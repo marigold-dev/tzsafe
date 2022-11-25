@@ -1,55 +1,84 @@
+(* MIT License
+   Copyright (c) 2022 Marigold <contact@marigold.dev>
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal in
+   the Software without restriction, including without limitation the rights to
+   use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+   the Software, and to permit persons to whom the Software is furnished to do so,
+   subject to the following conditions:
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE. *)
+
 #import "parameter.mligo" "Parameter"
 #import "./common/errors.mligo" "Errors"
-#import "./fa2/fa2.mligo" "FA2"
-
 
 module Types = struct
-    type proposal =
+    type proposal_id = Parameter.Types.proposal_id
+
+    type 'a proposal_params =
     [@layout:comb]
     {
         approved_signers: address set;
+        proposer: address;
         executed: bool;
         number_of_signer: nat;
-        target_fa2: address;
-        transfers: FA2.transfer;
+        target: address;
+        parameter: 'a;
+        amount: tez;
         timestamp: timestamp;
     }
 
-    type t =
+    type 'a proposal =
+    | Transfer of unit proposal_params
+    | Execute of ('a proposal_params)
+
+    type 'a t =
     [@layout:comb]
     {
         proposal_counter: nat;
-        proposal_map    : (nat, proposal) big_map;
+        proposal_map    : (proposal_id, 'a proposal) big_map;
         signers         : address set;
         threshold       : nat;
         metadata        : (string, bytes) big_map;
     }
 end
 
-module Utils = struct
-    [@inline]
-    let new_storage (signers, threshold: address set * nat) : Types.t =
-        {
-            proposal_counter = 0n;
-            proposal_map     = (Big_map.empty : (nat, Types.proposal) big_map);
-            signers          = signers;
-            threshold        = threshold;
-            metadata         = (Big_map.empty: (string, bytes) big_map);
-        }
+module Op = struct
+    type raw_proposal = Parameter.Types.raw_proposal
+    type raw_proposal_params = Parameter.Types.raw_proposal_params
+    type proposal_id = Parameter.Types.proposal_id
+    type proposal = Types.proposal
+    type proposal_params = Types.proposal_params
+    type types = Types.t
 
     [@inline]
-    let create_proposal (params: Parameter.Types.proposal_params) : Types.proposal =
+    let create_proposal_by (type a) (params: a raw_proposal_params) : a proposal_params =
         {
-            approved_signers = Set.literal [(Tezos.get_sender ())];
+            approved_signers = Set.empty;
+            proposer         = Tezos.get_sender ();
             executed         = false;
-            number_of_signer = 1n;
-            target_fa2       = params.target_fa2;
+            number_of_signer = 0n;
+            target           = params.target;
             timestamp        = (Tezos.get_now ());
-            transfers        = params.transfers;
+            parameter        = params.parameter;
+            amount           = params.amount;
         }
 
     [@inline]
-    let register_proposal (proposal, storage: Types.proposal * Types.t) : Types.t =
+    let create_proposal (type a) (raw_proposal: a raw_proposal) : a proposal =
+        match raw_proposal with
+        | Raw_transfer param -> Transfer (create_proposal_by param)
+        | Raw_execute param -> Execute (create_proposal_by param)
+
+    [@inline]
+    let register_proposal (type a) (proposal, storage: a proposal * a types) : a types =
         let proposal_counter = storage.proposal_counter + 1n in
         let proposal_map = Big_map.add proposal_counter proposal storage.proposal_map in
         {
@@ -59,14 +88,14 @@ module Utils = struct
         }
 
     [@inline]
-    let retrieve_proposal (proposal_number, storage : nat * Types.t) : Types.proposal =
+    let retrieve_proposal (type a) (proposal_number, storage : proposal_id * a types) : a proposal =
         match Big_map.find_opt proposal_number storage.proposal_map with
         | None -> failwith Errors.no_proposal_exist
-        | Some(proposal) -> proposal
+        | Some proposal  -> proposal
 
 
     [@inline]
-    let add_signer_to_proposal (proposal, signer, threshold: Types.proposal * address * nat) : Types.proposal =
+    let add_signer_to_proposal_by (type a) (proposal, signer, threshold: a proposal_params * address * nat) : a proposal_params =
         let approved_signers : address set = Set.add signer proposal.approved_signers in
         let executed = Set.cardinal approved_signers >= threshold || proposal.executed in
         {
@@ -77,7 +106,13 @@ module Utils = struct
         }
 
     [@inline]
-    let update_proposal (proposal_number, proposal, storage: Parameter.Types.proposal_number * Types.proposal * Types.t) : Types.t =
+    let add_signer_to_proposal (type a) (proposal, signer, threshold: a proposal * address * nat) : a proposal =
+      match proposal with
+      | Transfer p -> Transfer (add_signer_to_proposal_by (p, signer, threshold))
+      | Execute p  -> Execute (add_signer_to_proposal_by (p, signer, threshold))
+
+    [@inline]
+    let update_proposal (type a) (proposal_number, proposal, storage: proposal_id * a proposal * a types) : a types =
         let proposal_map = Big_map.update proposal_number (Some proposal) storage.proposal_map in
         {
             storage with

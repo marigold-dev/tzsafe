@@ -16,11 +16,25 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-let only_signer = "Only the contract signers can perform this operation"
-let amount_must_be_zero_tez = "You must not send Tezos to the smart contract"
-let no_proposal_exist = "No proposal exists for this counter"
-let has_already_signed = "You have already signed this proposal"
-let unknown_contract = "Unknown contract"
-let invalidated_threshold = "Threshold must be greater than 1"
-let no_signer = "No signer is set in the contract"
-let no_enought_singer = "Number of signer should be greater than threshold"
+#import "./common/errors.mligo" "Errors"
+#import "./common/constants.mligo" "Constants"
+#import "./storage.mligo" "Storage"
+
+type storage_types_proposal = Storage.Types.proposal
+
+let send (type a) (parameter: a) (target : address) (amount : tez) : operation =
+    [@no_mutation]
+    let contract_opt : a contract option = Tezos.get_contract_opt target in
+    let contract = Option.unopt_with_error contract_opt Errors.unknown_contract in
+    Tezos.transaction parameter amount contract
+
+let perform_operations (type a) (proposal: a storage_types_proposal) : operation list =
+    match proposal with
+    | Transfer p ->
+        if p.executed
+        then [ send p.parameter p.target p.amount ]
+        else Constants.no_operation
+    | Execute p ->
+        if p.executed
+        then [ send p.parameter p.target p.amount ]
+        else Constants.no_operation
