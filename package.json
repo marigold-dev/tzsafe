@@ -1,12 +1,12 @@
 {
-  "name": "ligo-foo",
-  "version": "1.0.18",
-  "author": "Name <email@domain.com>",
-  "description": "An example for ligo dependency depending on another ligo dependency",
+  "name": "multi-signature",
+  "version": "0.0.1",
+  "author": "Marigold <contact@marigold.dev>",
+  "description": "Multi-signature wallet",
   "scripts": {
-    "test": "ligo run test foo.test.mligo --project-root ."
+    "test": "ligo run test test/test.mligo --project-root ."
   },
   "dependencies": {
-    "ligo-breathalyzer": "^1.0.0"
+    "ligo-breathalyzer": "^1.2.0"
   }
 }
