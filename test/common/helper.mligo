@@ -17,16 +17,28 @@
    SOFTWARE. *)
 
 #import "ligo-breathalyzer/lib/lib.mligo" "Breath"
+#include "../../src/internal/contract.mligo"
 
-#import "./test_receiving_tez.mligo" "Tez"
-#import "./test_proposal.mligo" "Proposal"
-#import "./test_sign.mligo" "Sign"
-#import "./test_setting.mligo" "Setting"
+let init_storage (type a) (signers, threshold: address set * nat) : a storage_types =
+{ proposal_counter = 0n;
+  proposal_map     = (Big_map.empty : (nat, a storage_types_proposal) big_map);
+  signers          = signers;
+  threshold        = threshold;
+  metadata         = (Big_map.empty: (string, bytes) big_map);
+}
 
-let () =
-  Breath.Model.run_suites Void
-  [ Tez.test_suite
-  ; Proposal.test_suite
-  ; Sign.test_suite
-  ; Setting.test_suite
-  ]
+type originated = Breath.Contract.originated
+
+let originate (type a) (level: Breath.Logger.level) (main : a request -> a result) (init_storage : a storage_types ) (amount : tez) =
+  Breath.Contract.originate
+    level
+    "multisig"
+    main
+    init_storage
+    amount
+
+let create_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal : a parameter_types_raw_proposal) () =
+  Breath.Contract.transfert_with_entrypoint_to contract "create_proposal" proposal 0tez
+
+let sign_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal_number : nat) () =
+  Breath.Contract.transfert_with_entrypoint_to contract "sign_proposal" proposal_number 0tez

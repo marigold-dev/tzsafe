@@ -16,17 +16,16 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-#import "ligo-breathalyzer/lib/lib.mligo" "Breath"
+#import "../../src/internal/contract.mligo" "Contract"
 
-#import "./test_receiving_tez.mligo" "Tez"
-#import "./test_proposal.mligo" "Proposal"
-#import "./test_sign.mligo" "Sign"
-#import "./test_setting.mligo" "Setting"
+(* contract *)
+type add_action = nat
+let add_main (n,storage : add_action * nat) : operation list * nat =
+  [], n + storage
 
-let () =
-  Breath.Model.run_suites Void
-  [ Tez.test_suite
-  ; Proposal.test_suite
-  ; Sign.test_suite
-  ; Setting.test_suite
-  ]
+(* multisig wallet *)
+type result = Contract.result
+type request =  Contract.request
+
+let multisig_main (request : add_action request) : add_action result =
+  Contract.contract request

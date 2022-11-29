@@ -16,17 +16,7 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-#import "ligo-breathalyzer/lib/lib.mligo" "Breath"
-
-#import "./test_receiving_tez.mligo" "Tez"
-#import "./test_proposal.mligo" "Proposal"
-#import "./test_sign.mligo" "Sign"
-#import "./test_setting.mligo" "Setting"
-
-let () =
-  Breath.Model.run_suites Void
-  [ Tez.test_suite
-  ; Proposal.test_suite
-  ; Sign.test_suite
-  ; Setting.test_suite
-  ]
+let unopt (type a) (opt : a option) (msg : string) : a =
+  match opt with
+  | Some a -> a
+  | None -> Test.failwith msg

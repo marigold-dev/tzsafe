@@ -17,16 +17,21 @@
    SOFTWARE. *)
 
 #import "ligo-breathalyzer/lib/lib.mligo" "Breath"
+#import "../../src/internal/storage.mligo" "Storage"
 
-#import "./test_receiving_tez.mligo" "Tez"
-#import "./test_proposal.mligo" "Proposal"
-#import "./test_sign.mligo" "Sign"
-#import "./test_setting.mligo" "Setting"
+type storage_types_proposal = Storage.Types.proposal
 
-let () =
-  Breath.Model.run_suites Void
-  [ Tez.test_suite
-  ; Proposal.test_suite
-  ; Sign.test_suite
-  ; Setting.test_suite
-  ]
+let is_proposal_equal (type a) (msg:string) (actual : a storage_types_proposal) (expected : a storage_types_proposal) =
+  match (actual, expected) with
+  | Transfer _, Execute _ -> Breath.Assert.fail_with msg
+  | Execute _, Transfer _ -> Breath.Assert.fail_with msg
+  | Transfer a, Transfer e ->
+      let mock_time = Tezos.get_now () in
+      let actual = { a with timestamp = mock_time } in
+      let expected = { e with timestamp = mock_time } in
+      Breath.Assert.is_equal msg actual expected
+  | Execute a, Execute e ->
+      let mock_time = Tezos.get_now () in
+      let actual = { a with timestamp = mock_time } in
+      let expected = { e with timestamp = mock_time } in
+      Breath.Assert.is_equal msg actual expected
