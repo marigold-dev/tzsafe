@@ -17,7 +17,7 @@
    SOFTWARE. *)
 
 #import "parameter.mligo" "Parameter"
-#import "./common/errors.mligo" "Errors"
+#import "../common/errors.mligo" "Errors"
 
 module Types = struct
     type proposal_id = Parameter.Types.proposal_id

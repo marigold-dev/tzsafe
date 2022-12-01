@@ -17,7 +17,7 @@
    SOFTWARE. *)
 
 
-#import "./common/errors.mligo" "Errors"
+#import "../common/errors.mligo" "Errors"
 #import "parameter.mligo" "Parameter"
 #import "storage.mligo" "Storage"
 

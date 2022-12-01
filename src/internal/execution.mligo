@@ -16,8 +16,8 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-#import "./common/errors.mligo" "Errors"
-#import "./common/constants.mligo" "Constants"
+#import "../common/errors.mligo" "Errors"
+#import "../common/constants.mligo" "Constants"
 #import "./storage.mligo" "Storage"
 
 type storage_types_proposal = Storage.Types.proposal

@@ -16,10 +16,21 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-#import "../src/Lib.mligo" "Lib"
+#import "./internal/parameter.mligo" "Parameter"
+#import "./internal/storage.mligo" "Storage"
+#import "./internal/contract.mligo" "Contract"
 
-type result = Lib.result
-type request =  Lib.request
+(* type 'a parameter_types  *)
+type parameter_types = Parameter.Types.t
 
-let main (request : unit request) : unit result =
-  Lib.contract request
+(* type 'a storage_types *)
+type storage_types = Storage.Types.t
+
+(* type ['a request] is an alias of ['a parameter_types * 'a storage_types]  *)
+type request = Contract.request
+
+(* type ['a request] is an alias of [operation list * 'a storage_types]  *)
+type result = Contract.result
+
+let contract (type a) (request : a request) : a result =
+  Contract.contract request

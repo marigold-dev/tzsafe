@@ -17,7 +17,7 @@
    SOFTWARE. *)
 
 
-#import "./common/constants.mligo" "Constants"
+#import "../common/constants.mligo" "Constants"
 #import "parameter.mligo" "Parameter"
 #import "storage.mligo" "Storage"
 #import "conditions.mligo" "Conditions"
