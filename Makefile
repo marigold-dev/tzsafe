@@ -35,9 +35,11 @@ all: build test tarball-app
 install:
 	ligo install
 
-build: check-ligo-version
+# TODO: adding check-ligo-version when ligo release new version for bug fix
+build:
 	mkdir -p $(BUILT_APP_DIRECTORY)
-	$(LIGO_BUILD) $(APP_DIRECTORY)/main.mligo > $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME).tez
+	$(LIGO_BUILD) $(APP_DIRECTORY)/main_unit.mligo > $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_unit.tez
+	$(LIGO_BUILD) $(APP_DIRECTORY)/main_bytes.mligo > $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_bytes.tez
 
 test:
 	$(LIGO_TEST) $(TEST_DIRECTORY)/test.mligo
@@ -52,7 +54,7 @@ tarball-app:
 	tar czvf $(BUILD_DIRECTORY)/$(PROJECT_NAME)-$(BUILD_VERISON).tar.gz $(BUILT_APP_DIRECTORY)/*.tez
 
 ligo-version:
-	echo $(LIGO_VERSION)
+	@echo $(LIGO_VERSION)
 
 check-ligo-version:
 ifneq (${LIGO_VERSION},${LIGO_CURRENT_VERSION})
@@ -62,10 +64,11 @@ endif
 gen-wallet:
 	$(BUILD_DIRECTORY)/tezos-client gen keys wallet_address -f 2> /dev/null
 	$(BUILD_DIRECTORY)/tezos-client show address wallet_address -S 2> /dev/null
-	echo -e "\e[32m!!! Please go https://faucet.marigold.dev/ to request some XTZ !!!\e[0m"
+	@echo -e "\e[32m!!! Please go https://faucet.marigold.dev/ to request some XTZ !!!\e[0m"
 
 deploy:
-	$(BUILD_DIRECTORY)/tezos-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME) transferring 0 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME).tez --init '"init_storage"' --burn-cap 1 -f
+	$(BUILD_DIRECTORY)/tezos-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME)_unit transferring 0 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_unit.tez --init '(Pair 0 {} {} 1 {})' --burn-cap 1 -f
+	$(BUILD_DIRECTORY)/tezos-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME)_bytes transferring 0 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_bytes.tez --init '(Pair 0 {} {} 1 {})' --burn-cap 1 -f
 
 get-tezos-binary:
 	wget -O $(BUILD_DIRECTORY)/tezos-client $(TEZOS_BINARIES_URL)/tezos-client
