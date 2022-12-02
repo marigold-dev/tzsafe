@@ -16,7 +16,8 @@ BUILT_APP_DIRECTORY:=$(BUILD_DIRECTORY)/$(APP_DIRECTORY)
 
 # Ligo compiler
 LIGO_COMPILER_ARGS:=--protocol kathmandu
-LIGO_VERSION:=0.55.0
+### TODO: bug fix in "next" version, pending on ligo release to lock exact version
+LIGO_VERSION:=next
 LIGO?=ligo
 LIGO_BUILD=$(LIGO) compile contract $(LIGO_COMPILER_ARGS)
 LIGO_TEST=$(LIGO) run test
