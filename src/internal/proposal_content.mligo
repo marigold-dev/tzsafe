@@ -16,26 +16,16 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-#import "../common/errors.mligo" "Errors"
-#import "../common/constants.mligo" "Constants"
-#import "proposal_content.mligo" "Proposal_content"
-#import "./storage.mligo" "Storage"
+module Types = struct
+    type 'a transaction =
+    [@layout:comb]
+    {
+        target: address;
+        parameter: 'a;
+        amount: tez;
+    }
 
-type storage_types_proposal = Storage.Types.proposal
-type proposal_content = Proposal_content.Types.t
-
-let send_by (type a) (parameter: a) (target : address) (amount : tez) : operation =
-    [@no_mutation]
-    let contract_opt : a contract option = Tezos.get_contract_opt target in
-    let contract = Option.unopt_with_error contract_opt Errors.unknown_contract in
-    Tezos.transaction parameter amount contract
-
-let send (type a) (content : a proposal_content) : operation =
-    match content with
-    | Transfer tx -> send_by tx.parameter tx.target tx.amount
-    | Execute tx -> send_by tx.parameter tx.target tx.amount
-
-let perform_operations (type a) (proposal: a storage_types_proposal) : operation list =
-    if proposal.executed
-    then List.map send proposal.content
-    else Constants.no_operation
+    type 'a t =
+    | Transfer of unit transaction
+    | Execute of ('a transaction)
+end

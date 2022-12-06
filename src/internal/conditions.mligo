@@ -18,13 +18,13 @@
 
 
 #import "../common/errors.mligo" "Errors"
+#import "proposal_content.mligo" "Proposal_content"
 #import "parameter.mligo" "Parameter"
 #import "storage.mligo" "Storage"
 
 type storage_types = Storage.Types.t
 type storage_types_proposal = Storage.Types.proposal
-type parameter_types_raw_proposal = Parameter.Types.raw_proposal
-type parameter_types_raw_proposal_params = Parameter.Types.raw_proposal_params
+type proposal_content = Proposal_content.Types.t
 
 [@inline]
 let only_signer (type a) (storage : a storage_types) : unit =
@@ -35,24 +35,8 @@ let amount_must_be_zero_tez (an_amout : tez) : unit =
     assert_with_error (an_amout = 0tez) Errors.amount_must_be_zero_tez
 
 [@inline]
-let not_yet_signer (type a) (proposal : a storage_types_proposal) : unit = 
-    match proposal with
-    | Transfer p ->
-        assert_with_error (not Set.mem (Tezos.get_sender ()) p.approved_signers) Errors.has_already_signed
-    | Execute p ->
-        assert_with_error (not Set.mem (Tezos.get_sender ()) p.approved_signers) Errors.has_already_signed
-
-[@inline]
-let existed_contract (type a) (proposal : a parameter_types_raw_proposal) : unit =
-    match proposal with
-    | Raw_transfer p ->
-        let contract_opt : unit contract option = Tezos.get_contract_opt p.target in
-        let _ = Option.unopt_with_error contract_opt Errors.unknown_contract in
-        unit
-    | Raw_execute p ->
-        let contract_opt : a contract option = Tezos.get_contract_opt p.target in
-        let _ = Option.unopt_with_error contract_opt Errors.unknown_contract in
-        unit
+let not_yet_signer (type a) (proposal : a storage_types_proposal) : unit =
+    assert_with_error (not Set.mem (Tezos.get_sender ()) proposal.approved_signers) Errors.has_already_signed
 
 [@inline]
 let check_setting (type a) (storage : a storage_types) : unit =
