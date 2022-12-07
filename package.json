@@ -1,0 +1,12 @@
+{
+  "name": "multi-signature",
+  "version": "0.0.1",
+  "author": "Marigold <contact@marigold.dev>",
+  "description": "Multi-signature wallet",
+  "scripts": {
+    "test": "ligo run test test/test.mligo --project-root ."
+  },
+  "dependencies": {
+    "ligo-breathalyzer": "^1.2.0"
+  }
+}

@@ -1,0 +1,37 @@
+(* MIT License
+   Copyright (c) 2022 Marigold <contact@marigold.dev>
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal in
+   the Software without restriction, including without limitation the rights to
+   use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+   the Software, and to permit persons to whom the Software is furnished to do so,
+   subject to the following conditions:
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE. *)
+
+#import "ligo-breathalyzer/lib/lib.mligo" "Breath"
+#import "../../src/internal/storage.mligo" "Storage"
+
+type storage_types_proposal = Storage.Types.proposal
+
+let is_proposal_equal (type a) (msg:string) (actual : a storage_types_proposal) (expected : a storage_types_proposal) =
+  match (actual, expected) with
+  | Transfer _, Execute _ -> Breath.Assert.fail_with msg
+  | Execute _, Transfer _ -> Breath.Assert.fail_with msg
+  | Transfer a, Transfer e ->
+      let mock_time = Tezos.get_now () in
+      let actual = { a with timestamp = mock_time } in
+      let expected = { e with timestamp = mock_time } in
+      Breath.Assert.is_equal msg actual expected
+  | Execute a, Execute e ->
+      let mock_time = Tezos.get_now () in
+      let actual = { a with timestamp = mock_time } in
+      let expected = { e with timestamp = mock_time } in
+      Breath.Assert.is_equal msg actual expected
