@@ -19,6 +19,9 @@
 #import "ligo-breathalyzer/lib/lib.mligo" "Breath"
 #import "./common/helper.mligo" "Helper"
 #import "./common/mock_contract.mligo" "Mock_contract"
+#import "../src/internal/proposal_content.mligo" "Proposal_content"
+
+type proposal_content = Proposal_content.Types.t
 
 let case_invalidated_threshold =
   Breath.Model.case
@@ -30,8 +33,9 @@ let case_invalidated_threshold =
       let init_storage = Helper.init_storage (signers, 0n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
       let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
+      let param = ([] : (nat proposal_content) list) in
 
-      let param1 = (Raw_execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;}) in
+      let param1 = (Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;} :: param) in
       let action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
 
       Breath.Result.reduce [
@@ -48,8 +52,9 @@ let case_number_of_signer_less_than_threshold =
       let init_storage = Helper.init_storage (signers, 2n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
       let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
+      let param = ([] : (nat proposal_content) list) in
 
-      let param1 = (Raw_execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;}) in
+      let param1 = (Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;} :: param) in
       let action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
 
       Breath.Result.reduce [

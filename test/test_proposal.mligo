@@ -21,6 +21,9 @@
 #import "./common/assert.mligo" "Assert"
 #import "./common/mock_contract.mligo" "Mock_contract"
 #import "./common/util.mligo" "Util"
+#import "../src/internal/proposal_content.mligo" "Proposal_content"
+
+type proposal_content = Proposal_content.Types.t
 
 let case_create_proposal =
   Breath.Model.case
@@ -32,17 +35,18 @@ let case_create_proposal =
       let init_storage = Helper.init_storage (signers, 2n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
       let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
+      let param = ([] : (nat proposal_content) list) in
 
       (* create proposal 1 *)
-      let param1 = (Raw_execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;}) in
+      let param1 = (Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;} :: param) in
       let action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
 
       (* create proposal 2 *)
-      let param2 = (Raw_execute { target = add_contract.originated_address; parameter = 20n; amount = 10tez;}) in
+      let param2 = (Execute { target = add_contract.originated_address; parameter = 20n; amount = 10tez;} :: param)  in
       let action2 = Breath.Context.act_as bob (Helper.create_proposal multisig_contract param2) in
 
       (* create proposal 2 *)
-      let param3 = (Raw_transfer { target = alice.address; parameter = (); amount = 10tez;}) in
+      let param3 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
       let action3 = Breath.Context.act_as bob (Helper.create_proposal multisig_contract param3) in
 
       let balance = Breath.Contract.balance_of multisig_contract in
@@ -59,37 +63,43 @@ let case_create_proposal =
       ; Breath.Assert.is_equal "balance" balance 0tez
       ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 3n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
-        ( Execute {
+        ({
           approved_signers = Set.empty;
           proposer         = alice.address;
           executed         = false;
           number_of_signer = 0n;
-          target           = add_contract.originated_address;
-          parameter        = 10n;
-          amount           = 0tez;
           timestamp        = Tezos.get_now ();
+          content          = [ Execute {
+            parameter        = 10n;
+            amount           = 0tez;
+            target           = add_contract.originated_address;
+          }]
         })
       ; Assert.is_proposal_equal "#2 proposal" proposal2
-        ( Execute {
+        ({
           approved_signers = Set.empty;
           proposer         = bob.address;
           executed         = false;
           number_of_signer = 0n;
-          target           = add_contract.originated_address;
-          parameter        = 20n;
-          amount           = 10tez;
           timestamp        = Tezos.get_now ();
+          content          = [ Execute {
+            target           = add_contract.originated_address;
+            amount           = 10tez;
+            parameter        = 20n;
+          }]
         })
       ; Assert.is_proposal_equal "#3 proposal" proposal3
-        ( Transfer {
+        ({
           approved_signers = Set.empty;
           proposer         = bob.address;
           executed         = false;
           number_of_signer = 0n;
-          target           = alice.address;
-          parameter        = ();
-          amount           = 10tez;
           timestamp        = Tezos.get_now ();
+          content          = [ Transfer {
+            parameter        = ();
+            amount           = 10tez;
+            target           = alice.address;
+          }]
         })
       ])
 
@@ -105,11 +115,11 @@ let case_unauthorized_user_fail_to_create_proposal =
       let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
 
       (* create proposal 1 *)
-      let param1 = (Raw_execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;}) in
+      let param1 = [Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;}] in
       let action1 = Breath.Context.act_as carol (Helper.create_proposal multisig_contract param1) in
 
       (* create proposal 1 *)
-      let param2 = (Raw_transfer { target = alice.address; parameter = (); amount = 0tez;}) in
+      let param2 = [Transfer { target = alice.address; parameter = (); amount = 0tez;}] in
       let action2 = Breath.Context.act_as carol (Helper.create_proposal multisig_contract param2) in
 
       let balance = Breath.Contract.balance_of multisig_contract in

@@ -22,16 +22,7 @@
 type storage_types_proposal = Storage.Types.proposal
 
 let is_proposal_equal (type a) (msg:string) (actual : a storage_types_proposal) (expected : a storage_types_proposal) =
-  match (actual, expected) with
-  | Transfer _, Execute _ -> Breath.Assert.fail_with msg
-  | Execute _, Transfer _ -> Breath.Assert.fail_with msg
-  | Transfer a, Transfer e ->
-      let mock_time = Tezos.get_now () in
-      let actual = { a with timestamp = mock_time } in
-      let expected = { e with timestamp = mock_time } in
-      Breath.Assert.is_equal msg actual expected
-  | Execute a, Execute e ->
-      let mock_time = Tezos.get_now () in
-      let actual = { a with timestamp = mock_time } in
-      let expected = { e with timestamp = mock_time } in
-      Breath.Assert.is_equal msg actual expected
+  let mock_time = Tezos.get_now () in
+  let actual = { actual with timestamp = mock_time } in
+  let expected = { expected with timestamp = mock_time } in
+  Breath.Assert.is_equal msg actual expected
