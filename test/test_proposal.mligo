@@ -45,9 +45,17 @@ let case_create_proposal =
       let param2 = (Execute { target = add_contract.originated_address; parameter = 20n; amount = 10tez;} :: param)  in
       let action2 = Breath.Context.act_as bob (Helper.create_proposal multisig_contract param2) in
 
-      (* create proposal 2 *)
+      (* create proposal 3 *)
       let param3 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
       let action3 = Breath.Context.act_as bob (Helper.create_proposal multisig_contract param3) in
+
+      (* create proposal 4 *)
+      let param4 =
+        [ Transfer { target = alice.address; parameter = (); amount = 10tez;}
+        ; Transfer { target = alice.address; parameter = (); amount = 10tez;}
+        ; Execute { target = add_contract.originated_address; parameter = 20n; amount = 10tez;}
+        ] in
+      let action4 = Breath.Context.act_as bob (Helper.create_proposal multisig_contract param4) in
 
       let balance = Breath.Contract.balance_of multisig_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
@@ -55,13 +63,15 @@ let case_create_proposal =
       let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposal_map) "proposal 1 doesn't exist" in
       let proposal2 = Util.unopt (Big_map.find_opt 2n storage.proposal_map) "proposal 2 doesn't exist" in
       let proposal3 = Util.unopt (Big_map.find_opt 3n storage.proposal_map) "proposal 3 doesn't exist" in
+      let proposal4 = Util.unopt (Big_map.find_opt 4n storage.proposal_map) "proposal 4 doesn't exist" in
 
       Breath.Result.reduce [
         action1
       ; action2
       ; action3
+      ; action4
       ; Breath.Assert.is_equal "balance" balance 0tez
-      ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 3n
+      ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 4n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
           approved_signers = Set.empty;
@@ -100,6 +110,19 @@ let case_create_proposal =
             amount           = 10tez;
             target           = alice.address;
           }]
+        })
+      ; Assert.is_proposal_equal "#4 proposal" proposal4
+        ({
+          approved_signers = Set.empty;
+          proposer         = bob.address;
+          executed         = false;
+          number_of_signer = 0n;
+          timestamp        = Tezos.get_now ();
+          content          =
+            [ Transfer {parameter = (); amount = 10tez; target = alice.address; }
+            ; Transfer {parameter = (); amount = 10tez; target = alice.address; }
+            ; Execute  {parameter = 20n; amount = 10tez; target = add_contract.originated_address; }
+            ]
         })
       ])
 

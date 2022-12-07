@@ -151,6 +151,55 @@ let case_execute_transaction_1_of_1 =
         })
       ])
 
+let case_execute_transaction_1_of_1_batch =
+  Breath.Model.case
+  "test gathering signatures 1 of 1 for batch tx"
+  "successuful gathering proposal and execute"
+    (fun (level: Breath.Logger.level) ->
+      let (_, (alice, bob, carol)) = Breath.Context.init_default () in
+      let signers : address set = Set.literal [alice.address; bob.address; carol.address] in
+      let init_storage = Helper.init_storage (signers, 1n) in
+      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 40tez in
+      let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
+
+      (* create proposal 1 *)
+      let param1 =
+        [ Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;}
+        ; Transfer { target = bob.address; parameter = (); amount = 20tez;}
+        ] in
+      let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
+      let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n) in
+
+      let balance = Breath.Contract.balance_of multisig_contract in
+      let storage = Breath.Contract.storage_of multisig_contract in
+
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposal_map) "proposal 1 doesn't exist" in
+
+      Breath.Result.reduce [
+        create_action1
+      ; sign_action1
+      ; Breath.Assert.is_equal "balance" balance 20tez
+      ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 1n
+      ; Assert.is_proposal_equal "#1 proposal" proposal1
+        ({
+          approved_signers = Set.literal [bob.address;];
+          proposer         = alice.address;
+          executed         = true;
+          number_of_signer = 1n;
+          timestamp        = Tezos.get_now ();
+          content          =
+            [ Execute {
+              target           = add_contract.originated_address;
+              amount           = 0tez;
+              parameter        = 10n; }
+            ; Transfer {
+              target           = bob.address;
+              parameter        = ();
+              amount           = 20tez; }
+            ]
+        })
+      ])
+
 let case_execute_transaction_3_of_3 =
   Breath.Model.case
   "test gathering signatures 3 of 3"
@@ -310,6 +359,7 @@ let test_suite =
   Breath.Model.suite "Suite for sign proposal" [
     case_gathering_signatures
   ; case_execute_transaction_1_of_1
+  ; case_execute_transaction_1_of_1_batch
   ; case_execute_transaction_3_of_3
   ; case_fail_double_sign
   ; case_unauthorized_user_fail_to_sign
