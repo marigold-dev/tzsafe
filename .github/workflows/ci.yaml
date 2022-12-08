@@ -2,7 +2,7 @@ name: CI
 on:
   push:
     branches:
-      - main
+      - cc@ci_fix
   pull_request:
     branches:
       - main
@@ -41,7 +41,6 @@ jobs:
       - name: Package
         run: make tarball-app
       - name: release
-        if: github.event.pull_request.merged == true
         uses: actions/create-release@v1
         id: create_release
         with:
@@ -52,7 +51,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
       - name: Upload unit contract
-        if: github.event.pull_request.merged == true
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -62,7 +60,6 @@ jobs:
           asset_name: multisig_unit.tez
           asset_content_type: application/text
       - name: Upload bytes contract
-        if: github.event.pull_request.merged == true
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
