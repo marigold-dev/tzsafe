@@ -18,15 +18,16 @@
 
 
 #import "../common/constants.mligo" "Constants"
+#import "proposal_content.mligo" "Proposal_content"
 #import "parameter.mligo" "Parameter"
 #import "storage.mligo" "Storage"
 #import "conditions.mligo" "Conditions"
 #import "execution.mligo" "Execution"
 
 type parameter_types = Parameter.Types.t
-type parameter_types_raw_proposal = Parameter.Types.raw_proposal
 type storage_types = Storage.Types.t
 type storage_types_proposal = Storage.Types.proposal
+type proposal_content = Proposal_content.Types.t
 
 type 'a request = 'a parameter_types * 'a storage_types
 type 'a result = operation list * 'a storage_types
@@ -34,11 +35,10 @@ type 'a result = operation list * 'a storage_types
 (**
  * Proposal creation
  *)
-let create_proposal (type a) (raw_proposal, storage : a parameter_types_raw_proposal * a storage_types) : a result =
+let create_proposal (type a) (proposal, storage : (a proposal_content) list * a storage_types) : a result =
     let () = Conditions.only_signer storage in
     let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
-    let () = Conditions.existed_contract raw_proposal in
-    let proposal = Storage.Op.create_proposal raw_proposal in
+    let proposal = Storage.Op.create_proposal proposal in
     let storage = Storage.Op.register_proposal(proposal, storage) in
     (Constants.no_operation, storage)
 

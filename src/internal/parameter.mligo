@@ -16,23 +16,14 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
+#import "proposal_content.mligo" "Proposal_content"
+
 module Types = struct
-    type 'a raw_proposal_params =
-    [@layout:comb]
-    {
-        target: address;
-        parameter: 'a;
-        amount: tez;
-    }
-
-    type 'a raw_proposal =
-    | Raw_transfer of unit raw_proposal_params
-    | Raw_execute of ('a raw_proposal_params)
-
+    type proposal_content = Proposal_content.Types.t
     type proposal_id = nat
 
     type 'a t =
     | Default of unit
-    | Create_proposal of 'a raw_proposal
+    | Create_proposal of ('a proposal_content) list
     | Sign_proposal of proposal_id
 end

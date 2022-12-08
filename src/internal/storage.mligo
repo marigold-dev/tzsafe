@@ -18,26 +18,22 @@
 
 #import "parameter.mligo" "Parameter"
 #import "../common/errors.mligo" "Errors"
+#import "proposal_content.mligo" "Proposal_content"
 
 module Types = struct
     type proposal_id = Parameter.Types.proposal_id
+    type proposal_content = Proposal_content.Types.t
 
-    type 'a proposal_params =
+    type 'a proposal =
     [@layout:comb]
     {
         approved_signers: address set;
         proposer: address;
         executed: bool;
         number_of_signer: nat;
-        target: address;
-        parameter: 'a;
-        amount: tez;
         timestamp: timestamp;
+        content : ('a proposal_content) list
     }
-
-    type 'a proposal =
-    | Transfer of unit proposal_params
-    | Execute of ('a proposal_params)
 
     type 'a t =
     [@layout:comb]
@@ -51,31 +47,22 @@ module Types = struct
 end
 
 module Op = struct
-    type raw_proposal = Parameter.Types.raw_proposal
-    type raw_proposal_params = Parameter.Types.raw_proposal_params
+    type proposal_content = Proposal_content.Types.t
     type proposal_id = Parameter.Types.proposal_id
     type proposal = Types.proposal
-    type proposal_params = Types.proposal_params
     type types = Types.t
 
     [@inline]
-    let create_proposal_by (type a) (params: a raw_proposal_params) : a proposal_params =
+    let create_proposal (type a) (contents: (a proposal_content) list) : a proposal =
         {
             approved_signers = Set.empty;
             proposer         = Tezos.get_sender ();
             executed         = false;
             number_of_signer = 0n;
-            target           = params.target;
             timestamp        = (Tezos.get_now ());
-            parameter        = params.parameter;
-            amount           = params.amount;
+            content          = contents;
         }
 
-    [@inline]
-    let create_proposal (type a) (raw_proposal: a raw_proposal) : a proposal =
-        match raw_proposal with
-        | Raw_transfer param -> Transfer (create_proposal_by param)
-        | Raw_execute param -> Execute (create_proposal_by param)
 
     [@inline]
     let register_proposal (type a) (proposal, storage: a proposal * a types) : a types =
@@ -95,7 +82,7 @@ module Op = struct
 
 
     [@inline]
-    let add_signer_to_proposal_by (type a) (proposal, signer, threshold: a proposal_params * address * nat) : a proposal_params =
+    let add_signer_to_proposal (type a) (proposal, signer, threshold: a proposal * address * nat) : a proposal =
         let approved_signers : address set = Set.add signer proposal.approved_signers in
         let executed = Set.cardinal approved_signers >= threshold || proposal.executed in
         {
@@ -104,12 +91,6 @@ module Op = struct
             number_of_signer = proposal.number_of_signer + 1n ;
             executed         = executed
         }
-
-    [@inline]
-    let add_signer_to_proposal (type a) (proposal, signer, threshold: a proposal * address * nat) : a proposal =
-      match proposal with
-      | Transfer p -> Transfer (add_signer_to_proposal_by (p, signer, threshold))
-      | Execute p  -> Execute (add_signer_to_proposal_by (p, signer, threshold))
 
     [@inline]
     let update_proposal (type a) (proposal_number, proposal, storage: proposal_id * a proposal * a types) : a types =

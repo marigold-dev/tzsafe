@@ -18,6 +18,9 @@
 
 #import "ligo-breathalyzer/lib/lib.mligo" "Breath"
 #include "../../src/internal/contract.mligo"
+#import "../../src/internal/proposal_content.mligo" "Proposal_content"
+
+type proposal_content = Proposal_content.Types.t
 
 let init_storage (type a) (signers, threshold: address set * nat) : a storage_types =
 { proposal_counter = 0n;
@@ -37,7 +40,7 @@ let originate (type a) (level: Breath.Logger.level) (main : a request -> a resul
     init_storage
     amount
 
-let create_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal : a parameter_types_raw_proposal) () =
+let create_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal : (a proposal_content) list) () =
   Breath.Contract.transfert_with_entrypoint_to contract "create_proposal" proposal 0tez
 
 let sign_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal_number : nat) () =
