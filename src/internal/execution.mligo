@@ -31,21 +31,22 @@ let send_by (type a) (parameter: a) (target : address) (amount : tez) : operatio
     let contract = Option.unopt_with_error contract_opt Errors.unknown_contract in
     Tezos.transaction parameter amount contract
 
-let send (type a) (content : a proposal_content) (storage : a storage_types) : (operation  option * a storage_types) =
+let send (type a) (content : a proposal_content) (storage : a storage_types) : (operation option * a storage_types) =
     match content with
     | Transfer tx -> (Some (send_by tx.parameter tx.target tx.amount), storage)
     | Execute tx -> (Some (send_by tx.parameter tx.target tx.amount), storage)
+    | Execute_lambda l -> (Some (l ()), storage)
     | Adjust_threshold t -> (None, Storage.Op.adjust_threshold t storage)
     | Add_signers s -> (None, Storage.Op.add_signers s storage)
     | Remove_signers s -> (None, Storage.Op.remove_signers s storage)
 
 let perform_operations (type a) (proposal: a storage_types_proposal) (storage : a storage_types) : operation list * a storage_types =
-    let aux (type a) ((ops, s), c : (operation list * a storage_types) * a proposal_content) : (operation list * a storage_types) =
-      let (opt_o, s) = send c s in
-      match opt_o with
-      | Some o -> (o::ops, s)
-      | None -> (ops, s)
+    let batch (type a) ((ops, s), c : (operation list * a storage_types) * a proposal_content) : (operation list * a storage_types) =
+      let (opt_op, new_s) = send c s in
+      match opt_op with
+      | Some op -> op::ops, new_s
+      | None -> ops, new_s
     in
     if proposal.executed
-    then List.fold_left aux (Constants.no_operation, storage) proposal.content
+    then List.fold_left batch (Constants.no_operation, storage) proposal.content
     else (Constants.no_operation, storage)
