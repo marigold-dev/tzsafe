@@ -7,6 +7,8 @@ The contract is written in cameligo. Please follow [the instructions of installa
 The minimal required version can be found by performing `make ligo-version`.
 
 # Usage
+## Create multisig wallet
+
 To create a multisig wallet, you can use the default contracts that we provided or customize by yourself.
 
 If the purpose is to transfer Tez in and out only, the `app/main_unit.mligo` is recommended. Please run `make build` to compile the contract in Michelson which can be found in `_build/app/multisig_unit.tez`. See the Deploy section for the origination of the contract.
@@ -63,6 +65,18 @@ ligo compile contract your_contract.mligo --entry-point main
 # compile multisig contract
 ligo compile contract your_contract.mligo --entry-point multisig
 ```
+
+## Entrypoint of multisig
+
+### default entrypoint
+This entrypoint can receive Tez from any source.
+
+### create_proposal entrypoint
+Each signer can create proposal by this entrypoint. This entrypoint supports creating a batch of transactions. Once the proposal is executed, the transactions and atomic and will be executed.
+
+### sign_proposal entrypoint
+Signers can provide an approval by this entrypoint.
+
 
 # Deploy
 We provide several steps for quick deploying contracts in `app/` to ghostnet.
