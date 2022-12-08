@@ -21,6 +21,7 @@
 #import "proposal_content.mligo" "Proposal_content"
 #import "./storage.mligo" "Storage"
 
+type storage_types = Storage.Types.t
 type storage_types_proposal = Storage.Types.proposal
 type proposal_content = Proposal_content.Types.t
 
@@ -30,12 +31,21 @@ let send_by (type a) (parameter: a) (target : address) (amount : tez) : operatio
     let contract = Option.unopt_with_error contract_opt Errors.unknown_contract in
     Tezos.transaction parameter amount contract
 
-let send (type a) (content : a proposal_content) : operation =
+let send (type a) (content : a proposal_content) (storage : a storage_types) : (operation  option * a storage_types) =
     match content with
-    | Transfer tx -> send_by tx.parameter tx.target tx.amount
-    | Execute tx -> send_by tx.parameter tx.target tx.amount
+    | Transfer tx -> (Some (send_by tx.parameter tx.target tx.amount), storage)
+    | Execute tx -> (Some (send_by tx.parameter tx.target tx.amount), storage)
+    | Adjust_threshold t -> (None, Storage.Op.adjust_threshold t storage)
+    | Add_signers s -> (None, Storage.Op.add_signers s storage)
+    | Remove_signers s -> (None, Storage.Op.remove_signers s storage)
 
-let perform_operations (type a) (proposal: a storage_types_proposal) : operation list =
+let perform_operations (type a) (proposal: a storage_types_proposal) (storage : a storage_types) : operation list * a storage_types =
+    let aux (type a) ((ops, s), c : (operation list * a storage_types) * a proposal_content) : (operation list * a storage_types) =
+      let (opt_o, s) = send c s in
+      match opt_o with
+      | Some o -> (o::ops, s)
+      | None -> (ops, s)
+    in
     if proposal.executed
-    then List.map send proposal.content
-    else Constants.no_operation
+    then List.fold_left aux (Constants.no_operation, storage) proposal.content
+    else (Constants.no_operation, storage)

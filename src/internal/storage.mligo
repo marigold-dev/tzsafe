@@ -99,4 +99,18 @@ module Op = struct
             storage with
             proposal_map = proposal_map
         }
+
+    [@inline]
+    let adjust_threshold (type a) (threshold : nat) (storage : a types) : a types =
+      { storage with threshold = threshold }
+
+    [@inline]
+    let add_signers (type a) (signers: address set) (storage : a types) : a types =
+      let add (set, s : address set * address) : address set = Set.add s set in
+      { storage with signers = Set.fold add signers storage.signers }
+
+    [@inline]
+    let remove_signers (type a) (signers: address set) (storage : a types) : a types =
+      let remove (set, s : address set * address) : address set = Set.remove s set in
+      { storage with signers = Set.fold remove signers storage.signers }
 end

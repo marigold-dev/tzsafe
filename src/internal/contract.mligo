@@ -52,8 +52,7 @@ let sign_proposal (type a) (proposal_id, storage : Parameter.Types.proposal_id *
     let () = Conditions.not_yet_signer proposal in
     let proposal = Storage.Op.add_signer_to_proposal (proposal, Tezos.get_sender (), storage.threshold) in
     let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
-    let operations = Execution.perform_operations proposal in
-    (operations, storage)
+    Execution.perform_operations proposal storage
 
 let contract (type a) (action, storage : a request) : a result =
     let _ = Conditions.check_setting storage in
