@@ -18,14 +18,26 @@
 
 #import "../../src/internal/contract.mligo" "Contract"
 
-(* contract *)
+(* multisig wallet 1 *)
+type result = Contract.result
+type request =  Contract.request
+
+(* ------------------------ *)
+(* contract 1 *)
 type add_action = nat
 let add_main (n,storage : add_action * nat) : operation list * nat =
   [], n + storage
 
-(* multisig wallet *)
-type result = Contract.result
-type request =  Contract.request
 
 let multisig_main (request : add_action request) : add_action result =
+  Contract.contract request
+
+(* ------------------------ *)
+(* contract 2 *)
+type set_action = nat
+let set_main (n,_storage : set_action * nat) : operation list * nat =
+  [], n
+
+(* multisig wallet 2 *)
+let multisig_set_main (request : set_action request) : set_action result =
   Contract.contract request

@@ -24,6 +24,7 @@
 #import "./test_setting.mligo" "Setting"
 #import "./test_adjust_threshold_proposal.mligo" "Adjust_threshold_proposal"
 #import "./test_change_signer_proposal.mligo" "Change_signer_proposal"
+#import "./test_lambda_proposal.mligo" "Lambda_proposal"
 
 let () =
   Breath.Model.run_suites Void
@@ -33,4 +34,5 @@ let () =
   ; Setting.test_suite
   ; Adjust_threshold_proposal.test_suite
   ; Change_signer_proposal.test_suite
+  ; Lambda_proposal.test_suite
   ]
