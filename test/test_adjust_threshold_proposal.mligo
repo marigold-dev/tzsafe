@@ -71,7 +71,7 @@ let case_adjust_invalid_threshold_proposal =
       ])
 
 let test_suite =
-  Breath.Model.suite "Suite for reset proposal" [
+  Breath.Model.suite "Suite for reset threshold proposal" [
     case_execute_adjust_threshold_proposal
   ; case_adjust_invalid_threshold_proposal
   ]
