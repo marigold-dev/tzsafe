@@ -20,6 +20,7 @@
 #import "../common/constants.mligo" "Constants"
 #import "proposal_content.mligo" "Proposal_content"
 #import "./storage.mligo" "Storage"
+#import "conditions.mligo" "Conditions"
 
 type storage_types = Storage.Types.t
 type storage_types_proposal = Storage.Types.proposal

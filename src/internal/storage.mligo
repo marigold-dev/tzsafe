@@ -16,8 +16,8 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-#import "parameter.mligo" "Parameter"
 #import "../common/errors.mligo" "Errors"
+#import "parameter.mligo" "Parameter"
 #import "proposal_content.mligo" "Proposal_content"
 
 module Types = struct

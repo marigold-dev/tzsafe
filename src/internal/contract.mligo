@@ -35,10 +35,11 @@ type 'a result = operation list * 'a storage_types
 (**
  * Proposal creation
  *)
-let create_proposal (type a) (proposal, storage : (a proposal_content) list * a storage_types) : a result =
+let create_proposal (type a) (proposal_content, storage : (a proposal_content) list * a storage_types) : a result =
     let () = Conditions.only_signer storage in
     let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
-    let proposal = Storage.Op.create_proposal proposal in
+    let () = Conditions.check_proposals_content proposal_content in
+    let proposal = Storage.Op.create_proposal proposal_content in
     let storage = Storage.Op.register_proposal(proposal, storage) in
     (Constants.no_operation, storage)
 
