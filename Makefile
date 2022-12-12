@@ -66,8 +66,9 @@ gen-wallet:
 	@echo -e "\e[32m!!! Please go https://faucet.marigold.dev/ to request some XTZ !!!\e[0m"
 
 deploy:
-	$(BUILD_DIRECTORY)/tezos-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME)_unit transferring 0 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_unit.tez --init '(Pair 0 {} {} 1 {})' --burn-cap 1 -f
-	$(BUILD_DIRECTORY)/tezos-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME)_bytes transferring 0 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_bytes.tez --init '(Pair 0 {} {} 1 {})' --burn-cap 1 -f
+	$(eval SIGNER := $(shell TEZOS_CLIENT_UNSAFE_DISABLE_DISCLAIMER=yes ./_build/tezos-client --endpoint https://ghostnet.tezos.marigold.dev show address wallet_address | grep Hash | awk '{print $$2}'))
+	$(BUILD_DIRECTORY)/tezos-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME)_unit transferring 2 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_unit.tez --init '(Pair 0 {} {"$(SIGNER)";} 1 {})' --burn-cap 1 -f
+	$(BUILD_DIRECTORY)/tezos-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME)_bytes transferring 2 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_bytes.tez --init '(Pair 0 {} {"$(SIGNER)";} 1 {})' --burn-cap 1 -f
 
 get-tezos-binary:
 	wget -O $(BUILD_DIRECTORY)/tezos-client $(TEZOS_BINARIES_URL)/tezos-client
