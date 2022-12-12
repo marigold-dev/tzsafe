@@ -17,7 +17,7 @@
    SOFTWARE. *)
 
 let only_signer = "Only the contract signers can perform this operation"
-let amount_must_be_zero_tez = "You must not send Tezos to the smart contract"
+let amount_must_be_zero_tez = "You must not send tez to the smart contract"
 let no_proposal_exist = "No proposal exists for this counter"
 let has_already_signed = "You have already signed this proposal"
 let unknown_contract = "Unknown contract"
