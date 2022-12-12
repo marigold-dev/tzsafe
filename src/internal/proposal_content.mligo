@@ -25,6 +25,16 @@ module Types = struct
         amount: tez;
     }
 
+    (* The view function is forbidden operation. Therefore, the lambda of
+       [Execute_lambda] is removed *)
+    type 'a view =
+    | Transfer of unit transaction
+    | Execute of ('a transaction)
+    | Execute_lambda
+    | Adjust_threshold of nat
+    | Add_signers of address set
+    | Remove_signers of address set
+
     type 'a t =
     | Transfer of unit transaction
     | Execute of ('a transaction)

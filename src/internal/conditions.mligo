@@ -60,6 +60,6 @@ let check_proposals_content (type a) (proposals_content: (a proposal_content) li
 [@inline]
 let check_setting (type a) (storage : a storage_types) : unit =
     let () = assert_with_error (Set.cardinal storage.signers > 0n) Errors.no_signer  in
-    let () = assert_with_error (Set.cardinal storage.signers >= storage.threshold) Errors.no_enought_singer in
+    let () = assert_with_error (Set.cardinal storage.signers >= storage.threshold) Errors.no_enought_signer in
     let () = assert_with_error (storage.threshold > 0n) Errors.invalidated_threshold in
     ()

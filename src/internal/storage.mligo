@@ -23,6 +23,18 @@
 module Types = struct
     type proposal_id = Parameter.Types.proposal_id
     type proposal_content = Proposal_content.Types.t
+    type view_proposal_content = Proposal_content.Types.view
+
+    type 'a view_proposal =
+    [@layout:comb]
+    {
+        approved_signers: address set;
+        proposer: address;
+        executed: bool;
+        number_of_signer: nat;
+        timestamp: timestamp;
+        content : ('a view_proposal_content) list
+    }
 
     type 'a proposal =
     [@layout:comb]
