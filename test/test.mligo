@@ -19,14 +19,20 @@
 #import "ligo-breathalyzer/lib/lib.mligo" "Breath"
 
 #import "./test_receiving_tez.mligo" "Tez"
-#import "./test_proposal.mligo" "Proposal"
+#import "./test_basic_proposal.mligo" "Basic_proposal"
 #import "./test_sign.mligo" "Sign"
 #import "./test_setting.mligo" "Setting"
+#import "./test_adjust_threshold_proposal.mligo" "Adjust_threshold_proposal"
+#import "./test_change_signer_proposal.mligo" "Change_signer_proposal"
+#import "./test_lambda_proposal.mligo" "Lambda_proposal"
 
 let () =
   Breath.Model.run_suites Void
   [ Tez.test_suite
-  ; Proposal.test_suite
+  ; Basic_proposal.test_suite
   ; Sign.test_suite
   ; Setting.test_suite
+  ; Adjust_threshold_proposal.test_suite
+  ; Change_signer_proposal.test_suite
+  ; Lambda_proposal.test_suite
   ]

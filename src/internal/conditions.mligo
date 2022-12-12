@@ -39,6 +39,25 @@ let not_yet_signer (type a) (proposal : a storage_types_proposal) : unit =
     assert_with_error (not Set.mem (Tezos.get_sender ()) proposal.approved_signers) Errors.has_already_signed
 
 [@inline]
+let executed (executed : bool) : unit =
+    assert_with_error (not executed) Errors.already_executed
+
+[@inline]
+let check_proposal (type a) (content: a proposal_content) : unit =
+    match content with
+    | Transfer _ -> ()
+    | Execute _ -> ()
+    | Execute_lambda _ -> ()
+    | Adjust_threshold t ->
+        assert_with_error (t > 0n) Errors.invalidated_threshold
+    | Add_signers _ -> ()
+    | Remove_signers _ -> ()
+
+[@inline]
+let check_proposals_content (type a) (proposals_content: (a proposal_content) list) : unit =
+    List.iter check_proposal proposals_content
+
+[@inline]
 let check_setting (type a) (storage : a storage_types) : unit =
     let () = assert_with_error (Set.cardinal storage.signers > 0n) Errors.no_signer  in
     let () = assert_with_error (Set.cardinal storage.signers >= storage.threshold) Errors.no_enought_singer in

@@ -28,4 +28,8 @@ module Types = struct
     type 'a t =
     | Transfer of unit transaction
     | Execute of ('a transaction)
+    | Execute_lambda of (unit -> operation)
+    | Adjust_threshold of nat
+    | Add_signers of address set
+    | Remove_signers of address set
 end
