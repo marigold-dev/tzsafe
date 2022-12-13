@@ -26,6 +26,7 @@
 #import "./test_change_signer_proposal.mligo" "Change_signer_proposal"
 #import "./test_lambda_proposal.mligo" "Lambda_proposal"
 #import "./test_emit_events.mligo" "Emit_events"
+#import "./test_view.mligo" "View"
 
 let () =
   Breath.Model.run_suites Void
@@ -37,4 +38,5 @@ let () =
   ; Change_signer_proposal.test_suite
   ; Lambda_proposal.test_suite
   ; Emit_events.test_suite
+  ; View.test_suite
   ]
