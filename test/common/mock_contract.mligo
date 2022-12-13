@@ -16,6 +16,7 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
+#import "ligo-breathalyzer/lib/lib.mligo" "Breath"
 #import "../../src/internal/contract.mligo" "Contract"
 
 (* multisig wallet 1 *)
@@ -34,10 +35,14 @@ let multisig_main (request : add_action request) : add_action result =
 
 (* ------------------------ *)
 (* contract 2 *)
-type set_action = nat
-let set_main (n,_storage : set_action * nat) : operation list * nat =
-  [], n
+let transfer_only_contract (addr, storage: address * unit) : operation list * unit =
+  let contr = Tezos.get_contract_with_error addr "contract doesn't exist" in
+  [Tezos.transaction () 10tez contr], storage
 
-(* multisig wallet 2 *)
-let multisig_set_main (request : set_action request) : set_action result =
-  Contract.contract request
+let originate_transfer_only_contract (level: Breath.Logger.level) =
+  Breath.Contract.originate
+    level
+    "transfer only contract"
+    transfer_only_contract
+    ()
+    100tez
