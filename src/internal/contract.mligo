@@ -37,7 +37,7 @@ type 'a result = operation list * 'a storage_types
  * Default entrypoint
  *)
 let default (type a) (_, s : unit * a storage_types) : a result =
-    let event = Tezos.emit "%create_proposal" (Tezos.get_sender (), Tezos.get_amount ()) in
+    let event = Tezos.emit "%receiving_tez" (Tezos.get_sender (), Tezos.get_amount ()) in
     ([event], s)
 
 (**
