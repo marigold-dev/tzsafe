@@ -25,5 +25,7 @@ module Types = struct
     type 'a t =
     | Default of unit
     | Create_proposal of ('a proposal_content) list
-    | Sign_proposal of proposal_id
+    | Sign_and_execute_proposal of proposal_id
+    | Sign_proposal_only of proposal_id
+    | Execute_proposal of proposal_id
 end

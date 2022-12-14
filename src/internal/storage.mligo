@@ -94,15 +94,22 @@ module Op = struct
 
 
     [@inline]
-    let add_signer_to_proposal (type a) (proposal, signer, threshold: a proposal * address * nat) : a proposal =
+    let add_approval (type a) (proposal, signer: a proposal * address) : a proposal =
         let approved_signers : address set = Set.add signer proposal.approved_signers in
-        let executed = Set.cardinal approved_signers >= threshold || proposal.executed in
         {
             proposal with
             approved_signers = approved_signers;
             number_of_signer = proposal.number_of_signer + 1n ;
+        }
+
+    [@inline]
+    let update_execution_flag (type a) (proposal, threshold: a proposal * nat) : a proposal =
+        let executed = Set.cardinal proposal.approved_signers >= threshold || proposal.executed in
+        {
+            proposal with
             executed         = executed
         }
+
 
     [@inline]
     let update_proposal (type a) (proposal_number, proposal, storage: proposal_id * a proposal * a types) : a types =

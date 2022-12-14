@@ -59,15 +59,48 @@ let create_proposal (type a) (proposal_content, storage : (a proposal_content) l
 let sign_proposal (type a) (proposal_id, storage : Parameter.Types.proposal_id * a storage_types) : a result =
     let () = Conditions.only_signer storage in
     let proposal = Storage.Op.retrieve_proposal(proposal_id, storage) in
-    let () = Conditions.executed proposal.executed in
-    let () = Conditions.not_yet_signer proposal in
+    let () = Conditions.not_execute_yet proposal.executed in
+    let () = Conditions.not_sign_yet proposal in
     let signer = Tezos.get_sender () in
-    let proposal = Storage.Op.add_signer_to_proposal (proposal, signer, storage.threshold) in
+    let proposal = Storage.Op.add_approval (proposal, signer) in
+    let proposal = Storage.Op.update_execution_flag (proposal, storage.threshold) in
+    let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
+    let ops, storage = Execution.perform_operations proposal storage in
+    let ops = Tezos.emit "%sign_proposal" (proposal_id, signer)::ops in
+    if proposal.executed
+    then (Tezos.emit "%execute_proposal" (proposal_id, signer)::ops, storage)
+    else (ops, storage)
+
+(**
+ * Proposal signature only
+ *)
+
+let sign_proposal_only (type a) (proposal_id, storage : Parameter.Types.proposal_id * a storage_types) : a result =
+    let () = Conditions.only_signer storage in
+    let proposal = Storage.Op.retrieve_proposal(proposal_id, storage) in
+    let () = Conditions.not_execute_yet proposal.executed in
+    let () = Conditions.not_sign_yet proposal in
+    let signer = Tezos.get_sender () in
+    let proposal = Storage.Op.add_approval (proposal, signer) in
+    let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
+    let event = Tezos.emit "%sign_proposal" (proposal_id, signer) in
+    ([event], storage)
+
+(**
+ * Proposal Execution
+ *)
+
+let execute_proposal (type a) (proposal_id, storage : Parameter.Types.proposal_id * a storage_types) : a result =
+    let () = Conditions.only_signer storage in
+    let proposal = Storage.Op.retrieve_proposal(proposal_id, storage) in
+    let () = Conditions.not_execute_yet proposal.executed in
+    let signer = Tezos.get_sender () in
+    let proposal = Storage.Op.update_execution_flag (proposal, storage.threshold) in
+    let () = Conditions.ready_to_execute proposal.executed in
     let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
     let ops, s = Execution.perform_operations proposal storage in
-    let event = Tezos.emit "%sign_proposal" (proposal_id, signer) in
+    let event = Tezos.emit "%execute_proposal" (proposal_id, signer) in
     (event::ops, s)
-
 
 let contract (type a) (action, storage : a request) : a result =
     let _ = Conditions.check_setting storage in
@@ -75,5 +108,9 @@ let contract (type a) (action, storage : a request) : a result =
     | Default u -> default (u, storage)
     | Create_proposal proposal_params ->
         create_proposal (proposal_params, storage)
-    | Sign_proposal proposal_number ->
-        sign_proposal (proposal_number, storage)
+    | Sign_and_execute_proposal proposal_id ->
+        sign_proposal (proposal_id, storage)
+    | Sign_proposal_only proposal_id ->
+        sign_proposal_only (proposal_id, storage)
+    | Execute_proposal proposal_id ->
+        execute_proposal (proposal_id, storage)
