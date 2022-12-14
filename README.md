@@ -11,7 +11,7 @@ The minimal required version can be found by performing `make ligo-version`.
 
 To create a multisig wallet, you can use the default contracts that we provided or customize by yourself.
 
-If the purpose is to transfer Tez in and out only, the `app/main_unit.mligo` is recommended. Please run `make build` to compile the contract in Michelson which can be found in `_build/app/multisig_unit.tez`. See the Deploy section for the origination of the contract.
+If purpose is to transfer Tez in and out only, the `app/main_unit.mligo` is recommended. Please run `make build` to compile the contract in Michelson which can be found in `_build/app/multisig_unit.tez`. See the Deploy section for the origination of the contract.
 
 On the other hand, if executing other contracts is required, you can either use `app/main_bytes.mligo` or the multisig library to customize your own.
 
@@ -66,17 +66,43 @@ ligo compile contract your_contract.mligo --entry-point main
 ligo compile contract your_contract.mligo --entry-point multisig
 ```
 
-## Entrypoint of multisig
+Note that the `Execute_lambda` is also provided another solutions for executing other contracts.
 
-### default entrypoint
+## Entrypoints of multisig
+
+### default
 This entrypoint can receive Tez from any source.
+- Emit event
+  - tag: `default`
+  - data: `(sender, address)`
 
-### create_proposal entrypoint
-Each signer can create proposal by this entrypoint. This entrypoint supports creating a batch of transactions. Once the proposal is executed, the transactions and atomic and will be executed.
+### create_proposal
+Each signer can create proposal through this entrypoint. The entrypoint supports creating a batch of transactions. The batch is atomic and execution by order. If modifing settings are proposed, the modified setting will NOT apply in this batch immediately. The setting will effect on a next batch/transaction.
 
-### sign_proposal entrypoint
-Signers can provide an approval by this entrypoint.
+- proposal that signer can create
+  - `Transfer of { target:address; parameter:unit; amount:tez}`
+     - transfer amount only
+  - `Execute of { target:address; parameter:'a; amount:tez}`
+     - execute contract with type of parameter `'a`
+  - `Execute_lambda of (unit -> operation)`
+     - execute lambda, note that the cost of using `Transfer` and `Execute`is cheaper than `Execute_lambda`
+  - `Adjust_threshold of nat`
+     - adjust threshold. the threshold should be >0. Otherwises, errors will occur.
+  - `Add_signers of address set`
+     - add signers
+  - `Remove_signers of address set`
+     - remove signers
 
+- Emit event
+  - tag: `create_proposal`
+  - data: `(proposal id, created proposal)`
+
+### sign_proposal
+Signers can provide an approval through this entrypoint. The signer who is statisfied the minimal requestment of approvals will also trigger the execution of proposal. After the proposal has been executed, signers can not provide their approvals.
+
+- Emit event
+  - tag: `sign_proposal`
+  - data: `(proposal id, signer)`
 
 # Deploy
 We provide several steps for quick deploying contracts in `app/` to ghostnet.
@@ -88,8 +114,6 @@ We provide several steps for quick deploying contracts in `app/` to ghostnet.
 1. run `make deploy` to deploy contracts
 
 # TODO
-- reset settings, such as threshold, signers, etc
 - support a different kind of threshold
-- support a batch transaction
 - support FA2.1
-- support views and events
+- split execution from sign entrypoint
