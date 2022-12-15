@@ -356,7 +356,7 @@ let case_no_signer =
       ])
 
 let test_suite =
-  Breath.Model.suite "Suite for sign proposal" [
+  Breath.Model.suite "Suite for sign and execute proposal" [
     case_gathering_signatures
   ; case_execute_transaction_1_of_1
   ; case_execute_transaction_1_of_1_batch
