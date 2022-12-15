@@ -45,3 +45,9 @@ let create_proposal (type a) (contract : (a parameter_types, a storage_types) or
 
 let sign_and_execute_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal_number : nat) () =
   Breath.Contract.transfert_with_entrypoint_to contract "sign_and_execute_proposal" proposal_number 0tez
+
+let sign_proposal_only (type a) (contract : (a parameter_types, a storage_types) originated) (proposal_number : nat) () =
+  Breath.Contract.transfert_with_entrypoint_to contract "sign_proposal_only" proposal_number 0tez
+
+let execute_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal_number : nat) () =
+  Breath.Contract.transfert_with_entrypoint_to contract "execute_proposal" proposal_number 0tez
