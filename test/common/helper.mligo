@@ -43,5 +43,5 @@ let originate (type a) (level: Breath.Logger.level) (main : a request -> a resul
 let create_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal : (a proposal_content) list) () =
   Breath.Contract.transfert_with_entrypoint_to contract "create_proposal" proposal 0tez
 
-let sign_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal_number : nat) () =
-  Breath.Contract.transfert_with_entrypoint_to contract "sign_proposal" proposal_number 0tez
+let sign_and_execute_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal_number : nat) () =
+  Breath.Contract.transfert_with_entrypoint_to contract "sign_and_execute_proposal" proposal_number 0tez
