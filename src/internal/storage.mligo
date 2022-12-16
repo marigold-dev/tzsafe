@@ -64,6 +64,7 @@ end
 module Op = struct
     type proposal_content = Proposal_content.Types.t
     type proposal_id = Parameter.Types.proposal_id
+    type agreement = Parameter.Types.agreement
     type proposal = Types.proposal
     type types = Types.t
 
@@ -97,10 +98,10 @@ module Op = struct
 
 
     [@inline]
-    let add_approval (type a) (proposal, signer: a proposal * address) : a proposal =
+    let update_signature (type a) (proposal, signer, agreement: a proposal * address * agreement) : a proposal =
         {
             proposal with
-            signatures = Map.add signer true proposal.signatures;
+            signatures = Map.update signer (Some agreement) proposal.signatures;
         }
 
     [@inline]

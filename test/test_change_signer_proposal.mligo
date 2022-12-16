@@ -40,7 +40,7 @@ let case_execute_add_signer_proposal =
       (* create proposal *)
       let param = Add_signers (Set.literal [bob.address; carol.address]) :: param in
       let action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
-      let sign_action = Breath.Context.act_as alice (Helper.sign_and_execute_proposal multisig_contract 1n) in
+      let sign_action = Breath.Context.act_as alice (Helper.sign_and_execute_proposal multisig_contract 1n true) in
 
       let storage = Breath.Contract.storage_of multisig_contract in
 
@@ -66,7 +66,7 @@ let case_execute_add_existed_signer_proposal =
       (* create proposal *)
       let param = Add_signers (Set.literal [alice.address;]) :: param in
       let action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
-      let sign_action = Breath.Context.act_as alice (Helper.sign_and_execute_proposal multisig_contract 1n) in
+      let sign_action = Breath.Context.act_as alice (Helper.sign_and_execute_proposal multisig_contract 1n true) in
 
       let storage = Breath.Contract.storage_of multisig_contract in
 
@@ -92,7 +92,7 @@ let case_execute_remove_signer_proposal =
       (* create proposal *)
       let param = Remove_signers (Set.literal [bob.address; carol.address]) :: param in
       let action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
-      let sign_action = Breath.Context.act_as alice (Helper.sign_and_execute_proposal multisig_contract 1n) in
+      let sign_action = Breath.Context.act_as alice (Helper.sign_and_execute_proposal multisig_contract 1n true) in
 
       let storage = Breath.Contract.storage_of multisig_contract in
 
@@ -118,7 +118,7 @@ let case_execute_remove_nonexisted_signer_proposal =
       (* create proposal *)
       let param = Remove_signers (Set.literal [bob.address; carol.address]) :: param in
       let action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
-      let sign_action = Breath.Context.act_as alice (Helper.sign_and_execute_proposal multisig_contract 1n) in
+      let sign_action = Breath.Context.act_as alice (Helper.sign_and_execute_proposal multisig_contract 1n true) in
 
       let storage = Breath.Contract.storage_of multisig_contract in
 
