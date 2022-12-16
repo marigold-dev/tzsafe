@@ -66,10 +66,10 @@ let case_execute_proposal =
       ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 2n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
-          approved_signers = Set.literal [bob.address];
+          state            = Active;
+          signatures       = Map.literal [(bob.address, true)];
           proposer         = alice.address;
           executed         = Some bob.address;
-          number_of_signer = 1n;
           timestamp        = Tezos.get_now ();
           content          = [ Execute {
             amount           = 0tez;
@@ -79,10 +79,10 @@ let case_execute_proposal =
         })
       ; Assert.is_proposal_equal "#2 proposal" proposal2
         ({
-          approved_signers = Set.literal [carol.address];
+          state            = Active;
+          signatures       = Map.literal [(carol.address, true)];
           proposer         = bob.address;
           executed         = Some alice.address;
-          number_of_signer = 1n;
           timestamp        = Tezos.get_now ();
           content          = [ Transfer {
             parameter        = ();

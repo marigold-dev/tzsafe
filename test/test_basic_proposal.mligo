@@ -74,10 +74,10 @@ let case_create_proposal =
       ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 4n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
-          approved_signers = Set.empty;
+          state            = Active;
+          signatures       = Map.empty;
           proposer         = alice.address;
           executed         = None;
-          number_of_signer = 0n;
           timestamp        = Tezos.get_now ();
           content          = [ Execute {
             parameter        = 10n;
@@ -87,10 +87,10 @@ let case_create_proposal =
         })
       ; Assert.is_proposal_equal "#2 proposal" proposal2
         ({
-          approved_signers = Set.empty;
+          state            = Active;
+          signatures       = Map.empty;
           proposer         = bob.address;
           executed         = None;
-          number_of_signer = 0n;
           timestamp        = Tezos.get_now ();
           content          = [ Execute {
             target           = add_contract.originated_address;
@@ -100,10 +100,10 @@ let case_create_proposal =
         })
       ; Assert.is_proposal_equal "#3 proposal" proposal3
         ({
-          approved_signers = Set.empty;
+          state            = Active;
+          signatures       = Map.empty;
           proposer         = bob.address;
           executed         = None;
-          number_of_signer = 0n;
           timestamp        = Tezos.get_now ();
           content          = [ Transfer {
             parameter        = ();
@@ -113,10 +113,10 @@ let case_create_proposal =
         })
       ; Assert.is_proposal_equal "#4 proposal" proposal4
         ({
-          approved_signers = Set.empty;
+          state            = Active;
+          signatures       = Map.empty;
           proposer         = bob.address;
           executed         = None;
-          number_of_signer = 0n;
           timestamp        = Tezos.get_now ();
           content          =
             [ Transfer {parameter = (); amount = 10tez; target = alice.address; }

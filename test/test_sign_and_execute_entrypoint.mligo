@@ -62,10 +62,10 @@ let case_gathering_signatures =
       ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 2n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
-          approved_signers = Set.literal [bob.address];
+          state            = Active;
+          signatures       = Map.literal [(bob.address, true)];
           proposer         = alice.address;
           executed         = None;
-          number_of_signer = 1n;
           timestamp        = Tezos.get_now ();
           content          = [ Execute {
             amount           = 0tez;
@@ -75,10 +75,10 @@ let case_gathering_signatures =
         })
       ; Assert.is_proposal_equal "#2 proposal" proposal2
         ({
-          approved_signers = Set.literal [carol.address];
+          state            = Active;
+          signatures       = Map.literal [(carol.address, true)];
           proposer         = bob.address;
           executed         = None;
-          number_of_signer = 1n;
           timestamp        = Tezos.get_now ();
           content          = [ Transfer {
             parameter        = ();
@@ -125,10 +125,10 @@ let case_execute_transaction_1_of_1 =
       ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 2n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
-          approved_signers = Set.literal [bob.address;];
+          state            = Active;
+          signatures       = Map.literal [(bob.address, true)];
           proposer         = alice.address;
           executed         = Some bob.address;
-          number_of_signer = 1n;
           timestamp        = Tezos.get_now ();
           content          = [ Execute {
             target           = add_contract.originated_address;
@@ -138,10 +138,10 @@ let case_execute_transaction_1_of_1 =
         })
       ; Assert.is_proposal_equal "#2 proposal" proposal2
         ({
-          approved_signers = Set.literal [carol.address;];
+          state            = Active;
+          signatures       = Map.literal [(carol.address, true)];
           proposer         = bob.address;
           executed         = Some carol.address;
-          number_of_signer = 1n;
           timestamp        = Tezos.get_now ();
           content          = [ Transfer {
             target           = bob.address;
@@ -182,10 +182,10 @@ let case_execute_transaction_1_of_1_batch =
       ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 1n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
-          approved_signers = Set.literal [bob.address;];
+          state            = Active;
+          signatures       = Map.literal [(bob.address, true)];
           proposer         = alice.address;
           executed         = Some bob.address;
-          number_of_signer = 1n;
           timestamp        = Tezos.get_now ();
           content          =
             [ Execute {
@@ -245,10 +245,10 @@ let case_execute_transaction_3_of_3 =
       ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 2n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
-          approved_signers = Set.literal [alice.address; bob.address; carol.address];
+          state            = Active;
+          signatures       = Map.literal [(alice.address, true); (bob.address, true); (carol.address, true)];
           proposer         = alice.address;
           executed         = Some alice.address;
-          number_of_signer = 3n;
           timestamp        = Tezos.get_now ();
           content          = [ Execute {
             target           = add_contract.originated_address;
@@ -258,10 +258,10 @@ let case_execute_transaction_3_of_3 =
         })
       ; Assert.is_proposal_equal "#2 proposal" proposal2
         ({
-          approved_signers = Set.literal [alice.address; bob.address; carol.address];
+          state            = Active;
+          signatures       = Map.literal [(alice.address, true); (bob.address, true); (carol.address, true)];
           proposer         = bob.address;
           executed         = Some bob.address;
-          number_of_signer = 3n;
           timestamp        = Tezos.get_now ();
           content          = [ Transfer {
             target           = bob.address;

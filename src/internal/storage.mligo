@@ -26,13 +26,15 @@ module Types = struct
     type proposal_content = Proposal_content.Types.t
     type view_proposal_content = Proposal_content.Types.view
 
+    type proposal_state = Active | Done | Closed
+
     type 'a view_proposal =
     [@layout:comb]
     {
-        approved_signers: address set;
+        state: proposal_state;
+        signatures: (address, bool) map;
         proposer: address;
         executed: address option;
-        number_of_signer: nat;
         timestamp: timestamp;
         content : ('a view_proposal_content) list
     }
@@ -40,10 +42,10 @@ module Types = struct
     type 'a proposal =
     [@layout:comb]
     {
-        approved_signers: address set;
+        state: proposal_state;
+        signatures: (address, bool) map;
         proposer: address;
         executed: address option;
-        number_of_signer: nat;
         timestamp: timestamp;
         content : ('a proposal_content) list
     }
@@ -68,10 +70,10 @@ module Op = struct
     [@inline]
     let create_proposal (type a) (contents: (a proposal_content) list) : a proposal =
         {
-            approved_signers = Set.empty;
+            state            = Active;
+            signatures       = Map.empty;
             proposer         = Tezos.get_sender ();
             executed         = None;
-            number_of_signer = 0n;
             timestamp        = (Tezos.get_now ());
             content          = contents;
         }
@@ -96,16 +98,16 @@ module Op = struct
 
     [@inline]
     let add_approval (type a) (proposal, signer: a proposal * address) : a proposal =
-        let approved_signers : address set = Set.add signer proposal.approved_signers in
         {
             proposal with
-            approved_signers = approved_signers;
-            number_of_signer = proposal.number_of_signer + 1n ;
+            signatures = Map.add signer true proposal.signatures;
         }
 
     [@inline]
     let update_execution_flag (type a) (proposal, threshold: a proposal * nat) : a proposal =
-        let is_executed = Set.cardinal proposal.approved_signers >= threshold && Util.is_none proposal.executed in
+        let sum (acc, (_, v) : nat * (address * bool)) : nat = if v then acc + 1n else acc in
+        let number_of_approvals = Map.fold sum proposal.signatures 0n in
+        let is_executed = number_of_approvals >= threshold && Util.is_none proposal.executed in
         if is_executed
         then
           {

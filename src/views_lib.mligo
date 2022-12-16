@@ -37,10 +37,10 @@ let to_view_proposal_content (type a) (p : a proposal_content) : (a view_proposa
 
 let to_view_proposal (type a) (p : a proposal) : (a view_proposal) =
   {
-    approved_signers = p.approved_signers;
+    state            = p.state;
+    signatures       = p.signatures;
     proposer         = p.proposer;
     executed         = p.executed;
-    number_of_signer = p.number_of_signer;
     timestamp        = p.timestamp;
     content          = List.map to_view_proposal_content p.content;
   }

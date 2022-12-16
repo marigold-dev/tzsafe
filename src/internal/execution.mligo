@@ -25,6 +25,7 @@
 
 type storage_types = Storage.Types.t
 type storage_types_proposal = Storage.Types.proposal
+type storage_types_proposal_state = Storage.Types.proposal_state
 type proposal_content = Proposal_content.Types.t
 
 let send_by (type a) (parameter: a) (target : address) (amount : tez) : operation =
@@ -49,6 +50,6 @@ let perform_operations (type a) (proposal: a storage_types_proposal) (storage : 
       | Some op -> op::ops, new_s
       | None -> ops, new_s
     in
-    if Util.is_some proposal.executed
+    if proposal.state = (Done : storage_types_proposal_state)
     then List.fold_left batch (Constants.no_operation, storage) proposal.content
     else (Constants.no_operation, storage)
