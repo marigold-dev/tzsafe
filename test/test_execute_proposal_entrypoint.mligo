@@ -68,7 +68,7 @@ let case_execute_proposal =
         ({
           approved_signers = Set.literal [bob.address];
           proposer         = alice.address;
-          executed         = true;
+          executed         = Some bob.address;
           number_of_signer = 1n;
           timestamp        = Tezos.get_now ();
           content          = [ Execute {
@@ -81,7 +81,7 @@ let case_execute_proposal =
         ({
           approved_signers = Set.literal [carol.address];
           proposer         = bob.address;
-          executed         = true;
+          executed         = Some alice.address;
           number_of_signer = 1n;
           timestamp        = Tezos.get_now ();
           content          = [ Transfer {

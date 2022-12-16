@@ -64,7 +64,7 @@ let case_gathering_signatures =
         ({
           approved_signers = Set.literal [bob.address];
           proposer         = alice.address;
-          executed         = false;
+          executed         = None;
           number_of_signer = 1n;
           timestamp        = Tezos.get_now ();
           content          = [ Execute {
@@ -77,7 +77,7 @@ let case_gathering_signatures =
         ({
           approved_signers = Set.literal [carol.address];
           proposer         = bob.address;
-          executed         = false;
+          executed         = None;
           number_of_signer = 1n;
           timestamp        = Tezos.get_now ();
           content          = [ Transfer {
@@ -127,7 +127,7 @@ let case_execute_transaction_1_of_1 =
         ({
           approved_signers = Set.literal [bob.address;];
           proposer         = alice.address;
-          executed         = true;
+          executed         = Some bob.address;
           number_of_signer = 1n;
           timestamp        = Tezos.get_now ();
           content          = [ Execute {
@@ -140,7 +140,7 @@ let case_execute_transaction_1_of_1 =
         ({
           approved_signers = Set.literal [carol.address;];
           proposer         = bob.address;
-          executed         = true;
+          executed         = Some carol.address;
           number_of_signer = 1n;
           timestamp        = Tezos.get_now ();
           content          = [ Transfer {
@@ -184,7 +184,7 @@ let case_execute_transaction_1_of_1_batch =
         ({
           approved_signers = Set.literal [bob.address;];
           proposer         = alice.address;
-          executed         = true;
+          executed         = Some bob.address;
           number_of_signer = 1n;
           timestamp        = Tezos.get_now ();
           content          =
@@ -247,7 +247,7 @@ let case_execute_transaction_3_of_3 =
         ({
           approved_signers = Set.literal [alice.address; bob.address; carol.address];
           proposer         = alice.address;
-          executed         = true;
+          executed         = Some alice.address;
           number_of_signer = 3n;
           timestamp        = Tezos.get_now ();
           content          = [ Execute {
@@ -260,7 +260,7 @@ let case_execute_transaction_3_of_3 =
         ({
           approved_signers = Set.literal [alice.address; bob.address; carol.address];
           proposer         = bob.address;
-          executed         = true;
+          executed         = Some bob.address;
           number_of_signer = 3n;
           timestamp        = Tezos.get_now ();
           content          = [ Transfer {

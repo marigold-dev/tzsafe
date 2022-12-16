@@ -17,6 +17,7 @@
    SOFTWARE. *)
 
 #import "../common/errors.mligo" "Errors"
+#import "../common/util.mligo" "Util"
 #import "parameter.mligo" "Parameter"
 #import "proposal_content.mligo" "Proposal_content"
 
@@ -30,7 +31,7 @@ module Types = struct
     {
         approved_signers: address set;
         proposer: address;
-        executed: bool;
+        executed: address option;
         number_of_signer: nat;
         timestamp: timestamp;
         content : ('a view_proposal_content) list
@@ -41,7 +42,7 @@ module Types = struct
     {
         approved_signers: address set;
         proposer: address;
-        executed: bool;
+        executed: address option;
         number_of_signer: nat;
         timestamp: timestamp;
         content : ('a proposal_content) list
@@ -69,7 +70,7 @@ module Op = struct
         {
             approved_signers = Set.empty;
             proposer         = Tezos.get_sender ();
-            executed         = false;
+            executed         = None;
             number_of_signer = 0n;
             timestamp        = (Tezos.get_now ());
             content          = contents;
@@ -104,11 +105,14 @@ module Op = struct
 
     [@inline]
     let update_execution_flag (type a) (proposal, threshold: a proposal * nat) : a proposal =
-        let executed = Set.cardinal proposal.approved_signers >= threshold || proposal.executed in
-        {
-            proposal with
-            executed         = executed
-        }
+        let is_executed = Set.cardinal proposal.approved_signers >= threshold && Util.is_none proposal.executed in
+        if is_executed
+        then
+          {
+              proposal with
+              executed         = Some (Tezos.get_sender ())
+          }
+        else proposal
 
 
     [@inline]

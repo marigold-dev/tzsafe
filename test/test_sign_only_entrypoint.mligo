@@ -68,7 +68,7 @@ let case_gathering_signatures =
         ({
           approved_signers = Set.literal [bob.address; carol.address];
           proposer         = alice.address;
-          executed         = false;
+          executed         = None;
           number_of_signer = 2n;
           timestamp        = Tezos.get_now ();
           content          = [ Execute {
@@ -81,7 +81,7 @@ let case_gathering_signatures =
         ({
           approved_signers = Set.literal [carol.address; alice.address];
           proposer         = bob.address;
-          executed         = false;
+          executed         = None;
           number_of_signer = 2n;
           timestamp        = Tezos.get_now ();
           content          = [ Transfer {

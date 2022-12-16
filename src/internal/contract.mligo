@@ -18,6 +18,7 @@
 
 
 #import "../common/constants.mligo" "Constants"
+#import "../common/util.mligo" "Util"
 #import "proposal_content.mligo" "Proposal_content"
 #import "parameter.mligo" "Parameter"
 #import "storage.mligo" "Storage"
@@ -67,7 +68,7 @@ let sign_proposal (type a) (proposal_id, storage : Parameter.Types.proposal_id *
     let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
     let ops, storage = Execution.perform_operations proposal storage in
     let ops = Tezos.emit "%sign_proposal" (proposal_id, signer)::ops in
-    if proposal.executed
+    if Util.is_some proposal.executed
     then (Tezos.emit "%execute_proposal" (proposal_id, signer)::ops, storage)
     else (ops, storage)
 

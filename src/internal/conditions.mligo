@@ -18,6 +18,7 @@
 
 
 #import "../common/errors.mligo" "Errors"
+#import "../common/util.mligo" "Util"
 #import "proposal_content.mligo" "Proposal_content"
 #import "parameter.mligo" "Parameter"
 #import "storage.mligo" "Storage"
@@ -39,12 +40,12 @@ let not_sign_yet (type a) (proposal : a storage_types_proposal) : unit =
     assert_with_error (not Set.mem (Tezos.get_sender ()) proposal.approved_signers) Errors.has_already_signed
 
 [@inline]
-let ready_to_execute (executed : bool) : unit =
-    assert_with_error executed Errors.no_enough_approval_to_execute
+let ready_to_execute (executed : address option) : unit =
+    assert_with_error (Util.is_some executed) Errors.no_enough_approval_to_execute
 
 [@inline]
-let not_execute_yet (executed : bool) : unit =
-    assert_with_error (not executed) Errors.not_execute_yet
+let not_execute_yet (executed : address option) : unit =
+    assert_with_error (Util.is_none executed) Errors.not_execute_yet
 
 [@inline]
 let check_proposal (type a) (content: a proposal_content) : unit =

@@ -18,6 +18,7 @@
 
 #import "../common/errors.mligo" "Errors"
 #import "../common/constants.mligo" "Constants"
+#import "../common/util.mligo" "Util"
 #import "proposal_content.mligo" "Proposal_content"
 #import "./storage.mligo" "Storage"
 #import "conditions.mligo" "Conditions"
@@ -48,6 +49,6 @@ let perform_operations (type a) (proposal: a storage_types_proposal) (storage : 
       | Some op -> op::ops, new_s
       | None -> ops, new_s
     in
-    if proposal.executed
+    if Util.is_some proposal.executed
     then List.fold_left batch (Constants.no_operation, storage) proposal.content
     else (Constants.no_operation, storage)
