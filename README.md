@@ -97,11 +97,27 @@ Each signer can create proposal through this entrypoint. The entrypoint supports
   - tag: `create_proposal`
   - data: `(proposal id, created proposal)`
 
-### sign_proposal
-Signers can provide an approval through this entrypoint. The signer who is statisfied the minimal requestment of approvals will also trigger the execution of proposal. After the proposal has been executed, signers can not provide their approvals.
+### sign_and_execute_proposal
+Signers can provide an approval or a disapproval through this entrypoint. The signer who is statisfied the minimal requestment of approvals will also trigger the execution of proposal. After the proposal has been executed, signers can not provide their approvals.
 
 - Emit event
   - tag: `sign_proposal`
+  - data: `(proposal id, signer)`
+  - tag: `execute_proposal` (only when proposal is executed)
+  - data: `(proposal id, signer)`
+
+# sign_proposal_only
+Signers can provide an approval or a disapproval through this entrypoint. Unlike `sign_and_execute_proposal`, the proposal won't be execute in any case.
+
+- Emit event
+  - tag: `sign_proposal`
+  - data: `(proposal id, signer)`
+
+# execute_proposal
+Signers can execute proposal when minimal requestment is statisfied.
+
+- Emit event
+  - tag: `execute_proposal`
   - data: `(proposal id, signer)`
 
 # Deploy
@@ -116,4 +132,3 @@ We provide several steps for quick deploying contracts in `app/` to ghostnet.
 # TODO
 - support a different kind of threshold
 - support FA2.1
-- split execution from sign entrypoint
