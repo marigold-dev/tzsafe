@@ -105,18 +105,36 @@ module Op = struct
         }
 
     [@inline]
-    let update_execution_flag (type a) (proposal, threshold: a proposal * nat) : a proposal =
-        let sum (acc, (_, v) : nat * (address * bool)) : nat = if v then acc + 1n else acc in
-        let number_of_approvals = Map.fold sum proposal.signatures 0n in
-        let is_executed = number_of_approvals >= threshold && Util.is_none proposal.executed in
+    let ready_execution (type a) (proposal, approvals, threshold : a proposal * nat * nat) : a proposal =
+        let is_executed = approvals >= threshold && Util.is_none proposal.executed in
         if is_executed
         then
           {
               proposal with
-              executed         = Some (Tezos.get_sender ())
+              state    = Done;
+              executed = Some (Tezos.get_sender ())
           }
         else proposal
 
+    [@inline]
+    let close_proposal (type a) (proposal, disapprovals, threshold : a proposal * nat * nat) : a proposal =
+        let is_closed = disapprovals > threshold && Util.is_none proposal.executed in
+        if is_closed
+        then
+          {
+              proposal with
+              state    = Closed;
+              executed = Some (Tezos.get_sender ())
+          }
+        else proposal
+
+    [@inline]
+    let update_proposal_state (type a) (proposal, number_of_signers, threshold: a proposal * nat * nat) : a proposal =
+        let statistic ((t_acc,f_acc), (_, v) : (nat * nat) * (address * bool)) : (nat * nat) =
+          if v then (t_acc + 1n, f_acc) else (t_acc, f_acc + 1n) in
+        let (approvals, disapprovals) = Map.fold statistic proposal.signatures (0n, 0n) in
+        let proposal = ready_execution (proposal, approvals, threshold) in
+        close_proposal (proposal, disapprovals, abs(number_of_signers - threshold))
 
     [@inline]
     let update_proposal (type a) (proposal_number, proposal, storage: proposal_id * a proposal * a types) : a types =
