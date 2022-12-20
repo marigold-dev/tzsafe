@@ -20,9 +20,23 @@
 #import "../../src/internal/storage.mligo" "Storage"
 
 type storage_types_proposal = Storage.Types.proposal
+type storage_types_view_proposal = Storage.Types.view_proposal
 
 let is_proposal_equal (type a) (msg:string) (actual : a storage_types_proposal) (expected : a storage_types_proposal) =
   let mock_time = Tezos.get_now () in
   let actual = { actual with timestamp = mock_time } in
   let expected = { expected with timestamp = mock_time } in
+  Breath.Assert.is_equal msg actual expected
+
+let is_view_proposal_equal (type a) (msg:string) (actual : a storage_types_view_proposal) (expected : a storage_types_view_proposal) =
+  let mock_time = Tezos.get_now () in
+  let actual = { actual with timestamp = mock_time } in
+  let expected = { expected with timestamp = mock_time } in
+  Breath.Assert.is_equal msg actual expected
+
+let is_view_proposals_equal (type a) (msg:string) (actual : (nat, a storage_types_view_proposal) map) (expected : (nat, a storage_types_view_proposal) map) =
+  let mock_time = Tezos.get_now () in
+  let mock (type a) (_, t : (nat * a storage_types_view_proposal)) : a storage_types_view_proposal = { t with timestamp = mock_time } in
+  let actual = Map.map mock actual  in
+  let expected = Map.map mock expected in
   Breath.Assert.is_equal msg actual expected

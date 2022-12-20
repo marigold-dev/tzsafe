@@ -20,19 +20,27 @@
 
 #import "./test_receiving_tez.mligo" "Tez"
 #import "./test_basic_proposal.mligo" "Basic_proposal"
-#import "./test_sign.mligo" "Sign"
+#import "./test_sign_and_execute_entrypoint.mligo" "Sign_and_exe"
 #import "./test_setting.mligo" "Setting"
 #import "./test_adjust_threshold_proposal.mligo" "Adjust_threshold_proposal"
 #import "./test_change_signer_proposal.mligo" "Change_signer_proposal"
 #import "./test_lambda_proposal.mligo" "Lambda_proposal"
+#import "./test_emit_events.mligo" "Emit_events"
+#import "./test_view.mligo" "View"
+#import "./test_sign_only_entrypoint.mligo" "Sign_ony"
+#import "./test_execute_proposal_entrypoint.mligo" "Exe"
 
 let () =
   Breath.Model.run_suites Void
   [ Tez.test_suite
   ; Basic_proposal.test_suite
-  ; Sign.test_suite
+  ; Sign_and_exe.test_suite
   ; Setting.test_suite
   ; Adjust_threshold_proposal.test_suite
   ; Change_signer_proposal.test_suite
   ; Lambda_proposal.test_suite
+  ; Emit_events.test_suite
+  ; View.test_suite
+  ; Sign_ony.test_suite
+  ; Exe.test_suite
   ]

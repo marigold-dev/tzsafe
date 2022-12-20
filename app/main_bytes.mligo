@@ -16,10 +16,31 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-#import "../src/Lib.mligo" "Lib"
+#import "../src/lib.mligo" "Lib"
+#import "../src/views_lib.mligo" "Views"
 
 type result = Lib.result
 type request =  Lib.request
 
+type storage = Lib.storage_types
+type proposal_id = Lib.Storage.Types.proposal_id
+type view_proposal = Lib.Storage.Types.view_proposal
+
 let main (request : bytes request) : bytes result =
   Lib.contract request
+
+[@view]
+let signers (input : unit * bytes storage) : address set =
+  Views.signers input
+
+[@view]
+let threshold (input : unit * bytes storage) : nat =
+  Views.threshold input
+
+[@view]
+let proposal (input : proposal_id * bytes storage) : bytes view_proposal =
+  Views.proposal input
+
+[@view]
+let proposals (input : (proposal_id * proposal_id) * bytes storage) : (proposal_id, bytes view_proposal) map =
+  Views.proposals input

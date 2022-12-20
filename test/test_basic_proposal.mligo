@@ -76,7 +76,7 @@ let case_create_proposal =
         ({
           approved_signers = Set.empty;
           proposer         = alice.address;
-          executed         = false;
+          executed         = None;
           number_of_signer = 0n;
           timestamp        = Tezos.get_now ();
           content          = [ Execute {
@@ -89,7 +89,7 @@ let case_create_proposal =
         ({
           approved_signers = Set.empty;
           proposer         = bob.address;
-          executed         = false;
+          executed         = None;
           number_of_signer = 0n;
           timestamp        = Tezos.get_now ();
           content          = [ Execute {
@@ -102,7 +102,7 @@ let case_create_proposal =
         ({
           approved_signers = Set.empty;
           proposer         = bob.address;
-          executed         = false;
+          executed         = None;
           number_of_signer = 0n;
           timestamp        = Tezos.get_now ();
           content          = [ Transfer {
@@ -115,7 +115,7 @@ let case_create_proposal =
         ({
           approved_signers = Set.empty;
           proposer         = bob.address;
-          executed         = false;
+          executed         = None;
           number_of_signer = 0n;
           timestamp        = Tezos.get_now ();
           content          =

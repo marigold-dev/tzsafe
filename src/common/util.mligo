@@ -16,16 +16,12 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-#import "proposal_content.mligo" "Proposal_content"
+let is_none (type a) (opt: a option) : bool =
+  match opt with
+  | Some _ -> false
+  | None   -> true
 
-module Types = struct
-    type proposal_content = Proposal_content.Types.t
-    type proposal_id = nat
-
-    type 'a t =
-    | Default of unit
-    | Create_proposal of ('a proposal_content) list
-    | Sign_and_execute_proposal of proposal_id
-    | Sign_proposal_only of proposal_id
-    | Execute_proposal of proposal_id
-end
+let is_some (type a) (opt: a option) : bool =
+  match opt with
+  | Some _ -> true
+  | None   -> false

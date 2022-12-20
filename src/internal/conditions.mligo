@@ -18,6 +18,7 @@
 
 
 #import "../common/errors.mligo" "Errors"
+#import "../common/util.mligo" "Util"
 #import "proposal_content.mligo" "Proposal_content"
 #import "parameter.mligo" "Parameter"
 #import "storage.mligo" "Storage"
@@ -35,12 +36,16 @@ let amount_must_be_zero_tez (an_amout : tez) : unit =
     assert_with_error (an_amout = 0tez) Errors.amount_must_be_zero_tez
 
 [@inline]
-let not_yet_signer (type a) (proposal : a storage_types_proposal) : unit =
+let not_sign_yet (type a) (proposal : a storage_types_proposal) : unit =
     assert_with_error (not Set.mem (Tezos.get_sender ()) proposal.approved_signers) Errors.has_already_signed
 
 [@inline]
-let executed (executed : bool) : unit =
-    assert_with_error (not executed) Errors.already_executed
+let ready_to_execute (executed : address option) : unit =
+    assert_with_error (Util.is_some executed) Errors.no_enough_approval_to_execute
+
+[@inline]
+let not_execute_yet (executed : address option) : unit =
+    assert_with_error (Util.is_none executed) Errors.not_execute_yet
 
 [@inline]
 let check_proposal (type a) (content: a proposal_content) : unit =
@@ -60,6 +65,6 @@ let check_proposals_content (type a) (proposals_content: (a proposal_content) li
 [@inline]
 let check_setting (type a) (storage : a storage_types) : unit =
     let () = assert_with_error (Set.cardinal storage.signers > 0n) Errors.no_signer  in
-    let () = assert_with_error (Set.cardinal storage.signers >= storage.threshold) Errors.no_enought_singer in
+    let () = assert_with_error (Set.cardinal storage.signers >= storage.threshold) Errors.no_enough_signer in
     let () = assert_with_error (storage.threshold > 0n) Errors.invalidated_threshold in
     ()

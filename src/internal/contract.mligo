@@ -18,6 +18,7 @@
 
 
 #import "../common/constants.mligo" "Constants"
+#import "../common/util.mligo" "Util"
 #import "proposal_content.mligo" "Proposal_content"
 #import "parameter.mligo" "Parameter"
 #import "storage.mligo" "Storage"
@@ -32,6 +33,14 @@ type proposal_content = Proposal_content.Types.t
 type 'a request = 'a parameter_types * 'a storage_types
 type 'a result = operation list * 'a storage_types
 
+
+(**
+ * Default entrypoint
+ *)
+let default (type a) (_, s : unit * a storage_types) : a result =
+    let event = Tezos.emit "%receiving_tez" (Tezos.get_sender (), Tezos.get_amount ()) in
+    ([event], s)
+
 (**
  * Proposal creation
  *)
@@ -41,7 +50,8 @@ let create_proposal (type a) (proposal_content, storage : (a proposal_content) l
     let () = Conditions.check_proposals_content proposal_content in
     let proposal = Storage.Op.create_proposal proposal_content in
     let storage = Storage.Op.register_proposal(proposal, storage) in
-    (Constants.no_operation, storage)
+    let event = Tezos.emit "%create_proposal" (storage.proposal_counter, proposal) in
+    ([event], storage)
 
 (**
  * Proposal signature
@@ -50,17 +60,58 @@ let create_proposal (type a) (proposal_content, storage : (a proposal_content) l
 let sign_proposal (type a) (proposal_id, storage : Parameter.Types.proposal_id * a storage_types) : a result =
     let () = Conditions.only_signer storage in
     let proposal = Storage.Op.retrieve_proposal(proposal_id, storage) in
-    let () = Conditions.executed proposal.executed in
-    let () = Conditions.not_yet_signer proposal in
-    let proposal = Storage.Op.add_signer_to_proposal (proposal, Tezos.get_sender (), storage.threshold) in
+    let () = Conditions.not_execute_yet proposal.executed in
+    let () = Conditions.not_sign_yet proposal in
+    let signer = Tezos.get_sender () in
+    let proposal = Storage.Op.add_approval (proposal, signer) in
+    let proposal = Storage.Op.update_execution_flag (proposal, storage.threshold) in
     let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
-    Execution.perform_operations proposal storage
+    let ops, storage = Execution.perform_operations proposal storage in
+    let ops = Tezos.emit "%sign_proposal" (proposal_id, signer)::ops in
+    if Util.is_some proposal.executed
+    then (Tezos.emit "%execute_proposal" (proposal_id, signer)::ops, storage)
+    else (ops, storage)
+
+(**
+ * Proposal signature only
+ *)
+
+let sign_proposal_only (type a) (proposal_id, storage : Parameter.Types.proposal_id * a storage_types) : a result =
+    let () = Conditions.only_signer storage in
+    let proposal = Storage.Op.retrieve_proposal(proposal_id, storage) in
+    let () = Conditions.not_execute_yet proposal.executed in
+    let () = Conditions.not_sign_yet proposal in
+    let signer = Tezos.get_sender () in
+    let proposal = Storage.Op.add_approval (proposal, signer) in
+    let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
+    let event = Tezos.emit "%sign_proposal" (proposal_id, signer) in
+    ([event], storage)
+
+(**
+ * Proposal Execution
+ *)
+
+let execute_proposal (type a) (proposal_id, storage : Parameter.Types.proposal_id * a storage_types) : a result =
+    let () = Conditions.only_signer storage in
+    let proposal = Storage.Op.retrieve_proposal(proposal_id, storage) in
+    let () = Conditions.not_execute_yet proposal.executed in
+    let signer = Tezos.get_sender () in
+    let proposal = Storage.Op.update_execution_flag (proposal, storage.threshold) in
+    let () = Conditions.ready_to_execute proposal.executed in
+    let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
+    let ops, s = Execution.perform_operations proposal storage in
+    let event = Tezos.emit "%execute_proposal" (proposal_id, signer) in
+    (event::ops, s)
 
 let contract (type a) (action, storage : a request) : a result =
     let _ = Conditions.check_setting storage in
     match action with
-    | Default _ -> Constants.no_operation, storage
+    | Default u -> default (u, storage)
     | Create_proposal proposal_params ->
         create_proposal (proposal_params, storage)
-    | Sign_proposal proposal_number ->
-        sign_proposal (proposal_number, storage)
+    | Sign_and_execute_proposal proposal_id ->
+        sign_proposal (proposal_id, storage)
+    | Sign_proposal_only proposal_id ->
+        sign_proposal_only (proposal_id, storage)
+    | Execute_proposal proposal_id ->
+        execute_proposal (proposal_id, storage)

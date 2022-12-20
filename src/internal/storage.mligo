@@ -17,19 +17,32 @@
    SOFTWARE. *)
 
 #import "../common/errors.mligo" "Errors"
+#import "../common/util.mligo" "Util"
 #import "parameter.mligo" "Parameter"
 #import "proposal_content.mligo" "Proposal_content"
 
 module Types = struct
     type proposal_id = Parameter.Types.proposal_id
     type proposal_content = Proposal_content.Types.t
+    type view_proposal_content = Proposal_content.Types.view
+
+    type 'a view_proposal =
+    [@layout:comb]
+    {
+        approved_signers: address set;
+        proposer: address;
+        executed: address option;
+        number_of_signer: nat;
+        timestamp: timestamp;
+        content : ('a view_proposal_content) list
+    }
 
     type 'a proposal =
     [@layout:comb]
     {
         approved_signers: address set;
         proposer: address;
-        executed: bool;
+        executed: address option;
         number_of_signer: nat;
         timestamp: timestamp;
         content : ('a proposal_content) list
@@ -57,7 +70,7 @@ module Op = struct
         {
             approved_signers = Set.empty;
             proposer         = Tezos.get_sender ();
-            executed         = false;
+            executed         = None;
             number_of_signer = 0n;
             timestamp        = (Tezos.get_now ());
             content          = contents;
@@ -82,15 +95,25 @@ module Op = struct
 
 
     [@inline]
-    let add_signer_to_proposal (type a) (proposal, signer, threshold: a proposal * address * nat) : a proposal =
+    let add_approval (type a) (proposal, signer: a proposal * address) : a proposal =
         let approved_signers : address set = Set.add signer proposal.approved_signers in
-        let executed = Set.cardinal approved_signers >= threshold || proposal.executed in
         {
             proposal with
             approved_signers = approved_signers;
             number_of_signer = proposal.number_of_signer + 1n ;
-            executed         = executed
         }
+
+    [@inline]
+    let update_execution_flag (type a) (proposal, threshold: a proposal * nat) : a proposal =
+        let is_executed = Set.cardinal proposal.approved_signers >= threshold && Util.is_none proposal.executed in
+        if is_executed
+        then
+          {
+              proposal with
+              executed         = Some (Tezos.get_sender ())
+          }
+        else proposal
+
 
     [@inline]
     let update_proposal (type a) (proposal_number, proposal, storage: proposal_id * a proposal * a types) : a types =
