@@ -35,7 +35,7 @@ jobs:
       - name: Install ligo dependencies
         run: /root/ligo install
       - name: Build
-        run: LIGO=/root/ligo make build
+        run: LIGO=/root/ligo BUILD_VERSION=${{ needs.set_env_vars.outputs.release_version }} make build
       - name: Test
         run: LIGO=/root/ligo make test
       - name: Package
@@ -51,6 +51,16 @@ jobs:
           tag_name: ${{ needs.set_env_vars.outputs.release_version }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
+      - name: Upload metadata
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./_build/app/metadata.json
+          asset_name: metadata.json
+          asset_content_type: application/json
       - name: Upload unit contract
         if: github.ref == 'refs/heads/main'
         uses: actions/upload-release-asset@v1
