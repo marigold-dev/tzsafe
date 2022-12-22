@@ -21,11 +21,12 @@
 module Types = struct
     type proposal_content = Proposal_content.Types.t
     type proposal_id = nat
+    type agreement = bool
 
     type 'a t =
     | Default of unit
     | Create_proposal of ('a proposal_content) list
-    | Sign_and_execute_proposal of proposal_id
-    | Sign_proposal_only of proposal_id
+    | Sign_and_execute_proposal of (proposal_id * agreement)
+    | Sign_proposal_only of (proposal_id * agreement)
     | Execute_proposal of proposal_id
 end

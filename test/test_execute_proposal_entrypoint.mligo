@@ -40,13 +40,13 @@ let case_execute_proposal =
       (* create proposal 1 *)
       let param1 = (Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
-      let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal_only multisig_contract 1n) in
+      let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal_only multisig_contract 1n true) in
       let exe_action1 = Breath.Context.act_as bob (Helper.execute_proposal multisig_contract 1n) in
 
       (* create proposal 2 *)
       let param2 = (Transfer { target = bob.address; parameter = (); amount = 20tez;} :: param) in
       let create_action2 = Breath.Context.act_as bob (Helper.create_proposal multisig_contract param2) in
-      let sign_action2 = Breath.Context.act_as carol (Helper.sign_proposal_only multisig_contract 2n) in
+      let sign_action2 = Breath.Context.act_as carol (Helper.sign_proposal_only multisig_contract 2n true) in
       let exe_action2 = Breath.Context.act_as alice (Helper.execute_proposal multisig_contract 2n) in
 
       let balance = Breath.Contract.balance_of multisig_contract in
@@ -66,10 +66,10 @@ let case_execute_proposal =
       ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 2n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
-          approved_signers = Set.literal [bob.address];
+          state            = Done;
+          signatures       = Map.literal [(bob.address, true)];
           proposer         = alice.address;
           executed         = Some bob.address;
-          number_of_signer = 1n;
           timestamp        = Tezos.get_now ();
           content          = [ Execute {
             amount           = 0tez;
@@ -79,10 +79,10 @@ let case_execute_proposal =
         })
       ; Assert.is_proposal_equal "#2 proposal" proposal2
         ({
-          approved_signers = Set.literal [carol.address];
+          state            = Done;
+          signatures       = Map.literal [(carol.address, true)];
           proposer         = bob.address;
           executed         = Some alice.address;
-          number_of_signer = 1n;
           timestamp        = Tezos.get_now ();
           content          = [ Transfer {
             parameter        = ();
@@ -107,7 +107,7 @@ let case_fail_to_execute_proposal_twice =
       (* create proposal 1 *)
       let param1 = (Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
-      let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal_only multisig_contract 1n) in
+      let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal_only multisig_contract 1n true) in
       let exe_action1 = Breath.Context.act_as bob (Helper.execute_proposal multisig_contract 1n) in
       let exe_action2 = Breath.Context.act_as bob (Helper.execute_proposal multisig_contract 1n) in
 
@@ -132,7 +132,7 @@ let case_not_signer =
 
       let param1 = (Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
-      let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal_only multisig_contract 1n) in
+      let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal_only multisig_contract 1n true) in
       let exe_action1 = Breath.Context.act_as carol (Helper.execute_proposal multisig_contract 1n) in
 
       Breath.Result.reduce [
@@ -155,7 +155,7 @@ let case_no_enough_signature =
 
       let param1 = (Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
-      let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal_only multisig_contract 1n) in
+      let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal_only multisig_contract 1n true) in
       let exe_action1 = Breath.Context.act_as bob (Helper.execute_proposal multisig_contract 1n) in
 
       Breath.Result.reduce [
@@ -171,5 +171,3 @@ let test_suite =
   ; case_not_signer
   ; case_no_enough_signature
   ]
-
-

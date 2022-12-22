@@ -37,7 +37,7 @@ let amount_must_be_zero_tez (an_amout : tez) : unit =
 
 [@inline]
 let not_sign_yet (type a) (proposal : a storage_types_proposal) : unit =
-    assert_with_error (not Set.mem (Tezos.get_sender ()) proposal.approved_signers) Errors.has_already_signed
+    assert_with_error (not Map.mem (Tezos.get_sender ()) proposal.signatures) Errors.has_already_signed
 
 [@inline]
 let ready_to_execute (executed : address option) : unit =

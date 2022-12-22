@@ -26,13 +26,15 @@ module Types = struct
     type proposal_content = Proposal_content.Types.t
     type view_proposal_content = Proposal_content.Types.view
 
+    type proposal_state = Active | Done | Closed
+
     type 'a view_proposal =
     [@layout:comb]
     {
-        approved_signers: address set;
+        state: proposal_state;
+        signatures: (address, bool) map;
         proposer: address;
         executed: address option;
-        number_of_signer: nat;
         timestamp: timestamp;
         content : ('a view_proposal_content) list
     }
@@ -40,10 +42,10 @@ module Types = struct
     type 'a proposal =
     [@layout:comb]
     {
-        approved_signers: address set;
+        state: proposal_state;
+        signatures: (address, bool) map;
         proposer: address;
         executed: address option;
-        number_of_signer: nat;
         timestamp: timestamp;
         content : ('a proposal_content) list
     }
@@ -62,16 +64,17 @@ end
 module Op = struct
     type proposal_content = Proposal_content.Types.t
     type proposal_id = Parameter.Types.proposal_id
+    type agreement = Parameter.Types.agreement
     type proposal = Types.proposal
     type types = Types.t
 
     [@inline]
     let create_proposal (type a) (contents: (a proposal_content) list) : a proposal =
         {
-            approved_signers = Set.empty;
+            state            = Active;
+            signatures       = Map.empty;
             proposer         = Tezos.get_sender ();
             executed         = None;
-            number_of_signer = 0n;
             timestamp        = (Tezos.get_now ());
             content          = contents;
         }
@@ -95,25 +98,43 @@ module Op = struct
 
 
     [@inline]
-    let add_approval (type a) (proposal, signer: a proposal * address) : a proposal =
-        let approved_signers : address set = Set.add signer proposal.approved_signers in
+    let update_signature (type a) (proposal, signer, agreement: a proposal * address * agreement) : a proposal =
         {
             proposal with
-            approved_signers = approved_signers;
-            number_of_signer = proposal.number_of_signer + 1n ;
+            signatures = Map.update signer (Some agreement) proposal.signatures;
         }
 
     [@inline]
-    let update_execution_flag (type a) (proposal, threshold: a proposal * nat) : a proposal =
-        let is_executed = Set.cardinal proposal.approved_signers >= threshold && Util.is_none proposal.executed in
+    let ready_execution (type a) (proposal, approvals, threshold : a proposal * nat * nat) : a proposal =
+        let is_executed = approvals >= threshold && Util.is_none proposal.executed in
         if is_executed
         then
           {
               proposal with
-              executed         = Some (Tezos.get_sender ())
+              state    = Done;
+              executed = Some (Tezos.get_sender ())
           }
         else proposal
 
+    [@inline]
+    let close_proposal (type a) (proposal, disapprovals, threshold : a proposal * nat * nat) : a proposal =
+        let is_closed = disapprovals > threshold && Util.is_none proposal.executed in
+        if is_closed
+        then
+          {
+              proposal with
+              state    = Closed;
+              executed = Some (Tezos.get_sender ())
+          }
+        else proposal
+
+    [@inline]
+    let update_proposal_state (type a) (proposal, number_of_signers, threshold: a proposal * nat * nat) : a proposal =
+        let statistic ((t_acc,f_acc), (_, v) : (nat * nat) * (address * bool)) : (nat * nat) =
+          if v then (t_acc + 1n, f_acc) else (t_acc, f_acc + 1n) in
+        let (approvals, disapprovals) = Map.fold statistic proposal.signatures (0n, 0n) in
+        let proposal = ready_execution (proposal, approvals, threshold) in
+        close_proposal (proposal, disapprovals, abs(number_of_signers - threshold))
 
     [@inline]
     let update_proposal (type a) (proposal_number, proposal, storage: proposal_id * a proposal * a types) : a types =
