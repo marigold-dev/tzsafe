@@ -29,6 +29,7 @@
 #import "./test_view.mligo" "View"
 #import "./test_sign_only_entrypoint.mligo" "Sign_ony"
 #import "./test_execute_proposal_entrypoint.mligo" "Exe"
+#import "./test_disapproval.mligo" "Disapproval"
 
 let () =
   Breath.Model.run_suites Void
@@ -43,4 +44,5 @@ let () =
   ; View.test_suite
   ; Sign_ony.test_suite
   ; Exe.test_suite
+  ; Disapproval.test_suite
   ]
