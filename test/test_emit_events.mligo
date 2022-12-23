@@ -49,7 +49,7 @@ let case_emitted_create_proposal =
       let (emitted_id, emitted_proposal) = Option.unopt (List.head_opt events) in
 
       let storage = Breath.Contract.storage_of multisig_contract in
-      let proposal = Util.unopt (Big_map.find_opt 1n storage.proposal_map) "proposal 1 doesn't exist" in
+      let proposal = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         action1

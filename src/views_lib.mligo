@@ -67,4 +67,4 @@ let proposals (type a) (((limit,  offset), storage) : (proposal_id * proposal_id
    let end_ = offset + limit in
    Map.map
      (fun (_id, p : proposal_id * a proposal) : a view_proposal -> to_view_proposal p)
-     (slice(offset, end_, storage.proposal_map, Map.empty))
+     (slice(offset, end_, storage.proposals, Map.empty))

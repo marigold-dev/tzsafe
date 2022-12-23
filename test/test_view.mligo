@@ -64,7 +64,7 @@ let case_view_proposal =
 
       let storage = Breath.Contract.storage_of multisig in
 
-      let expected_proposal = Util.unopt (Big_map.find_opt 1n storage.proposal_map) "proposal 1 doesn't exist" in
+      let expected_proposal = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
       let view_proposal = App.proposal (1n, storage) in
 
       Breath.Result.reduce [
@@ -98,8 +98,8 @@ let case_view_proposals =
       let storage = Breath.Contract.storage_of multisig in
       let view_proposals = App.proposals ((2n, 1n), storage) in
 
-      let expected_proposal2 = Util.unopt (Big_map.find_opt 2n storage.proposal_map) "proposal 2 doesn't exist" in
-      let expected_proposal3 = Util.unopt (Big_map.find_opt 3n storage.proposal_map) "proposal 3 doesn't exist" in
+      let expected_proposal2 = Util.unopt (Big_map.find_opt 2n storage.proposals) "proposal 2 doesn't exist" in
+      let expected_proposal3 = Util.unopt (Big_map.find_opt 3n storage.proposals) "proposal 3 doesn't exist" in
 
       Breath.Result.reduce [
         action1

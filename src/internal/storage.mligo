@@ -59,7 +59,7 @@ module Types = struct
     [@layout:comb]
     {
         proposal_counter: nat;
-        proposal_map    : (proposal_id, 'a proposal) big_map;
+        proposals    : (proposal_id, 'a proposal) big_map;
         owners          : address set;
         threshold       : nat;
         metadata        : (string, bytes) big_map;
@@ -92,16 +92,16 @@ module Op = struct
     [@inline]
     let register_proposal (type a) (proposal, storage: a proposal * a types) : a types =
         let proposal_counter = storage.proposal_counter + 1n in
-        let proposal_map = Big_map.add proposal_counter proposal storage.proposal_map in
+        let proposals = Big_map.add proposal_counter proposal storage.proposals in
         {
             storage with
-            proposal_map     = proposal_map;
+            proposals     = proposals;
             proposal_counter = proposal_counter
         }
 
     [@inline]
     let retrieve_proposal (type a) (proposal_number, storage : proposal_id * a types) : a proposal =
-        match Big_map.find_opt proposal_number storage.proposal_map with
+        match Big_map.find_opt proposal_number storage.proposals with
         | None -> failwith Errors.no_proposal_exist
         | Some proposal  -> proposal
 
@@ -155,10 +155,10 @@ module Op = struct
 
     [@inline]
     let update_proposal (type a) (proposal_number, proposal, storage: proposal_id * a proposal * a types) : a types =
-        let proposal_map = Big_map.update proposal_number (Some proposal) storage.proposal_map in
+        let proposals = Big_map.update proposal_number (Some proposal) storage.proposals in
         {
             storage with
-            proposal_map = proposal_map
+            proposals = proposals
         }
 
     [@inline]
