@@ -55,10 +55,10 @@ let create_proposal (type a) (proposal_content, storage : (a proposal_content) l
     ([event], storage)
 
 (**
- * Proposal signature
+ * sign and resolved proposal
  *)
 
-let sign_and_execute_proposal (type a) (proposal_id, agreement, storage : Parameter.Types.proposal_id * Parameter.Types.agreement * a storage_types) : a result =
+let sign_and_resolve_proposal (type a) (proposal_id, agreement, storage : Parameter.Types.proposal_id * Parameter.Types.agreement * a storage_types) : a result =
     let () = Conditions.only_owner storage in
     let proposal = Storage.Op.retrieve_proposal(proposal_id, storage) in
     let () = Conditions.unresolved proposal.state in
@@ -71,7 +71,7 @@ let sign_and_execute_proposal (type a) (proposal_id, agreement, storage : Parame
     let ops = Tezos.emit "%sign_proposal" (proposal_id, owner, agreement)::ops in
     if (proposal.state = (Proposing : storage_types_proposal_state))
     then (ops, storage)
-    else (Tezos.emit "%execute_proposal" (proposal_id, owner)::ops, storage)
+    else (Tezos.emit "%resolve_proposal" (proposal_id, owner)::ops, storage)
 
 (**
  * Proposal signature only
@@ -92,7 +92,7 @@ let sign_proposal_only (type a) (proposal_id, agreement, storage : Parameter.Typ
  * Proposal Execution
  *)
 
-let execute_proposal (type a) (proposal_id, storage : Parameter.Types.proposal_id * a storage_types) : a result =
+let resolve_proposal (type a) (proposal_id, storage : Parameter.Types.proposal_id * a storage_types) : a result =
     let () = Conditions.only_owner storage in
     let proposal = Storage.Op.retrieve_proposal(proposal_id, storage) in
     let () = Conditions.unresolved proposal.state in
@@ -101,7 +101,7 @@ let execute_proposal (type a) (proposal_id, storage : Parameter.Types.proposal_i
     let () = Conditions.ready_to_execute proposal.state in
     let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
     let ops, s = Execution.perform_operations proposal storage in
-    let event = Tezos.emit "%execute_proposal" (proposal_id, owner) in
+    let event = Tezos.emit "%resolve_proposal" (proposal_id, owner) in
     (event::ops, s)
 
 let contract (type a) (action, storage : a request) : a result =
@@ -110,9 +110,9 @@ let contract (type a) (action, storage : a request) : a result =
     | Default u -> default (u, storage)
     | Create_proposal proposal_params ->
         create_proposal (proposal_params, storage)
-    | Sign_and_execute_proposal (proposal_id, agreement) ->
-        sign_and_execute_proposal (proposal_id, agreement, storage)
+    | Sign_and_resolve_proposal (proposal_id, agreement) ->
+        sign_and_resolve_proposal (proposal_id, agreement, storage)
     | Sign_proposal_only (proposal_id, agreement) ->
         sign_proposal_only (proposal_id, agreement, storage)
-    | Execute_proposal proposal_id ->
-        execute_proposal (proposal_id, storage)
+    | Resolve_proposal proposal_id ->
+        resolve_proposal (proposal_id, storage)

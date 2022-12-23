@@ -188,7 +188,7 @@ let case_fail_to_sign_after_executed_flag_set =
 
       let param = (Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;} :: param) in
       let create_action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
-      let sign_exe_action = Breath.Context.act_as bob (Helper.sign_and_execute_proposal multisig_contract 1n true) in
+      let sign_exe_action = Breath.Context.act_as bob (Helper.sign_and_resolve_proposal multisig_contract 1n true) in
       let sign_action = Breath.Context.act_as carol (Helper.sign_proposal_only multisig_contract 1n true) in
 
       Breath.Result.reduce [

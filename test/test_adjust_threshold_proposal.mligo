@@ -40,7 +40,7 @@ let case_execute_adjust_threshold_proposal =
       (* create proposal *)
       let param = Adjust_threshold 2n :: param in
       let action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
-      let sign_action = Breath.Context.act_as bob (Helper.sign_and_execute_proposal multisig_contract 1n true) in
+      let sign_action = Breath.Context.act_as bob (Helper.sign_and_resolve_proposal multisig_contract 1n true) in
 
       let storage = Breath.Contract.storage_of multisig_contract in
 
