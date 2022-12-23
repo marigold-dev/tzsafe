@@ -68,7 +68,7 @@ let sign_and_execute_proposal (type a) (proposal_id, agreement, storage : Parame
     let proposal = Storage.Op.update_proposal_state (proposal, Set.cardinal storage.owners,storage.threshold) in
     let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
     let ops, storage = Execution.perform_operations proposal storage in
-    let ops = Tezos.emit "%sign_proposal" (proposal_id, owner)::ops in
+    let ops = Tezos.emit "%sign_proposal" (proposal_id, owner, agreement)::ops in
     if (proposal.state = (Proposing : storage_types_proposal_state))
     then (ops, storage)
     else (Tezos.emit "%execute_proposal" (proposal_id, owner)::ops, storage)
@@ -85,7 +85,7 @@ let sign_proposal_only (type a) (proposal_id, agreement, storage : Parameter.Typ
     let owner = Tezos.get_sender () in
     let proposal = Storage.Op.update_signature (proposal, owner, agreement) in
     let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
-    let event = Tezos.emit "%sign_proposal" (proposal_id, owner) in
+    let event = Tezos.emit "%sign_proposal" (proposal_id, owner, agreement) in
     ([event], storage)
 
 (**

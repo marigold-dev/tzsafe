@@ -74,15 +74,16 @@ let case_emitted_sign_proposal =
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal_only multisig_contract 1n true) in
       let multisig_address = multisig_contract.originated_address in
 
-      let events = (Util.get_last_events_from multisig_address "sign_proposal" : (storage_types_proposal_id * address) list) in
+      let events = (Util.get_last_events_from multisig_address "sign_proposal" : (storage_types_proposal_id * address * bool) list) in
 
-      let (emitted_proposal_id, emitted_addr) = Option.unopt (List.head_opt events) in
+      let (emitted_proposal_id, emitted_addr, emitted_agreement) = Option.unopt (List.head_opt events) in
 
       Breath.Result.reduce [
         action1
       ; sign_action1
       ; Breath.Assert.is_equal "proposal id" emitted_proposal_id 1n
       ; Breath.Assert.is_equal "owner" emitted_addr bob.address
+      ; Breath.Assert.is_equal "agreement" emitted_agreement true
       ])
 
 let case_emitted_exe_proposal =
@@ -132,10 +133,10 @@ let case_emitted_sign_and_execute_proposal =
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_and_execute_proposal multisig_contract 1n true) in
       let multisig_address = multisig_contract.originated_address in
 
-      let sign_events = (Util.get_last_events_from multisig_address "sign_proposal" : (storage_types_proposal_id * address) list) in
+      let sign_events = (Util.get_last_events_from multisig_address "sign_proposal" : (storage_types_proposal_id * address * bool) list) in
       let exe_events = (Util.get_last_events_from multisig_address "execute_proposal" : (storage_types_proposal_id * address) list) in
 
-      let (emitted_sign_proposal_id, emitted_owner_addr) = Option.unopt (List.head_opt sign_events) in
+      let (emitted_sign_proposal_id, emitted_owner_addr, emitted_agreement) = Option.unopt (List.head_opt sign_events) in
       let (emitted_exe_proposal_id, emitted_exe_addr) = Option.unopt (List.head_opt exe_events) in
 
       Breath.Result.reduce [
@@ -143,6 +144,7 @@ let case_emitted_sign_and_execute_proposal =
       ; sign_action1
       ; Breath.Assert.is_equal "sign-proposal id" emitted_sign_proposal_id 1n
       ; Breath.Assert.is_equal "owner address" emitted_owner_addr bob.address
+      ; Breath.Assert.is_equal "agreement" emitted_agreement true
       ; Breath.Assert.is_equal "exe-proposal id" emitted_exe_proposal_id 1n
       ; Breath.Assert.is_equal "executor address" emitted_exe_addr bob.address
       ])
@@ -164,15 +166,16 @@ let case_emitted_sign_proposal_without_exe_proposal =
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_and_execute_proposal multisig_contract 1n true) in
       let multisig_address = multisig_contract.originated_address in
 
-      let sign_events = (Util.get_last_events_from multisig_address "sign_proposal" : (storage_types_proposal_id * address) list) in
+      let sign_events = (Util.get_last_events_from multisig_address "sign_proposal" : (storage_types_proposal_id * address * bool) list) in
 
-      let (emitted_sign_proposal_id, emitted_owner_addr) = Option.unopt (List.head_opt sign_events) in
+      let (emitted_sign_proposal_id, emitted_owner_addr, emitted_agreement) = Option.unopt (List.head_opt sign_events) in
 
       Breath.Result.reduce [
         action1
       ; sign_action1
       ; Breath.Assert.is_equal "sign-proposal id" emitted_sign_proposal_id 1n
       ; Breath.Assert.is_equal "owner address" emitted_owner_addr bob.address
+      ; Breath.Assert.is_equal "agreement" emitted_agreement true
       ])
 
 let case_emitted_receiving_amount =
