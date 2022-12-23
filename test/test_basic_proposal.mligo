@@ -74,11 +74,10 @@ let case_create_proposal =
       ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 4n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
-          state            = Active;
+          state            = Proposing;
           signatures       = Map.empty;
-          proposer         = alice.address;
-          executed         = None;
-          timestamp        = Tezos.get_now ();
+          proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
+          resolver         = None;
           content          = [ Execute {
             parameter        = 10n;
             amount           = 0tez;
@@ -87,11 +86,10 @@ let case_create_proposal =
         })
       ; Assert.is_proposal_equal "#2 proposal" proposal2
         ({
-          state            = Active;
+          state            = Proposing;
           signatures       = Map.empty;
-          proposer         = bob.address;
-          executed         = None;
-          timestamp        = Tezos.get_now ();
+          proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
+          resolver         = None;
           content          = [ Execute {
             target           = add_contract.originated_address;
             amount           = 10tez;
@@ -100,11 +98,10 @@ let case_create_proposal =
         })
       ; Assert.is_proposal_equal "#3 proposal" proposal3
         ({
-          state            = Active;
+          state            = Proposing;
           signatures       = Map.empty;
-          proposer         = bob.address;
-          executed         = None;
-          timestamp        = Tezos.get_now ();
+          proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
+          resolver         = None;
           content          = [ Transfer {
             parameter        = ();
             amount           = 10tez;
@@ -113,11 +110,10 @@ let case_create_proposal =
         })
       ; Assert.is_proposal_equal "#4 proposal" proposal4
         ({
-          state            = Active;
+          state            = Proposing;
           signatures       = Map.empty;
-          proposer         = bob.address;
-          executed         = None;
-          timestamp        = Tezos.get_now ();
+          proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
+          resolver         = None;
           content          =
             [ Transfer {parameter = (); amount = 10tez; target = alice.address; }
             ; Transfer {parameter = (); amount = 10tez; target = alice.address; }

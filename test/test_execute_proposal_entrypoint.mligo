@@ -68,9 +68,8 @@ let case_execute_proposal =
         ({
           state            = Executed;
           signatures       = Map.literal [(bob.address, true)];
-          proposer         = alice.address;
-          executed         = Some bob.address;
-          timestamp        = Tezos.get_now ();
+          proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
+          resolver         = Some { actor = bob.address; timestamp = Tezos.get_now () };
           content          = [ Execute {
             amount           = 0tez;
             target           = add_contract.originated_address;
@@ -81,9 +80,8 @@ let case_execute_proposal =
         ({
           state            = Executed;
           signatures       = Map.literal [(carol.address, true)];
-          proposer         = bob.address;
-          executed         = Some alice.address;
-          timestamp        = Tezos.get_now ();
+          proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
+          resolver         = Some { actor = alice.address; timestamp = Tezos.get_now () };
           content          = [ Transfer {
             parameter        = ();
             target           = bob.address;
@@ -115,7 +113,7 @@ let case_fail_to_execute_proposal_twice =
         create_action1
       ; sign_action1
       ; exe_action1
-      ; Breath.Expect.fail_with_message "This proposal has been executed" exe_action2
+      ; Breath.Expect.fail_with_message "This proposal has been resolved" exe_action2
       ])
 
 let case_not_owner =
@@ -161,7 +159,7 @@ let case_no_enough_signature =
       Breath.Result.reduce [
         create_action1
       ; sign_action1
-      ; Breath.Expect.fail_with_message "No enough approval to execute the proposal" exe_action1
+      ; Breath.Expect.fail_with_message "No enough signature to resolve the proposal" exe_action1
       ])
 
 let test_suite =

@@ -26,16 +26,22 @@ module Types = struct
     type proposal_content = Proposal_content.Types.t
     type view_proposal_content = Proposal_content.Types.view
 
-    type proposal_state = Active | Executed | Rejected
+    type actor =
+    [@layout:comb]
+    {
+      actor     : address;
+      timestamp : timestamp;
+    }
+
+    type proposal_state = Proposing | Executed | Rejected
 
     type 'a view_proposal =
     [@layout:comb]
     {
         state: proposal_state;
         signatures: (address, bool) map;
-        proposer: address;
-        executed: address option;
-        timestamp: timestamp;
+        proposer : actor;
+        resolver : actor option;
         content : ('a view_proposal_content) list
     }
 
@@ -44,9 +50,8 @@ module Types = struct
     {
         state: proposal_state;
         signatures: (address, bool) map;
-        proposer: address;
-        executed: address option;
-        timestamp: timestamp;
+        proposer : actor;
+        resolver : actor option;
         content : ('a proposal_content) list
     }
 
@@ -66,16 +71,20 @@ module Op = struct
     type proposal_id = Parameter.Types.proposal_id
     type agreement = Parameter.Types.agreement
     type proposal = Types.proposal
+    type proposal_state = Types.proposal_state
     type types = Types.t
 
     [@inline]
     let create_proposal (type a) (contents: (a proposal_content) list) : a proposal =
         {
-            state            = Active;
+            state            = Proposing;
             signatures       = Map.empty;
-            proposer         = Tezos.get_sender ();
-            executed         = None;
-            timestamp        = (Tezos.get_now ());
+            proposer         =
+              {
+                actor = Tezos.get_sender ();
+                timestamp = Tezos.get_now ()
+              };
+            resolver         = None;
             content          = contents;
         }
 
@@ -106,25 +115,33 @@ module Op = struct
 
     [@inline]
     let ready_execution (type a) (proposal, approvals, threshold : a proposal * nat * nat) : a proposal =
-        let is_executed = approvals >= threshold && Util.is_none proposal.executed in
+        let is_executed = approvals >= threshold && proposal.state = (Proposing : proposal_state) in
         if is_executed
         then
           {
               proposal with
               state    = Executed;
-              executed = Some (Tezos.get_sender ())
+              resolver =
+                Some {
+                  actor = Tezos.get_sender ();
+                  timestamp = Tezos.get_now ()
+                };
           }
         else proposal
 
     [@inline]
     let close_proposal (type a) (proposal, disapprovals, threshold : a proposal * nat * nat) : a proposal =
-        let is_closed = disapprovals > threshold && Util.is_none proposal.executed in
+        let is_closed = disapprovals > threshold && proposal.state = (Proposing : proposal_state) in
         if is_closed
         then
           {
               proposal with
               state    = Rejected;
-              executed = Some (Tezos.get_sender ())
+              resolver =
+                Some {
+                  actor = Tezos.get_sender ();
+                  timestamp = Tezos.get_now ()
+                };
           }
         else proposal
 

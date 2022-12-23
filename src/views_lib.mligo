@@ -40,8 +40,7 @@ let to_view_proposal (type a) (p : a proposal) : (a view_proposal) =
     state            = p.state;
     signatures       = p.signatures;
     proposer         = p.proposer;
-    executed         = p.executed;
-    timestamp        = p.timestamp;
+    resolver         = p.resolver;
     content          = List.map to_view_proposal_content p.content;
   }
 

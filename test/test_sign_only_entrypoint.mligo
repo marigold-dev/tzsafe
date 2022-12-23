@@ -66,11 +66,10 @@ let case_gathering_signatures =
       ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 2n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
-          state            = Active;
+          state            = Proposing;
           signatures       = Map.literal [(bob.address, true); (carol.address, true)];
-          proposer         = alice.address;
-          executed         = None;
-          timestamp        = Tezos.get_now ();
+          proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
+          resolver         = None;
           content          = [ Execute {
             amount           = 0tez;
             target           = add_contract.originated_address;
@@ -79,11 +78,10 @@ let case_gathering_signatures =
         })
       ; Assert.is_proposal_equal "#2 proposal" proposal2
         ({
-          state            = Active;
+          state            = Proposing;
           signatures       = Map.literal [(carol.address, true); (alice.address, true)];
-          proposer         = bob.address;
-          executed         = None;
-          timestamp        = Tezos.get_now ();
+          proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
+          resolver         = None;
           content          = [ Transfer {
             parameter        = ();
             target           = bob.address;
@@ -196,7 +194,7 @@ let case_fail_to_sign_after_executed_flag_set =
       Breath.Result.reduce [
         create_action
       ; sign_exe_action
-      ; Breath.Expect.fail_with_message "This proposal has been executed" sign_action
+      ; Breath.Expect.fail_with_message "This proposal has been resolved" sign_action
       ])
 
 let test_suite =

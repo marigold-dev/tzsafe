@@ -25,6 +25,7 @@
 
 type storage_types = Storage.Types.t
 type storage_types_proposal = Storage.Types.proposal
+type storage_types_proposal_state = Storage.Types.proposal_state
 type proposal_content = Proposal_content.Types.t
 
 [@inline]
@@ -36,16 +37,16 @@ let amount_must_be_zero_tez (an_amout : tez) : unit =
     assert_with_error (an_amout = 0tez) Errors.amount_must_be_zero_tez
 
 [@inline]
-let not_sign_yet (type a) (proposal : a storage_types_proposal) : unit =
+let unsigned (type a) (proposal : a storage_types_proposal) : unit =
     assert_with_error (not Map.mem (Tezos.get_sender ()) proposal.signatures) Errors.has_already_signed
 
 [@inline]
-let ready_to_execute (executed : address option) : unit =
-    assert_with_error (Util.is_some executed) Errors.no_enough_approval_to_execute
+let ready_to_execute (state : storage_types_proposal_state) : unit =
+    assert_with_error (not (state = (Proposing : storage_types_proposal_state))) Errors.no_enough_signature_to_resolve
 
 [@inline]
-let not_execute_yet (executed : address option) : unit =
-    assert_with_error (Util.is_none executed) Errors.not_execute_yet
+let unresolved (state : storage_types_proposal_state) : unit =
+    assert_with_error (state = (Proposing : storage_types_proposal_state)) Errors.unresolved
 
 [@inline]
 let check_proposal (type a) (content: a proposal_content) : unit =

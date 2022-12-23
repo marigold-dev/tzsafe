@@ -53,11 +53,10 @@ let case_sign_for_disapproval =
       ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 1n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
-          state            = Active;
+          state            = Proposing;
           signatures       = Map.literal [(bob.address, false)];
-          proposer         = alice.address;
-          executed         = None;
-          timestamp        = Tezos.get_now ();
+          proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
+          resolver         = None;
           content          = [ Execute {
             amount           = 0tez;
             target           = add_contract.originated_address;
@@ -122,9 +121,8 @@ let case_close_proposal_1_1 =
         ({
           state            = Rejected;
           signatures       = Map.literal [(bob.address, false)];
-          proposer         = bob.address;
-          executed         = Some bob.address;
-          timestamp        = Tezos.get_now ();
+          proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
+          resolver         = Some { actor = bob.address; timestamp = Tezos.get_now () };
           content          = [ Execute {
             amount           = 10tez;
             target           = add_contract.originated_address;
@@ -166,9 +164,8 @@ let case_close_proposal_2_2 =
         ({
           state            = Rejected;
           signatures       = Map.literal [(alice.address, false)];
-          proposer         = bob.address;
-          executed         = Some alice.address;
-          timestamp        = Tezos.get_now ();
+          proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
+          resolver         = Some { actor = alice.address; timestamp = Tezos.get_now () };
           content          = [ Execute {
             amount           = 10tez;
             target           = add_contract.originated_address;
@@ -212,9 +209,8 @@ let case_close_proposal_2_3 =
         ({
           state            = Rejected;
           signatures       = Map.literal [(bob.address, false); (alice.address, false)];
-          proposer         = bob.address;
-          executed         = Some bob.address;
-          timestamp        = Tezos.get_now ();
+          proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
+          resolver         = Some { actor = bob.address; timestamp = Tezos.get_now () };
           content          = [ Execute {
             amount           = 10tez;
             target           = add_contract.originated_address;
@@ -254,11 +250,10 @@ let case_not_closed_1_2 =
       ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 1n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
-          state            = Active;
+          state            = Proposing;
           signatures       = Map.literal [(alice.address, false)];
-          proposer         = bob.address;
-          executed         = None;
-          timestamp        = Tezos.get_now ();
+          proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
+          resolver         = None;
           content          = [ Execute {
             amount           = 10tez;
             target           = add_contract.originated_address;
