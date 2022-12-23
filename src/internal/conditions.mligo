@@ -50,16 +50,20 @@ let not_execute_yet (executed : address option) : unit =
 [@inline]
 let check_proposal (type a) (content: a proposal_content) : unit =
     match content with
-    | Transfer _ -> ()
+    | Transfer t ->
+        assert_with_error (not (t.amount = 0tez)) Errors.amount_is_zero
     | Execute _ -> ()
     | Execute_lambda _ -> ()
     | Adjust_threshold t ->
         assert_with_error (t > 0n) Errors.invalidated_threshold
-    | Add_signers _ -> ()
-    | Remove_signers _ -> ()
+    | Add_signers s ->
+        assert_with_error (Set.cardinal s > 0n) Errors.no_owners
+    | Remove_signers s ->
+        assert_with_error (Set.cardinal s > 0n) Errors.no_owners
 
 [@inline]
 let check_proposals_content (type a) (proposals_content: (a proposal_content) list) : unit =
+    let () = assert_with_error ((List.length proposals_content) > 0n) Errors.no_proposal in
     List.iter check_proposal proposals_content
 
 [@inline]

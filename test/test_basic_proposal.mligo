@@ -126,6 +126,63 @@ let case_create_proposal =
         })
       ])
 
+let case_fail_to_create_empty_proposal =
+  Breath.Model.case
+  "test create empty proposal"
+  "failed to create proposal"
+    (fun (level: Breath.Logger.level) ->
+      let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
+      let signers : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (signers, 2n) in
+      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
+      let param = ([] : (nat proposal_content) list) in
+
+      let action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
+
+      Breath.Result.reduce [
+        Breath.Expect.fail_with_message "There is no content in proposal" action
+      ])
+
+let case_fail_to_create_transfer_0_amount_proposal =
+  Breath.Model.case
+  "test create transfer 0 amount proposal"
+  "failed to create proposal"
+    (fun (level: Breath.Logger.level) ->
+      let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
+      let signers : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (signers, 2n) in
+      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
+      let param = ([] : (nat proposal_content) list) in
+      let param = (Transfer { target = alice.address; parameter = (); amount = 0tez;} :: param) in
+
+      let action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
+
+      Breath.Result.reduce [
+        Breath.Expect.fail_with_message "Amount should be greater than zero" action
+      ])
+
+let case_fail_to_create_proposal_with_empty_owner_adjustment =
+  Breath.Model.case
+  "test create proposal with empty owner adjustment"
+  "failed to create proposal"
+    (fun (level: Breath.Logger.level) ->
+      let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
+      let signers : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (signers, 2n) in
+      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
+      let param = ([] : (nat proposal_content) list) in
+
+      let param1 = Remove_signers (Set.literal []) :: param in
+      let action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
+
+      let param2 = Add_signers (Set.literal []) :: param in
+      let action2 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param2) in
+
+      Breath.Result.reduce [
+        Breath.Expect.fail_with_message "No owner to be added or removed" action1
+      ; Breath.Expect.fail_with_message "No owner to be added or removed" action2
+      ])
+
 let case_unauthorized_user_fail_to_create_proposal =
   Breath.Model.case
   "unauthorized user creates proposal"
@@ -159,5 +216,8 @@ let test_suite =
   Breath.Model.suite "Suite for create proposal" [
     case_create_proposal
   ; case_unauthorized_user_fail_to_create_proposal
+  ; case_fail_to_create_empty_proposal
+  ; case_fail_to_create_transfer_0_amount_proposal
+  ; case_fail_to_create_proposal_with_empty_owner_adjustment
   ]
 
