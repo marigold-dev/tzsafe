@@ -32,14 +32,14 @@ module Types = struct
     | Execute of ('a transaction)
     | Execute_lambda
     | Adjust_threshold of nat
-    | Add_signers of address set
-    | Remove_signers of address set
+    | Add_owners of address set
+    | Remove_owners of address set
 
     type 'a t =
     | Transfer of unit transaction
     | Execute of ('a transaction)
     | Execute_lambda of (unit -> operation)
     | Adjust_threshold of nat
-    | Add_signers of address set
-    | Remove_signers of address set
+    | Add_owners of address set
+    | Remove_owners of address set
 end

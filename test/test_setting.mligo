@@ -29,8 +29,8 @@ let case_invalidated_threshold =
   "fail to perform any operation"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, _bob, _carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address] in
-      let init_storage = Helper.init_storage (signers, 0n) in
+      let owners : address set = Set.literal [alice.address] in
+      let init_storage = Helper.init_storage (owners, 0n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
       let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
       let param = ([] : (nat proposal_content) list) in
@@ -42,14 +42,14 @@ let case_invalidated_threshold =
         Breath.Expect.fail_with_message "Threshold must be greater than 1" action1
       ])
 
-let case_number_of_signer_less_than_threshold =
+let case_number_of_owner_less_than_threshold =
   Breath.Model.case
-  "number of signer less than threshold"
+  "number of owner less than threshold"
   "fail to perform any operation"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, _bob, _carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address] in
-      let init_storage = Helper.init_storage (signers, 2n) in
+      let owners : address set = Set.literal [alice.address] in
+      let init_storage = Helper.init_storage (owners, 2n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
       let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
       let param = ([] : (nat proposal_content) list) in
@@ -58,13 +58,13 @@ let case_number_of_signer_less_than_threshold =
       let action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
 
       Breath.Result.reduce [
-        Breath.Expect.fail_with_message "Number of signer should be greater than threshold" action1
+        Breath.Expect.fail_with_message "Number of owner should be greater than threshold" action1
       ])
 
 let test_suite =
   Breath.Model.suite "Suite for setting" [
     case_invalidated_threshold
-  ; case_number_of_signer_less_than_threshold
+  ; case_number_of_owner_less_than_threshold
   ]
 
 

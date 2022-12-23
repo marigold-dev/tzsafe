@@ -22,10 +22,10 @@
 
 type proposal_content = Proposal_content.Types.t
 
-let init_storage (type a) (signers, threshold: address set * nat) : a storage_types =
+let init_storage (type a) (owners, threshold: address set * nat) : a storage_types =
 { proposal_counter = 0n;
   proposal_map     = (Big_map.empty : (nat, a storage_types_proposal) big_map);
-  signers          = signers;
+  owners          = owners;
   threshold        = threshold;
   metadata         = (Big_map.empty: (string, bytes) big_map);
 }

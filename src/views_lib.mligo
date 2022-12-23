@@ -32,8 +32,8 @@ let to_view_proposal_content (type a) (p : a proposal_content) : (a view_proposa
   | Execute e -> Execute e
   | Execute_lambda _ -> Execute_lambda
   | Adjust_threshold t -> Adjust_threshold t
-  | Add_signers s -> Add_signers s
-  | Remove_signers s -> Remove_signers s
+  | Add_owners s -> Add_owners s
+  | Remove_owners s -> Remove_owners s
 
 let to_view_proposal (type a) (p : a proposal) : (a view_proposal) =
   {
@@ -55,8 +55,8 @@ let rec slice (type a) (start, end_, proposals, acc :
     | None -> slice (idx, end_, proposals, acc)
     | Some p -> slice (idx, end_, proposals, Map.add idx p acc)
 
-let signers (type a) ((), storage : unit * a storage) : address set =
-  storage.signers
+let owners (type a) ((), storage : unit * a storage) : address set =
+  storage.owners
 
 let threshold (type a) ((), storage : unit * a storage) : nat =
   storage.threshold

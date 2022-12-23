@@ -23,7 +23,7 @@
 #import "./test_sign_and_execute_entrypoint.mligo" "Sign_and_exe"
 #import "./test_setting.mligo" "Setting"
 #import "./test_adjust_threshold_proposal.mligo" "Adjust_threshold_proposal"
-#import "./test_change_signer_proposal.mligo" "Change_signer_proposal"
+#import "./test_change_owner_proposal.mligo" "Change_owner_proposal"
 #import "./test_lambda_proposal.mligo" "Lambda_proposal"
 #import "./test_emit_events.mligo" "Emit_events"
 #import "./test_view.mligo" "View"
@@ -38,7 +38,7 @@ let () =
   ; Sign_and_exe.test_suite
   ; Setting.test_suite
   ; Adjust_threshold_proposal.test_suite
-  ; Change_signer_proposal.test_suite
+  ; Change_owner_proposal.test_suite
   ; Lambda_proposal.test_suite
   ; Emit_events.test_suite
   ; View.test_suite

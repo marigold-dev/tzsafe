@@ -31,8 +31,8 @@ let case_execute_adjust_threshold_proposal =
   "successuful adjust"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address; bob.address;] in
-      let init_storage = Helper.init_storage (signers, 1n) in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 1n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
 
       let param = ([] : (nat proposal_content) list) in
@@ -56,8 +56,8 @@ let case_adjust_invalid_threshold_proposal =
   "failed to create"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address; bob.address;] in
-      let init_storage = Helper.init_storage (signers, 1n) in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 1n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
 
       let param = ([] : (nat proposal_content) list) in

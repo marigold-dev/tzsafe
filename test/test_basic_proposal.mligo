@@ -31,8 +31,8 @@ let case_create_proposal =
   "successuful create proposal"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address; bob.address;] in
-      let init_storage = Helper.init_storage (signers, 2n) in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 2n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
       let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
       let param = ([] : (nat proposal_content) list) in
@@ -132,8 +132,8 @@ let case_fail_to_create_empty_proposal =
   "failed to create proposal"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address; bob.address;] in
-      let init_storage = Helper.init_storage (signers, 2n) in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 2n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
       let param = ([] : (nat proposal_content) list) in
 
@@ -149,8 +149,8 @@ let case_fail_to_create_transfer_0_amount_proposal =
   "failed to create proposal"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address; bob.address;] in
-      let init_storage = Helper.init_storage (signers, 2n) in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 2n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
       let param = ([] : (nat proposal_content) list) in
       let param = (Transfer { target = alice.address; parameter = (); amount = 0tez;} :: param) in
@@ -167,15 +167,15 @@ let case_fail_to_create_proposal_with_empty_owner_adjustment =
   "failed to create proposal"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address; bob.address;] in
-      let init_storage = Helper.init_storage (signers, 2n) in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 2n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
       let param = ([] : (nat proposal_content) list) in
 
-      let param1 = Remove_signers (Set.literal []) :: param in
+      let param1 = Remove_owners (Set.literal []) :: param in
       let action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
 
-      let param2 = Add_signers (Set.literal []) :: param in
+      let param2 = Add_owners (Set.literal []) :: param in
       let action2 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param2) in
 
       Breath.Result.reduce [
@@ -189,8 +189,8 @@ let case_unauthorized_user_fail_to_create_proposal =
   "fail to create proposal"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address; bob.address;] in
-      let init_storage = Helper.init_storage (signers, 2n) in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 2n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
       let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
 
@@ -206,8 +206,8 @@ let case_unauthorized_user_fail_to_create_proposal =
       let storage = Breath.Contract.storage_of multisig_contract in
 
       Breath.Result.reduce [
-        Breath.Expect.fail_with_message "Only the contract signers can perform this operation" action1
-      ; Breath.Expect.fail_with_message "Only the contract signers can perform this operation" action2
+        Breath.Expect.fail_with_message "Only the contract owners can perform this operation" action1
+      ; Breath.Expect.fail_with_message "Only the contract owners can perform this operation" action2
       ; Breath.Assert.is_equal "balance" balance 0tez
       ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 0n
       ])

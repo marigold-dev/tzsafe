@@ -31,8 +31,8 @@ let case_execute_lambda_proposal =
   "successuful execute"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address; bob.address;] in
-      let init_storage = Helper.init_storage (signers, 1n) in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 1n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
       let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
       let add_contract_address = add_contract.originated_address in

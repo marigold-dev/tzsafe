@@ -55,7 +55,7 @@ module Types = struct
     {
         proposal_counter: nat;
         proposal_map    : (proposal_id, 'a proposal) big_map;
-        signers         : address set;
+        owners          : address set;
         threshold       : nat;
         metadata        : (string, bytes) big_map;
     }
@@ -98,10 +98,10 @@ module Op = struct
 
 
     [@inline]
-    let update_signature (type a) (proposal, signer, agreement: a proposal * address * agreement) : a proposal =
+    let update_signature (type a) (proposal, owner, agreement: a proposal * address * agreement) : a proposal =
         {
             proposal with
-            signatures = Map.update signer (Some agreement) proposal.signatures;
+            signatures = Map.update owner (Some agreement) proposal.signatures;
         }
 
     [@inline]
@@ -129,12 +129,12 @@ module Op = struct
         else proposal
 
     [@inline]
-    let update_proposal_state (type a) (proposal, number_of_signers, threshold: a proposal * nat * nat) : a proposal =
+    let update_proposal_state (type a) (proposal, number_of_owners, threshold: a proposal * nat * nat) : a proposal =
         let statistic ((t_acc,f_acc), (_, v) : (nat * nat) * (address * bool)) : (nat * nat) =
           if v then (t_acc + 1n, f_acc) else (t_acc, f_acc + 1n) in
         let (approvals, disapprovals) = Map.fold statistic proposal.signatures (0n, 0n) in
         let proposal = ready_execution (proposal, approvals, threshold) in
-        close_proposal (proposal, disapprovals, abs(number_of_signers - threshold))
+        close_proposal (proposal, disapprovals, abs(number_of_owners - threshold))
 
     [@inline]
     let update_proposal (type a) (proposal_number, proposal, storage: proposal_id * a proposal * a types) : a types =
@@ -149,12 +149,12 @@ module Op = struct
       { storage with threshold = threshold }
 
     [@inline]
-    let add_signers (type a) (signers: address set) (storage : a types) : a types =
+    let add_owners (type a) (owners: address set) (storage : a types) : a types =
       let add (set, s : address set * address) : address set = Set.add s set in
-      { storage with signers = Set.fold add signers storage.signers }
+      { storage with owners = Set.fold add owners storage.owners }
 
     [@inline]
-    let remove_signers (type a) (signers: address set) (storage : a types) : a types =
+    let remove_owners (type a) (owners: address set) (storage : a types) : a types =
       let remove (set, s : address set * address) : address set = Set.remove s set in
-      { storage with signers = Set.fold remove signers storage.signers }
+      { storage with owners = Set.fold remove owners storage.owners }
 end

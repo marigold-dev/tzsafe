@@ -28,8 +28,8 @@ type storage_types_proposal = Storage.Types.proposal
 type proposal_content = Proposal_content.Types.t
 
 [@inline]
-let only_signer (type a) (storage : a storage_types) : unit =
-    assert_with_error (Set.mem (Tezos.get_sender ()) storage.signers) Errors.only_signer
+let only_owner (type a) (storage : a storage_types) : unit =
+    assert_with_error (Set.mem (Tezos.get_sender ()) storage.owners) Errors.only_owner
 
 [@inline]
 let amount_must_be_zero_tez (an_amout : tez) : unit =
@@ -56,9 +56,9 @@ let check_proposal (type a) (content: a proposal_content) : unit =
     | Execute_lambda _ -> ()
     | Adjust_threshold t ->
         assert_with_error (t > 0n) Errors.invalidated_threshold
-    | Add_signers s ->
+    | Add_owners s ->
         assert_with_error (Set.cardinal s > 0n) Errors.no_owners
-    | Remove_signers s ->
+    | Remove_owners s ->
         assert_with_error (Set.cardinal s > 0n) Errors.no_owners
 
 [@inline]
@@ -68,7 +68,7 @@ let check_proposals_content (type a) (proposals_content: (a proposal_content) li
 
 [@inline]
 let check_setting (type a) (storage : a storage_types) : unit =
-    let () = assert_with_error (Set.cardinal storage.signers > 0n) Errors.no_signer  in
-    let () = assert_with_error (Set.cardinal storage.signers >= storage.threshold) Errors.no_enough_signer in
+    let () = assert_with_error (Set.cardinal storage.owners > 0n) Errors.no_owner  in
+    let () = assert_with_error (Set.cardinal storage.owners >= storage.threshold) Errors.no_enough_owner in
     let () = assert_with_error (storage.threshold > 0n) Errors.invalidated_threshold in
     ()

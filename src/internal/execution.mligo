@@ -40,8 +40,8 @@ let send (type a) (content : a proposal_content) (storage : a storage_types) : (
     | Execute tx -> (Some (send_by tx.parameter tx.target tx.amount), storage)
     | Execute_lambda l -> (Some (l ()), storage)
     | Adjust_threshold t -> (None, Storage.Op.adjust_threshold t storage)
-    | Add_signers s -> (None, Storage.Op.add_signers s storage)
-    | Remove_signers s -> (None, Storage.Op.remove_signers s storage)
+    | Add_owners s -> (None, Storage.Op.add_owners s storage)
+    | Remove_owners s -> (None, Storage.Op.remove_owners s storage)
 
 let perform_operations (type a) (proposal: a storage_types_proposal) (storage : a storage_types) : operation list * a storage_types =
     let batch (type a) ((ops, s), c : (operation list * a storage_types) * a proposal_content) : (operation list * a storage_types) =
