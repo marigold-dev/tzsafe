@@ -51,5 +51,5 @@ let perform_operations (type a) (proposal: a storage_types_proposal) (storage : 
       | None -> ops, new_s
     in
     if proposal.state = (Executed : storage_types_proposal_state)
-    then List.fold_left batch (Constants.no_operation, storage) proposal.content
+    then List.fold_left batch (Constants.no_operation, storage) proposal.contents
     else (Constants.no_operation, storage)

@@ -41,7 +41,7 @@ let to_view_proposal (type a) (p : a proposal) : (a view_proposal) =
     signatures       = p.signatures;
     proposer         = p.proposer;
     resolver         = p.resolver;
-    content          = List.map to_view_proposal_content p.content;
+    contents          = List.map to_view_proposal_content p.contents;
   }
 
 let rec slice (type a) (start, end_, proposals, acc :

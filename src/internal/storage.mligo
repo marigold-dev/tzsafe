@@ -42,7 +42,7 @@ module Types = struct
         signatures: (address, bool) map;
         proposer : actor;
         resolver : actor option;
-        content : ('a view_proposal_content) list
+        contents : ('a view_proposal_content) list
     }
 
     type 'a proposal =
@@ -52,7 +52,7 @@ module Types = struct
         signatures: (address, bool) map;
         proposer : actor;
         resolver : actor option;
-        content : ('a proposal_content) list
+        contents : ('a proposal_content) list
     }
 
     type 'a t =
@@ -85,7 +85,7 @@ module Op = struct
                 timestamp = Tezos.get_now ()
               };
             resolver         = None;
-            content          = contents;
+            contents          = contents;
         }
 
 

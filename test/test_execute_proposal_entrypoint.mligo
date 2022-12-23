@@ -70,7 +70,7 @@ let case_execute_proposal =
           signatures       = Map.literal [(bob.address, true)];
           proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
           resolver         = Some { actor = bob.address; timestamp = Tezos.get_now () };
-          content          = [ Execute {
+          contents         = [ Execute {
             amount           = 0tez;
             target           = add_contract.originated_address;
             parameter        = 10n;
@@ -82,7 +82,7 @@ let case_execute_proposal =
           signatures       = Map.literal [(carol.address, true)];
           proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
           resolver         = Some { actor = alice.address; timestamp = Tezos.get_now () };
-          content          = [ Transfer {
+          contents         = [ Transfer {
             parameter        = ();
             target           = bob.address;
             amount           = 20tez;

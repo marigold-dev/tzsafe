@@ -66,7 +66,7 @@ let case_gathering_signatures =
           signatures       = Map.literal [(bob.address, true)];
           proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
           resolver         = None;
-          content          = [ Execute {
+          contents         = [ Execute {
             amount           = 0tez;
             target           = add_contract.originated_address;
             parameter        = 10n;
@@ -78,7 +78,7 @@ let case_gathering_signatures =
           signatures       = Map.literal [(carol.address, true)];
           proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
           resolver         = None;
-          content          = [ Transfer {
+          contents         = [ Transfer {
             parameter        = ();
             target           = bob.address;
             amount           = 20tez;
@@ -127,7 +127,7 @@ let case_execute_transaction_1_of_1 =
           signatures       = Map.literal [(bob.address, true)];
           proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
           resolver         = Some { actor = bob.address; timestamp = Tezos.get_now () };
-          content          = [ Execute {
+          contents         = [ Execute {
             target           = add_contract.originated_address;
             amount           = 0tez;
             parameter        = 10n;
@@ -139,7 +139,7 @@ let case_execute_transaction_1_of_1 =
           signatures       = Map.literal [(carol.address, true)];
           proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
           resolver         = Some { actor = carol.address; timestamp = Tezos.get_now () };
-          content          = [ Transfer {
+          contents         = [ Transfer {
             target           = bob.address;
             parameter        = ();
             amount           = 20tez;
@@ -182,7 +182,7 @@ let case_execute_transaction_1_of_1_batch =
           signatures       = Map.literal [(bob.address, true)];
           proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
           resolver         = Some { actor = bob.address; timestamp = Tezos.get_now () };
-          content          =
+          contents         =
             [ Execute {
               target           = add_contract.originated_address;
               amount           = 0tez;
@@ -244,7 +244,7 @@ let case_execute_transaction_3_of_3 =
           signatures       = Map.literal [(alice.address, true); (bob.address, true); (carol.address, true)];
           proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
           resolver         = Some { actor = alice.address; timestamp = Tezos.get_now () };
-          content          = [ Execute {
+          contents         = [ Execute {
             target           = add_contract.originated_address;
             parameter        = 10n;
             amount           = 0tez;
@@ -256,7 +256,7 @@ let case_execute_transaction_3_of_3 =
           signatures       = Map.literal [(alice.address, true); (bob.address, true); (carol.address, true)];
           proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
           resolver         = Some { actor = bob.address; timestamp = Tezos.get_now () };
-          content          = [ Transfer {
+          contents         = [ Transfer {
             target           = bob.address;
             parameter        = ();
             amount           = 20tez;

@@ -78,7 +78,7 @@ let case_create_proposal =
           signatures       = Map.empty;
           proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
           resolver         = None;
-          content          = [ Execute {
+          contents         = [ Execute {
             parameter        = 10n;
             amount           = 0tez;
             target           = add_contract.originated_address;
@@ -90,7 +90,7 @@ let case_create_proposal =
           signatures       = Map.empty;
           proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
           resolver         = None;
-          content          = [ Execute {
+          contents         = [ Execute {
             target           = add_contract.originated_address;
             amount           = 10tez;
             parameter        = 20n;
@@ -102,7 +102,7 @@ let case_create_proposal =
           signatures       = Map.empty;
           proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
           resolver         = None;
-          content          = [ Transfer {
+          contents         = [ Transfer {
             parameter        = ();
             amount           = 10tez;
             target           = alice.address;
@@ -114,7 +114,7 @@ let case_create_proposal =
           signatures       = Map.empty;
           proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
           resolver         = None;
-          content          =
+          contents         =
             [ Transfer {parameter = (); amount = 10tez; target = alice.address; }
             ; Transfer {parameter = (); amount = 10tez; target = alice.address; }
             ; Execute  {parameter = 20n; amount = 10tez; target = add_contract.originated_address; }

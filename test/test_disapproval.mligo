@@ -57,7 +57,7 @@ let case_sign_for_disapproval =
           signatures       = Map.literal [(bob.address, false)];
           proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
           resolver         = None;
-          content          = [ Execute {
+          contents         = [ Execute {
             amount           = 0tez;
             target           = add_contract.originated_address;
             parameter        = 10n;
@@ -123,7 +123,7 @@ let case_close_proposal_1_1 =
           signatures       = Map.literal [(bob.address, false)];
           proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
           resolver         = Some { actor = bob.address; timestamp = Tezos.get_now () };
-          content          = [ Execute {
+          contents         = [ Execute {
             amount           = 10tez;
             target           = add_contract.originated_address;
             parameter        = 10n;
@@ -166,7 +166,7 @@ let case_close_proposal_2_2 =
           signatures       = Map.literal [(alice.address, false)];
           proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
           resolver         = Some { actor = alice.address; timestamp = Tezos.get_now () };
-          content          = [ Execute {
+          contents         = [ Execute {
             amount           = 10tez;
             target           = add_contract.originated_address;
             parameter        = 10n;
@@ -211,7 +211,7 @@ let case_close_proposal_2_3 =
           signatures       = Map.literal [(bob.address, false); (alice.address, false)];
           proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
           resolver         = Some { actor = bob.address; timestamp = Tezos.get_now () };
-          content          = [ Execute {
+          contents         = [ Execute {
             amount           = 10tez;
             target           = add_contract.originated_address;
             parameter        = 10n;
@@ -254,7 +254,7 @@ let case_not_closed_1_2 =
           signatures       = Map.literal [(alice.address, false)];
           proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
           resolver         = None;
-          content          = [ Execute {
+          contents         = [ Execute {
             amount           = 10tez;
             target           = add_contract.originated_address;
             parameter        = 10n;
