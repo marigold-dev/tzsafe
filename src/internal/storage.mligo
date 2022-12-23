@@ -26,7 +26,7 @@ module Types = struct
     type proposal_content = Proposal_content.Types.t
     type view_proposal_content = Proposal_content.Types.view
 
-    type proposal_state = Active | Done | Closed
+    type proposal_state = Active | Executed | Rejected
 
     type 'a view_proposal =
     [@layout:comb]
@@ -111,7 +111,7 @@ module Op = struct
         then
           {
               proposal with
-              state    = Done;
+              state    = Executed;
               executed = Some (Tezos.get_sender ())
           }
         else proposal
@@ -123,7 +123,7 @@ module Op = struct
         then
           {
               proposal with
-              state    = Closed;
+              state    = Rejected;
               executed = Some (Tezos.get_sender ())
           }
         else proposal

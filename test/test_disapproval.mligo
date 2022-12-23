@@ -120,7 +120,7 @@ let case_close_proposal_1_1 =
       ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 1n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
-          state            = Closed;
+          state            = Rejected;
           signatures       = Map.literal [(bob.address, false)];
           proposer         = bob.address;
           executed         = Some bob.address;
@@ -164,7 +164,7 @@ let case_close_proposal_2_2 =
       ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 1n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
-          state            = Closed;
+          state            = Rejected;
           signatures       = Map.literal [(alice.address, false)];
           proposer         = bob.address;
           executed         = Some alice.address;
@@ -210,7 +210,7 @@ let case_close_proposal_2_3 =
       ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 1n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
-          state            = Closed;
+          state            = Rejected;
           signatures       = Map.literal [(bob.address, false); (alice.address, false)];
           proposer         = bob.address;
           executed         = Some bob.address;

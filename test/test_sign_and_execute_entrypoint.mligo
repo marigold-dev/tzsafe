@@ -125,7 +125,7 @@ let case_execute_transaction_1_of_1 =
       ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 2n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
-          state            = Done;
+          state            = Executed;
           signatures       = Map.literal [(bob.address, true)];
           proposer         = alice.address;
           executed         = Some bob.address;
@@ -138,7 +138,7 @@ let case_execute_transaction_1_of_1 =
         })
       ; Assert.is_proposal_equal "#2 proposal" proposal2
         ({
-          state            = Done;
+          state            = Executed;
           signatures       = Map.literal [(carol.address, true)];
           proposer         = bob.address;
           executed         = Some carol.address;
@@ -182,7 +182,7 @@ let case_execute_transaction_1_of_1_batch =
       ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 1n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
-          state            = Done;
+          state            = Executed;
           signatures       = Map.literal [(bob.address, true)];
           proposer         = alice.address;
           executed         = Some bob.address;
@@ -245,7 +245,7 @@ let case_execute_transaction_3_of_3 =
       ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 2n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
-          state            = Done;
+          state            = Executed;
           signatures       = Map.literal [(alice.address, true); (bob.address, true); (carol.address, true)];
           proposer         = alice.address;
           executed         = Some alice.address;
@@ -258,7 +258,7 @@ let case_execute_transaction_3_of_3 =
         })
       ; Assert.is_proposal_equal "#2 proposal" proposal2
         ({
-          state            = Done;
+          state            = Executed;
           signatures       = Map.literal [(alice.address, true); (bob.address, true); (carol.address, true)];
           proposer         = bob.address;
           executed         = Some bob.address;

@@ -66,7 +66,7 @@ let case_execute_proposal =
       ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 2n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
-          state            = Done;
+          state            = Executed;
           signatures       = Map.literal [(bob.address, true)];
           proposer         = alice.address;
           executed         = Some bob.address;
@@ -79,7 +79,7 @@ let case_execute_proposal =
         })
       ; Assert.is_proposal_equal "#2 proposal" proposal2
         ({
-          state            = Done;
+          state            = Executed;
           signatures       = Map.literal [(carol.address, true)];
           proposer         = bob.address;
           executed         = Some alice.address;
