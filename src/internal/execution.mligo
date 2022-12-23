@@ -38,7 +38,7 @@ let send (type a) (content : a proposal_content) (storage : a storage_types) : (
     match content with
     | Transfer tx -> (Some (send_by tx.parameter tx.target tx.amount), storage)
     | Execute tx -> (Some (send_by tx.parameter tx.target tx.amount), storage)
-    | Execute_lambda l -> (Some (l ()), storage)
+    | Execute_lambda e -> (Some (e.lambda ()), storage)
     | Adjust_threshold t -> (None, Storage.Op.adjust_threshold t storage)
     | Add_owners s -> (None, Storage.Op.add_owners s storage)
     | Remove_owners s -> (None, Storage.Op.remove_owners s storage)

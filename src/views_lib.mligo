@@ -30,7 +30,7 @@ let to_view_proposal_content (type a) (p : a proposal_content) : (a view_proposa
   match p with
   | Transfer t -> Transfer t
   | Execute e -> Execute e
-  | Execute_lambda _ -> Execute_lambda
+  | Execute_lambda e -> Execute_lambda { metadata = e.metadata }
   | Adjust_threshold t -> Adjust_threshold t
   | Add_owners s -> Add_owners s
   | Remove_owners s -> Remove_owners s
