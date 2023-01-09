@@ -19,6 +19,7 @@
 #import "ligo-breathalyzer/lib/lib.mligo" "Breath"
 #include "../../src/internal/contract.mligo"
 #import "../../src/internal/proposal_content.mligo" "Proposal_content"
+#import "./util.mligo" "Util"
 
 type proposal_content = Proposal_content.Types.t
 
@@ -43,11 +44,11 @@ let originate (type a) (level: Breath.Logger.level) (main : a request -> a resul
 let create_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal : (a proposal_content) list) () =
   Breath.Contract.transfert_with_entrypoint_to contract "create_proposal" proposal 0tez
 
-let sign_and_resolve_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal_number : nat) (agreement : bool) () =
-  Breath.Contract.transfert_with_entrypoint_to contract "sign_and_resolve_proposal" (proposal_number, agreement) 0tez
+let sign_and_resolve_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal_id : nat) (agreement : bool) (proposal : (a proposal_content) list) () =
+  Breath.Contract.transfert_with_entrypoint_to contract "sign_and_resolve_proposal" (proposal_id, proposal, agreement) 0tez
 
-let sign_proposal_only (type a) (contract : (a parameter_types, a storage_types) originated) (proposal_number : nat) (agreement : bool) () =
-  Breath.Contract.transfert_with_entrypoint_to contract "sign_proposal_only" (proposal_number, agreement) 0tez
+let sign_proposal_only (type a) (contract : (a parameter_types, a storage_types) originated) (proposal_id : nat) (agreement : bool) (proposal : (a proposal_content) list) () =
+  Breath.Contract.transfert_with_entrypoint_to contract "sign_proposal_only" (proposal_id, proposal, agreement) 0tez
 
-let resolve_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal_number : nat) () =
-  Breath.Contract.transfert_with_entrypoint_to contract "resolve_proposal" proposal_number 0tez
+let resolve_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal_id : nat) (proposal : (a proposal_content) list) () =
+  Breath.Contract.transfert_with_entrypoint_to contract "resolve_proposal" (proposal_id, proposal) 0tez
