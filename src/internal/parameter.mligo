@@ -26,7 +26,7 @@ module Types = struct
     type 'a t =
     | Default of unit
     | Create_proposal of ('a proposal_content) list
-    | Sign_and_resolve_proposal of (proposal_id * agreement)
-    | Sign_proposal_only of (proposal_id * agreement)
-    | Resolve_proposal of proposal_id
+    | Sign_and_resolve_proposal of (proposal_id * ('a proposal_content) list * agreement)
+    | Sign_proposal_only of (proposal_id * ('a proposal_content) list * agreement)
+    | Resolve_proposal of proposal_id * ('a proposal_content) list
 end
