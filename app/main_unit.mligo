@@ -30,8 +30,8 @@ let main (request : unit request) : unit result =
   Lib.contract request
 
 [@view]
-let signers (input : unit * unit storage) : address set =
-  Views.signers input
+let owners (input : unit * unit storage) : address set =
+  Views.owners input
 
 [@view]
 let threshold (input : unit * unit storage) : nat =

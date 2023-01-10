@@ -34,8 +34,8 @@ let case_emitted_create_proposal =
   "successuful emit event"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address; bob.address;] in
-      let init_storage = Helper.init_storage (signers, 2n) in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 2n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
       let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
       let param = ([] : (nat proposal_content) list) in
@@ -49,7 +49,7 @@ let case_emitted_create_proposal =
       let (emitted_id, emitted_proposal) = Option.unopt (List.head_opt events) in
 
       let storage = Breath.Contract.storage_of multisig_contract in
-      let proposal = Util.unopt (Big_map.find_opt 1n storage.proposal_map) "proposal 1 doesn't exist" in
+      let proposal = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         action1
@@ -63,8 +63,8 @@ let case_emitted_sign_proposal =
   "successuful emit event"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address; bob.address;] in
-      let init_storage = Helper.init_storage (signers, 2n) in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 2n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
       let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
       let param = ([] : (nat proposal_content) list) in
@@ -74,15 +74,16 @@ let case_emitted_sign_proposal =
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal_only multisig_contract 1n true) in
       let multisig_address = multisig_contract.originated_address in
 
-      let events = (Util.get_last_events_from multisig_address "sign_proposal" : (storage_types_proposal_id * address) list) in
+      let events = (Util.get_last_events_from multisig_address "sign_proposal" : (storage_types_proposal_id * address * bool) list) in
 
-      let (emitted_proposal_id, emitted_addr) = Option.unopt (List.head_opt events) in
+      let (emitted_proposal_id, emitted_addr, emitted_agreement) = Option.unopt (List.head_opt events) in
 
       Breath.Result.reduce [
         action1
       ; sign_action1
       ; Breath.Assert.is_equal "proposal id" emitted_proposal_id 1n
-      ; Breath.Assert.is_equal "signer" emitted_addr bob.address
+      ; Breath.Assert.is_equal "owner" emitted_addr bob.address
+      ; Breath.Assert.is_equal "agreement" emitted_agreement true
       ])
 
 let case_emitted_exe_proposal =
@@ -91,8 +92,8 @@ let case_emitted_exe_proposal =
   "successuful emit event"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address; bob.address;] in
-      let init_storage = Helper.init_storage (signers, 1n) in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 1n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
       let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
       let param = ([] : (nat proposal_content) list) in
@@ -100,10 +101,10 @@ let case_emitted_exe_proposal =
       let param1 = (Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;} :: param) in
       let action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal_only multisig_contract 1n true) in
-      let exe_action1 = Breath.Context.act_as bob (Helper.execute_proposal multisig_contract 1n) in
+      let exe_action1 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n) in
 
       let multisig_address = multisig_contract.originated_address in
-      let events = (Util.get_last_events_from multisig_address "execute_proposal" : (storage_types_proposal_id * address) list) in
+      let events = (Util.get_last_events_from multisig_address "resolve_proposal" : (storage_types_proposal_id * address) list) in
 
       let (emitted_proposal_id, emitted_addr) = Option.unopt (List.head_opt events) in
 
@@ -112,37 +113,38 @@ let case_emitted_exe_proposal =
       ; sign_action1
       ; exe_action1
       ; Breath.Assert.is_equal "proposal id" emitted_proposal_id 1n
-      ; Breath.Assert.is_equal "signer" emitted_addr bob.address
+      ; Breath.Assert.is_equal "owner" emitted_addr bob.address
       ])
 
-let case_emitted_sign_and_execute_proposal =
+let case_emitted_sign_and_resolve_proposal =
   Breath.Model.case
   "test emitted event for signing proposal and executing proposal"
   "successuful emit event"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address; bob.address;] in
-      let init_storage = Helper.init_storage (signers, 1n) in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 1n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
       let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
       let param = ([] : (nat proposal_content) list) in
 
       let param1 = (Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;} :: param) in
       let action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
-      let sign_action1 = Breath.Context.act_as bob (Helper.sign_and_execute_proposal multisig_contract 1n true) in
+      let sign_action1 = Breath.Context.act_as bob (Helper.sign_and_resolve_proposal multisig_contract 1n true) in
       let multisig_address = multisig_contract.originated_address in
 
-      let sign_events = (Util.get_last_events_from multisig_address "sign_proposal" : (storage_types_proposal_id * address) list) in
-      let exe_events = (Util.get_last_events_from multisig_address "execute_proposal" : (storage_types_proposal_id * address) list) in
+      let sign_events = (Util.get_last_events_from multisig_address "sign_proposal" : (storage_types_proposal_id * address * bool) list) in
+      let exe_events = (Util.get_last_events_from multisig_address "resolve_proposal" : (storage_types_proposal_id * address) list) in
 
-      let (emitted_sign_proposal_id, emitted_signer_addr) = Option.unopt (List.head_opt sign_events) in
+      let (emitted_sign_proposal_id, emitted_owner_addr, emitted_agreement) = Option.unopt (List.head_opt sign_events) in
       let (emitted_exe_proposal_id, emitted_exe_addr) = Option.unopt (List.head_opt exe_events) in
 
       Breath.Result.reduce [
         action1
       ; sign_action1
       ; Breath.Assert.is_equal "sign-proposal id" emitted_sign_proposal_id 1n
-      ; Breath.Assert.is_equal "signer address" emitted_signer_addr bob.address
+      ; Breath.Assert.is_equal "owner address" emitted_owner_addr bob.address
+      ; Breath.Assert.is_equal "agreement" emitted_agreement true
       ; Breath.Assert.is_equal "exe-proposal id" emitted_exe_proposal_id 1n
       ; Breath.Assert.is_equal "executor address" emitted_exe_addr bob.address
       ])
@@ -153,26 +155,27 @@ let case_emitted_sign_proposal_without_exe_proposal =
   "successuful emit event"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address; bob.address;] in
-      let init_storage = Helper.init_storage (signers, 2n) in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 2n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
       let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
       let param = ([] : (nat proposal_content) list) in
 
       let param1 = (Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;} :: param) in
       let action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
-      let sign_action1 = Breath.Context.act_as bob (Helper.sign_and_execute_proposal multisig_contract 1n true) in
+      let sign_action1 = Breath.Context.act_as bob (Helper.sign_and_resolve_proposal multisig_contract 1n true) in
       let multisig_address = multisig_contract.originated_address in
 
-      let sign_events = (Util.get_last_events_from multisig_address "sign_proposal" : (storage_types_proposal_id * address) list) in
+      let sign_events = (Util.get_last_events_from multisig_address "sign_proposal" : (storage_types_proposal_id * address * bool) list) in
 
-      let (emitted_sign_proposal_id, emitted_signer_addr) = Option.unopt (List.head_opt sign_events) in
+      let (emitted_sign_proposal_id, emitted_owner_addr, emitted_agreement) = Option.unopt (List.head_opt sign_events) in
 
       Breath.Result.reduce [
         action1
       ; sign_action1
       ; Breath.Assert.is_equal "sign-proposal id" emitted_sign_proposal_id 1n
-      ; Breath.Assert.is_equal "signer address" emitted_signer_addr bob.address
+      ; Breath.Assert.is_equal "owner address" emitted_owner_addr bob.address
+      ; Breath.Assert.is_equal "agreement" emitted_agreement true
       ])
 
 let case_emitted_receiving_amount =
@@ -181,8 +184,8 @@ let case_emitted_receiving_amount =
   "successuful emit event"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address; bob.address;] in
-      let init_storage = Helper.init_storage (signers, 2n) in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 2n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
       let contract = Mock_contract.originate_transfer_only_contract level in
 
@@ -203,7 +206,7 @@ let test_suite =
     case_emitted_create_proposal
   ; case_emitted_sign_proposal
   ; case_emitted_exe_proposal
-  ; case_emitted_sign_and_execute_proposal
+  ; case_emitted_sign_and_resolve_proposal
   ; case_emitted_sign_proposal_without_exe_proposal
   ; case_emitted_receiving_amount
   ]

@@ -1,5 +1,5 @@
 # Multi-signature
-Multi-signature (also multisig) wallet allows to share the ownership of an account by a smart contract. Each owner, also called signer, can create a proposal to propose transferring Tez or executing other contracts. Signer provides approval stored on-chain by performing Tezos transaction. Once gathering the minimal approvals, the multisig will perform the proposal.
+Multi-signature (also multisig) wallet allows to share the ownership of an account by a smart contract. Each owner can create a proposal to propose transferring Tez or executing other contracts. Signer provides approval stored on-chain by performing Tezos transaction. Once gathering the minimal approvals, the multisig will perform the proposal.
 
 # Requirements
 The contract is written in cameligo. Please follow [the instructions of installation in LIGO](https://ligolang.org/docs/intro/introduction?lang=cameligo).
@@ -77,48 +77,48 @@ This entrypoint can receive Tez from any source.
   - data: `(sender, address)`
 
 ### create_proposal
-Each signer can create proposal through this entrypoint. The entrypoint supports creating a batch of transactions. The batch is atomic and execution by order. If modifing settings are proposed, the modified setting will NOT apply in this batch immediately. The setting will effect on a next batch/transaction.
+Each owner can create proposal through this entrypoint. The entrypoint supports creating a batch of transactions. The batch is atomic and execution by order. If modifing settings are proposed, the modified setting will NOT apply in this batch immediately. The setting will effect on a next batch/transaction.
 
-- proposal that signer can create
+- proposal that owner can create
   - `Transfer of { target:address; parameter:unit; amount:tez}`
      - transfer amount only
   - `Execute of { target:address; parameter:'a; amount:tez}`
      - execute contract with type of parameter `'a`
-  - `Execute_lambda of (unit -> operation)`
+  - `Execute_lambda of { metadata: bytes option; lambda: (unit -> operation)}`
      - execute lambda, note that the cost of using `Transfer` and `Execute`is cheaper than `Execute_lambda`
   - `Adjust_threshold of nat`
      - adjust threshold. the threshold should be >0. Otherwises, errors will occur.
-  - `Add_signers of address set`
-     - add signers
-  - `Remove_signers of address set`
-     - remove signers
+  - `Add_owners of address set`
+     - add owners
+  - `Remove_owners of address set`
+     - remove owners
 
 - Emit event
   - tag: `create_proposal`
   - data: `(proposal id, created proposal)`
 
-### sign_and_execute_proposal
-Signers can provide an approval or a disapproval through this entrypoint. The signer who is statisfied the minimal requestment of approvals will also trigger the execution of proposal. After the proposal has been executed, signers can not provide their approvals.
+### sign_and_resolve_proposal
+Signers can provide an approval or a disapproval through this entrypoint. The owner who is statisfied the minimal requestment of approvals will also trigger the execution of proposal. After the proposal has been resolved, owners can not provide their approvals.
 
 - Emit event
   - tag: `sign_proposal`
-  - data: `(proposal id, signer)`
-  - tag: `execute_proposal` (only when proposal is executed)
-  - data: `(proposal id, signer)`
+  - data: `(proposal id, owner, agreement)`
+  - tag: `resolve_proposal` (only when proposal is resolved)
+  - data: `(proposal id, owner)`
 
 # sign_proposal_only
-Signers can provide an approval or a disapproval through this entrypoint. Unlike `sign_and_execute_proposal`, the proposal won't be execute in any case.
+Signers can provide an approval or a disapproval through this entrypoint. Unlike `sign_and_resolve_proposal`, the proposal won't be resolve in any case.
 
 - Emit event
   - tag: `sign_proposal`
-  - data: `(proposal id, signer)`
+  - data: `(proposal id, owner, agreement)`
 
-# execute_proposal
-Signers can execute proposal when minimal requestment is statisfied.
+# resolve_proposal
+Signers can resolve proposal when minimal requestment is statisfied.
 
 - Emit event
-  - tag: `execute_proposal`
-  - data: `(proposal id, signer)`
+  - tag: `resolve_proposal`
+  - data: `(proposal id, owner)`
 
 # Deploy
 We provide several steps for quick deploying contracts in `app/` to ghostnet.

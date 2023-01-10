@@ -25,46 +25,51 @@
 
 type storage_types = Storage.Types.t
 type storage_types_proposal = Storage.Types.proposal
+type storage_types_proposal_state = Storage.Types.proposal_state
 type proposal_content = Proposal_content.Types.t
 
 [@inline]
-let only_signer (type a) (storage : a storage_types) : unit =
-    assert_with_error (Set.mem (Tezos.get_sender ()) storage.signers) Errors.only_signer
+let only_owner (type a) (storage : a storage_types) : unit =
+    assert_with_error (Set.mem (Tezos.get_sender ()) storage.owners) Errors.only_owner
 
 [@inline]
 let amount_must_be_zero_tez (an_amout : tez) : unit =
     assert_with_error (an_amout = 0tez) Errors.amount_must_be_zero_tez
 
 [@inline]
-let not_sign_yet (type a) (proposal : a storage_types_proposal) : unit =
+let unsigned (type a) (proposal : a storage_types_proposal) : unit =
     assert_with_error (not Map.mem (Tezos.get_sender ()) proposal.signatures) Errors.has_already_signed
 
 [@inline]
-let ready_to_execute (executed : address option) : unit =
-    assert_with_error (Util.is_some executed) Errors.no_enough_approval_to_execute
+let ready_to_execute (state : storage_types_proposal_state) : unit =
+    assert_with_error (not (state = (Proposing : storage_types_proposal_state))) Errors.no_enough_signature_to_resolve
 
 [@inline]
-let not_execute_yet (executed : address option) : unit =
-    assert_with_error (Util.is_none executed) Errors.not_execute_yet
+let unresolved (state : storage_types_proposal_state) : unit =
+    assert_with_error (state = (Proposing : storage_types_proposal_state)) Errors.unresolved
 
 [@inline]
 let check_proposal (type a) (content: a proposal_content) : unit =
     match content with
-    | Transfer _ -> ()
+    | Transfer t ->
+        assert_with_error (not (t.amount = 0tez)) Errors.amount_is_zero
     | Execute _ -> ()
     | Execute_lambda _ -> ()
     | Adjust_threshold t ->
         assert_with_error (t > 0n) Errors.invalidated_threshold
-    | Add_signers _ -> ()
-    | Remove_signers _ -> ()
+    | Add_owners s ->
+        assert_with_error (Set.cardinal s > 0n) Errors.no_owners
+    | Remove_owners s ->
+        assert_with_error (Set.cardinal s > 0n) Errors.no_owners
 
 [@inline]
 let check_proposals_content (type a) (proposals_content: (a proposal_content) list) : unit =
+    let () = assert_with_error ((List.length proposals_content) > 0n) Errors.no_proposal in
     List.iter check_proposal proposals_content
 
 [@inline]
 let check_setting (type a) (storage : a storage_types) : unit =
-    let () = assert_with_error (Set.cardinal storage.signers > 0n) Errors.no_signer  in
-    let () = assert_with_error (Set.cardinal storage.signers >= storage.threshold) Errors.no_enough_signer in
+    let () = assert_with_error (Set.cardinal storage.owners > 0n) Errors.no_owner  in
+    let () = assert_with_error (Set.cardinal storage.owners >= storage.threshold) Errors.no_enough_owner in
     let () = assert_with_error (storage.threshold > 0n) Errors.invalidated_threshold in
     ()

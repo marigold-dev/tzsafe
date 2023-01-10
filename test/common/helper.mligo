@@ -22,10 +22,10 @@
 
 type proposal_content = Proposal_content.Types.t
 
-let init_storage (type a) (signers, threshold: address set * nat) : a storage_types =
+let init_storage (type a) (owners, threshold: address set * nat) : a storage_types =
 { proposal_counter = 0n;
-  proposal_map     = (Big_map.empty : (nat, a storage_types_proposal) big_map);
-  signers          = signers;
+  proposals     = (Big_map.empty : (nat, a storage_types_proposal) big_map);
+  owners          = owners;
   threshold        = threshold;
   metadata         = (Big_map.empty: (string, bytes) big_map);
 }
@@ -43,11 +43,11 @@ let originate (type a) (level: Breath.Logger.level) (main : a request -> a resul
 let create_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal : (a proposal_content) list) () =
   Breath.Contract.transfert_with_entrypoint_to contract "create_proposal" proposal 0tez
 
-let sign_and_execute_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal_number : nat) (agreement : bool) () =
-  Breath.Contract.transfert_with_entrypoint_to contract "sign_and_execute_proposal" (proposal_number, agreement) 0tez
+let sign_and_resolve_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal_number : nat) (agreement : bool) () =
+  Breath.Contract.transfert_with_entrypoint_to contract "sign_and_resolve_proposal" (proposal_number, agreement) 0tez
 
 let sign_proposal_only (type a) (contract : (a parameter_types, a storage_types) originated) (proposal_number : nat) (agreement : bool) () =
   Breath.Contract.transfert_with_entrypoint_to contract "sign_proposal_only" (proposal_number, agreement) 0tez
 
-let execute_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal_number : nat) () =
-  Breath.Contract.transfert_with_entrypoint_to contract "execute_proposal" proposal_number 0tez
+let resolve_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal_number : nat) () =
+  Breath.Contract.transfert_with_entrypoint_to contract "resolve_proposal" proposal_number 0tez

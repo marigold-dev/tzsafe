@@ -1,6 +1,6 @@
 {
   "name": "multi-signature",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "author": "Marigold <contact@marigold.dev>",
   "description": "Multi-signature wallet",
   "scripts": {

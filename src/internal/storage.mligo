@@ -26,17 +26,23 @@ module Types = struct
     type proposal_content = Proposal_content.Types.t
     type view_proposal_content = Proposal_content.Types.view
 
-    type proposal_state = Active | Done | Closed
+    type actor =
+    [@layout:comb]
+    {
+      actor     : address;
+      timestamp : timestamp;
+    }
+
+    type proposal_state = Proposing | Executed | Rejected
 
     type 'a view_proposal =
     [@layout:comb]
     {
         state: proposal_state;
         signatures: (address, bool) map;
-        proposer: address;
-        executed: address option;
-        timestamp: timestamp;
-        content : ('a view_proposal_content) list
+        proposer : actor;
+        resolver : actor option;
+        contents : ('a view_proposal_content) list
     }
 
     type 'a proposal =
@@ -44,18 +50,17 @@ module Types = struct
     {
         state: proposal_state;
         signatures: (address, bool) map;
-        proposer: address;
-        executed: address option;
-        timestamp: timestamp;
-        content : ('a proposal_content) list
+        proposer : actor;
+        resolver : actor option;
+        contents : ('a proposal_content) list
     }
 
     type 'a t =
     [@layout:comb]
     {
         proposal_counter: nat;
-        proposal_map    : (proposal_id, 'a proposal) big_map;
-        signers         : address set;
+        proposals    : (proposal_id, 'a proposal) big_map;
+        owners          : address set;
         threshold       : nat;
         metadata        : (string, bytes) big_map;
     }
@@ -66,82 +71,94 @@ module Op = struct
     type proposal_id = Parameter.Types.proposal_id
     type agreement = Parameter.Types.agreement
     type proposal = Types.proposal
+    type proposal_state = Types.proposal_state
     type types = Types.t
 
     [@inline]
     let create_proposal (type a) (contents: (a proposal_content) list) : a proposal =
         {
-            state            = Active;
+            state            = Proposing;
             signatures       = Map.empty;
-            proposer         = Tezos.get_sender ();
-            executed         = None;
-            timestamp        = (Tezos.get_now ());
-            content          = contents;
+            proposer         =
+              {
+                actor = Tezos.get_sender ();
+                timestamp = Tezos.get_now ()
+              };
+            resolver         = None;
+            contents          = contents;
         }
 
 
     [@inline]
     let register_proposal (type a) (proposal, storage: a proposal * a types) : a types =
         let proposal_counter = storage.proposal_counter + 1n in
-        let proposal_map = Big_map.add proposal_counter proposal storage.proposal_map in
+        let proposals = Big_map.add proposal_counter proposal storage.proposals in
         {
             storage with
-            proposal_map     = proposal_map;
+            proposals     = proposals;
             proposal_counter = proposal_counter
         }
 
     [@inline]
     let retrieve_proposal (type a) (proposal_number, storage : proposal_id * a types) : a proposal =
-        match Big_map.find_opt proposal_number storage.proposal_map with
+        match Big_map.find_opt proposal_number storage.proposals with
         | None -> failwith Errors.no_proposal_exist
         | Some proposal  -> proposal
 
 
     [@inline]
-    let update_signature (type a) (proposal, signer, agreement: a proposal * address * agreement) : a proposal =
+    let update_signature (type a) (proposal, owner, agreement: a proposal * address * agreement) : a proposal =
         {
             proposal with
-            signatures = Map.update signer (Some agreement) proposal.signatures;
+            signatures = Map.update owner (Some agreement) proposal.signatures;
         }
 
     [@inline]
     let ready_execution (type a) (proposal, approvals, threshold : a proposal * nat * nat) : a proposal =
-        let is_executed = approvals >= threshold && Util.is_none proposal.executed in
+        let is_executed = approvals >= threshold && proposal.state = (Proposing : proposal_state) in
         if is_executed
         then
           {
               proposal with
-              state    = Done;
-              executed = Some (Tezos.get_sender ())
+              state    = Executed;
+              resolver =
+                Some {
+                  actor = Tezos.get_sender ();
+                  timestamp = Tezos.get_now ()
+                };
           }
         else proposal
 
     [@inline]
     let close_proposal (type a) (proposal, disapprovals, threshold : a proposal * nat * nat) : a proposal =
-        let is_closed = disapprovals > threshold && Util.is_none proposal.executed in
+        let is_closed = disapprovals > threshold && proposal.state = (Proposing : proposal_state) in
         if is_closed
         then
           {
               proposal with
-              state    = Closed;
-              executed = Some (Tezos.get_sender ())
+              state    = Rejected;
+              resolver =
+                Some {
+                  actor = Tezos.get_sender ();
+                  timestamp = Tezos.get_now ()
+                };
           }
         else proposal
 
     [@inline]
-    let update_proposal_state (type a) (proposal, number_of_signers, threshold: a proposal * nat * nat) : a proposal =
+    let update_proposal_state (type a) (proposal, number_of_owners, threshold: a proposal * nat * nat) : a proposal =
         let statistic ((t_acc,f_acc), (_, v) : (nat * nat) * (address * bool)) : (nat * nat) =
           if v then (t_acc + 1n, f_acc) else (t_acc, f_acc + 1n) in
         let (approvals, disapprovals) = Map.fold statistic proposal.signatures (0n, 0n) in
         let proposal = ready_execution (proposal, approvals, threshold) in
-        close_proposal (proposal, disapprovals, abs(number_of_signers - threshold))
+        close_proposal (proposal, disapprovals, abs(number_of_owners - threshold))
 
     [@inline]
     let update_proposal (type a) (proposal_number, proposal, storage: proposal_id * a proposal * a types) : a types =
-        let proposal_map = Big_map.update proposal_number (Some proposal) storage.proposal_map in
+        let proposals = Big_map.update proposal_number (Some proposal) storage.proposals in
         {
             storage with
-            proposal_map = proposal_map
+            proposals = proposals
         }
 
     [@inline]
@@ -149,12 +166,12 @@ module Op = struct
       { storage with threshold = threshold }
 
     [@inline]
-    let add_signers (type a) (signers: address set) (storage : a types) : a types =
+    let add_owners (type a) (owners: address set) (storage : a types) : a types =
       let add (set, s : address set * address) : address set = Set.add s set in
-      { storage with signers = Set.fold add signers storage.signers }
+      { storage with owners = Set.fold add owners storage.owners }
 
     [@inline]
-    let remove_signers (type a) (signers: address set) (storage : a types) : a types =
+    let remove_owners (type a) (owners: address set) (storage : a types) : a types =
       let remove (set, s : address set * address) : address set = Set.remove s set in
-      { storage with signers = Set.fold remove signers storage.signers }
+      { storage with owners = Set.fold remove owners storage.owners }
 end

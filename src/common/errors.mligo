@@ -16,13 +16,16 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-let only_signer = "Only the contract signers can perform this operation"
+let only_owner = "Only the contract owners can perform this operation"
 let amount_must_be_zero_tez = "You must not send tez to the smart contract"
 let no_proposal_exist = "No proposal exists for this counter"
 let has_already_signed = "You have already signed this proposal"
 let unknown_contract = "Unknown contract"
 let invalidated_threshold = "Threshold must be greater than 1"
-let no_signer = "No signer is set in the contract"
-let no_enough_signer = "Number of signer should be greater than threshold"
-let not_execute_yet = "This proposal has been executed"
-let no_enough_approval_to_execute = "No enough approval to execute the proposal"
+let no_owner = "No owner is set in the contract"
+let no_enough_owner = "Number of owner should be greater than threshold"
+let unresolved = "This proposal has been resolved"
+let no_enough_signature_to_resolve = "No enough signature to resolve the proposal"
+let no_proposal = "There is no content in proposal"
+let no_owners = "No owner to be added or removed"
+let amount_is_zero = "Amount should be greater than zero"

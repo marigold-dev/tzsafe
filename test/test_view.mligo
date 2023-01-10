@@ -35,16 +35,16 @@ let case_view_setting =
   "view successufully return setting"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address; bob.address;] in
-      let init_storage = Helper.init_storage (signers, 2n) in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 2n) in
       let multisig = Helper.originate level App.main init_storage 0tez in
 
       let storage = Breath.Contract.storage_of multisig in
-      let view_signers = App.signers ((), storage) in
+      let view_owners = App.owners ((), storage) in
       let view_threshold = App.threshold ((), storage) in
 
       Breath.Result.reduce [
-        Breath.Assert.is_equal "signer" view_signers signers
+        Breath.Assert.is_equal "owner" view_owners owners
       ; Breath.Assert.is_equal "threshold" view_threshold 2n
       ])
 
@@ -54,8 +54,8 @@ let case_view_proposal =
   "successuful view proposal"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address; bob.address;] in
-      let init_storage = Helper.init_storage (signers, 2n) in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 2n) in
       let multisig = Helper.originate level App.main init_storage 0tez in
       let param = ([] : (bytes proposal_content) list) in
 
@@ -64,7 +64,7 @@ let case_view_proposal =
 
       let storage = Breath.Contract.storage_of multisig in
 
-      let expected_proposal = Util.unopt (Big_map.find_opt 1n storage.proposal_map) "proposal 1 doesn't exist" in
+      let expected_proposal = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
       let view_proposal = App.proposal (1n, storage) in
 
       Breath.Result.reduce [
@@ -78,8 +78,8 @@ let case_view_proposals =
   "successuful view proposals"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address; bob.address;] in
-      let init_storage = Helper.init_storage (signers, 2n) in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 2n) in
       let multisig = Helper.originate level App.main init_storage 0tez in
       let param = ([] : (bytes proposal_content) list) in
 
@@ -98,8 +98,8 @@ let case_view_proposals =
       let storage = Breath.Contract.storage_of multisig in
       let view_proposals = App.proposals ((2n, 1n), storage) in
 
-      let expected_proposal2 = Util.unopt (Big_map.find_opt 2n storage.proposal_map) "proposal 2 doesn't exist" in
-      let expected_proposal3 = Util.unopt (Big_map.find_opt 3n storage.proposal_map) "proposal 3 doesn't exist" in
+      let expected_proposal2 = Util.unopt (Big_map.find_opt 2n storage.proposals) "proposal 2 doesn't exist" in
+      let expected_proposal3 = Util.unopt (Big_map.find_opt 3n storage.proposals) "proposal 3 doesn't exist" in
 
       Breath.Result.reduce [
         action1

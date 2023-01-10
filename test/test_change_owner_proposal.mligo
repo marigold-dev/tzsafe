@@ -25,115 +25,115 @@
 
 type proposal_content = Proposal_content.Types.t
 
-let case_execute_add_signer_proposal =
+let case_execute_add_owner_proposal =
   Breath.Model.case
-  "test add signers proposal"
-  "successuful add signers"
+  "test add owners proposal"
+  "successuful add owners"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address] in
-      let init_storage = Helper.init_storage (signers, 1n) in
+      let owners : address set = Set.literal [alice.address] in
+      let init_storage = Helper.init_storage (owners, 1n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
 
       let param = ([] : (nat proposal_content) list) in
 
       (* create proposal *)
-      let param = Add_signers (Set.literal [bob.address; carol.address]) :: param in
+      let param = Add_owners (Set.literal [bob.address; carol.address]) :: param in
       let action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
-      let sign_action = Breath.Context.act_as alice (Helper.sign_and_execute_proposal multisig_contract 1n true) in
+      let sign_action = Breath.Context.act_as alice (Helper.sign_and_resolve_proposal multisig_contract 1n true) in
 
       let storage = Breath.Contract.storage_of multisig_contract in
 
       Breath.Result.reduce [
         action
       ; sign_action
-      ; Breath.Assert.is_equal "storage threshold" storage.signers
+      ; Breath.Assert.is_equal "storage threshold" storage.owners
         (Set.literal [alice.address; bob.address; carol.address])
       ])
 
-let case_execute_add_existed_signer_proposal =
+let case_execute_add_existed_owner_proposal =
   Breath.Model.case
-  "test add existed signers proposal"
+  "test add existed owners proposal"
   "nothing happen"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, _bob, _carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address] in
-      let init_storage = Helper.init_storage (signers, 1n) in
+      let owners : address set = Set.literal [alice.address] in
+      let init_storage = Helper.init_storage (owners, 1n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
 
       let param = ([] : (nat proposal_content) list) in
 
       (* create proposal *)
-      let param = Add_signers (Set.literal [alice.address;]) :: param in
+      let param = Add_owners (Set.literal [alice.address;]) :: param in
       let action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
-      let sign_action = Breath.Context.act_as alice (Helper.sign_and_execute_proposal multisig_contract 1n true) in
+      let sign_action = Breath.Context.act_as alice (Helper.sign_and_resolve_proposal multisig_contract 1n true) in
 
       let storage = Breath.Contract.storage_of multisig_contract in
 
       Breath.Result.reduce [
         action
       ; sign_action
-      ; Breath.Assert.is_equal "storage threshold" storage.signers
+      ; Breath.Assert.is_equal "storage threshold" storage.owners
         (Set.literal [alice.address;])
       ])
 
-let case_execute_remove_signer_proposal =
+let case_execute_remove_owner_proposal =
   Breath.Model.case
-  "test remove signers proposal"
-  "successuful remove signers"
+  "test remove owners proposal"
+  "successuful remove owners"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address; bob.address; carol.address] in
-      let init_storage = Helper.init_storage (signers, 1n) in
+      let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
+      let init_storage = Helper.init_storage (owners, 1n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
 
       let param = ([] : (nat proposal_content) list) in
 
       (* create proposal *)
-      let param = Remove_signers (Set.literal [bob.address; carol.address]) :: param in
+      let param = Remove_owners (Set.literal [bob.address; carol.address]) :: param in
       let action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
-      let sign_action = Breath.Context.act_as alice (Helper.sign_and_execute_proposal multisig_contract 1n true) in
+      let sign_action = Breath.Context.act_as alice (Helper.sign_and_resolve_proposal multisig_contract 1n true) in
 
       let storage = Breath.Contract.storage_of multisig_contract in
 
       Breath.Result.reduce [
         action
       ; sign_action
-      ; Breath.Assert.is_equal "storage threshold" storage.signers
+      ; Breath.Assert.is_equal "storage threshold" storage.owners
         (Set.literal [alice.address;])
       ])
 
-let case_execute_remove_nonexisted_signer_proposal =
+let case_execute_remove_nonexisted_owner_proposal =
   Breath.Model.case
-  "test remove nonexisted signers proposal"
+  "test remove nonexisted owners proposal"
   "nothing happen"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
-      let signers : address set = Set.literal [alice.address;] in
-      let init_storage = Helper.init_storage (signers, 1n) in
+      let owners : address set = Set.literal [alice.address;] in
+      let init_storage = Helper.init_storage (owners, 1n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
 
       let param = ([] : (nat proposal_content) list) in
 
       (* create proposal *)
-      let param = Remove_signers (Set.literal [bob.address; carol.address]) :: param in
+      let param = Remove_owners (Set.literal [bob.address; carol.address]) :: param in
       let action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
-      let sign_action = Breath.Context.act_as alice (Helper.sign_and_execute_proposal multisig_contract 1n true) in
+      let sign_action = Breath.Context.act_as alice (Helper.sign_and_resolve_proposal multisig_contract 1n true) in
 
       let storage = Breath.Contract.storage_of multisig_contract in
 
       Breath.Result.reduce [
         action
       ; sign_action
-      ; Breath.Assert.is_equal "storage threshold" storage.signers
+      ; Breath.Assert.is_equal "storage threshold" storage.owners
         (Set.literal [alice.address;])
       ])
 
 let test_suite =
-  Breath.Model.suite "Suite for changing signer proposal" [
-    case_execute_add_signer_proposal
-  ; case_execute_add_existed_signer_proposal
-  ; case_execute_remove_signer_proposal
-  ; case_execute_remove_nonexisted_signer_proposal
+  Breath.Model.suite "Suite for changing owner proposal" [
+    case_execute_add_owner_proposal
+  ; case_execute_add_existed_owner_proposal
+  ; case_execute_remove_owner_proposal
+  ; case_execute_remove_nonexisted_owner_proposal
   ]
 

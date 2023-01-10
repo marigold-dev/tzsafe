@@ -38,10 +38,10 @@ let send (type a) (content : a proposal_content) (storage : a storage_types) : (
     match content with
     | Transfer tx -> (Some (send_by tx.parameter tx.target tx.amount), storage)
     | Execute tx -> (Some (send_by tx.parameter tx.target tx.amount), storage)
-    | Execute_lambda l -> (Some (l ()), storage)
+    | Execute_lambda e -> (Some (e.lambda ()), storage)
     | Adjust_threshold t -> (None, Storage.Op.adjust_threshold t storage)
-    | Add_signers s -> (None, Storage.Op.add_signers s storage)
-    | Remove_signers s -> (None, Storage.Op.remove_signers s storage)
+    | Add_owners s -> (None, Storage.Op.add_owners s storage)
+    | Remove_owners s -> (None, Storage.Op.remove_owners s storage)
 
 let perform_operations (type a) (proposal: a storage_types_proposal) (storage : a storage_types) : operation list * a storage_types =
     let batch (type a) ((ops, s), c : (operation list * a storage_types) * a proposal_content) : (operation list * a storage_types) =
@@ -50,6 +50,6 @@ let perform_operations (type a) (proposal: a storage_types_proposal) (storage : 
       | Some op -> op::ops, new_s
       | None -> ops, new_s
     in
-    if proposal.state = (Done : storage_types_proposal_state)
-    then List.fold_left batch (Constants.no_operation, storage) proposal.content
+    if proposal.state = (Executed : storage_types_proposal_state)
+    then List.fold_left batch (Constants.no_operation, storage) proposal.contents
     else (Constants.no_operation, storage)

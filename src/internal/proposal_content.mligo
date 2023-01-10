@@ -30,16 +30,16 @@ module Types = struct
     type 'a view =
     | Transfer of unit transaction
     | Execute of ('a transaction)
-    | Execute_lambda
+    | Execute_lambda of { metadata: bytes option }
     | Adjust_threshold of nat
-    | Add_signers of address set
-    | Remove_signers of address set
+    | Add_owners of address set
+    | Remove_owners of address set
 
     type 'a t =
     | Transfer of unit transaction
     | Execute of ('a transaction)
-    | Execute_lambda of (unit -> operation)
+    | Execute_lambda of { metadata: bytes option; lambda: (unit -> operation) }
     | Adjust_threshold of nat
-    | Add_signers of address set
-    | Remove_signers of address set
+    | Add_owners of address set
+    | Remove_owners of address set
 end

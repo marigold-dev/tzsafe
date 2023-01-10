@@ -30,19 +30,18 @@ let to_view_proposal_content (type a) (p : a proposal_content) : (a view_proposa
   match p with
   | Transfer t -> Transfer t
   | Execute e -> Execute e
-  | Execute_lambda _ -> Execute_lambda
+  | Execute_lambda e -> Execute_lambda { metadata = e.metadata }
   | Adjust_threshold t -> Adjust_threshold t
-  | Add_signers s -> Add_signers s
-  | Remove_signers s -> Remove_signers s
+  | Add_owners s -> Add_owners s
+  | Remove_owners s -> Remove_owners s
 
 let to_view_proposal (type a) (p : a proposal) : (a view_proposal) =
   {
     state            = p.state;
     signatures       = p.signatures;
     proposer         = p.proposer;
-    executed         = p.executed;
-    timestamp        = p.timestamp;
-    content          = List.map to_view_proposal_content p.content;
+    resolver         = p.resolver;
+    contents          = List.map to_view_proposal_content p.contents;
   }
 
 let rec slice (type a) (start, end_, proposals, acc :
@@ -55,8 +54,8 @@ let rec slice (type a) (start, end_, proposals, acc :
     | None -> slice (idx, end_, proposals, acc)
     | Some p -> slice (idx, end_, proposals, Map.add idx p acc)
 
-let signers (type a) ((), storage : unit * a storage) : address set =
-  storage.signers
+let owners (type a) ((), storage : unit * a storage) : address set =
+  storage.owners
 
 let threshold (type a) ((), storage : unit * a storage) : nat =
   storage.threshold
@@ -68,4 +67,4 @@ let proposals (type a) (((limit,  offset), storage) : (proposal_id * proposal_id
    let end_ = offset + limit in
    Map.map
      (fun (_id, p : proposal_id * a proposal) : a view_proposal -> to_view_proposal p)
-     (slice(offset, end_, storage.proposal_map, Map.empty))
+     (slice(offset, end_, storage.proposals, Map.empty))
