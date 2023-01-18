@@ -25,3 +25,7 @@ let is_some (type a) (opt: a option) : bool =
   match opt with
   | Some _ -> true
   | None   -> false
+
+let reverse (type a) (xs : a list) : a list =
+  let acc (ys,x : (a list * a)) : a list = x :: ys in
+  List.fold_left acc ([] : a list) xs

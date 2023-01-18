@@ -34,22 +34,30 @@ let send_by (type a) (parameter: a) (target : address) (amount : tez) : operatio
     let contract = Option.unopt_with_error contract_opt Errors.unknown_contract in
     Tezos.transaction parameter amount contract
 
-let send (type a) (content : a proposal_content) (storage : a storage_types) : (operation option * a storage_types) =
+let send (type a) (content : a proposal_content) (storage : a storage_types)
+  : (operation option * a proposal_content * a storage_types) =
     match content with
-    | Transfer tx -> (Some (send_by tx.parameter tx.target tx.amount), storage)
-    | Execute tx -> (Some (send_by tx.parameter tx.target tx.amount), storage)
-    | Execute_lambda e -> (Some (e.lambda ()), storage)
-    | Adjust_threshold t -> (None, Storage.Op.adjust_threshold t storage)
-    | Add_owners s -> (None, Storage.Op.add_owners s storage)
-    | Remove_owners s -> (None, Storage.Op.remove_owners s storage)
+    | Transfer tx -> (Some (send_by tx.parameter tx.target tx.amount), content, storage)
+    | Execute tx -> (Some (send_by tx.parameter tx.target tx.amount), content, storage)
+    | Execute_lambda e ->
+       let new_content = Execute_lambda { e with lambda = None } in
+       (Option.map (fun (f : (unit -> operation)) : operation -> f ()) e.lambda, new_content, storage)
+    | Adjust_threshold t -> (None, content, Storage.Op.adjust_threshold t storage)
+    | Add_owners s -> (None, content, Storage.Op.add_owners s storage)
+    | Remove_owners s -> (None, content, Storage.Op.remove_owners s storage)
 
-let perform_operations (type a) (proposal: a storage_types_proposal) (storage : a storage_types) : operation list * a storage_types =
-    let batch (type a) ((ops, s), c : (operation list * a storage_types) * a proposal_content) : (operation list * a storage_types) =
-      let (opt_op, new_s) = send c s in
+let perform_operations (type a) (proposal: a storage_types_proposal) (storage : a storage_types) : operation list * a storage_types_proposal * a storage_types =
+    let batch (type a) ((ops, cs, s), c : (operation list * a proposal_content list * a storage_types) * a proposal_content) : (operation list * a proposal_content list * a storage_types) =
+      let (opt_op, new_c, new_s) = send c s in
       match opt_op with
-      | Some op -> op::ops, new_s
-      | None -> ops, new_s
+      | Some op -> op::ops, new_c::cs, new_s
+      | None ->
+          ops, cs, new_s
     in
     if proposal.state = (Executed : storage_types_proposal_state)
-    then List.fold_left batch (Constants.no_operation, storage) proposal.contents
-    else (Constants.no_operation, storage)
+    then
+      let (ops, cs, s) = List.fold_left batch (Constants.no_operation, [], storage) proposal.contents in
+      let ops = Util.reverse ops in
+      let cs = Util.reverse cs in
+      (ops, { proposal with contents = cs} , s)
+    else (Constants.no_operation, proposal, storage)
