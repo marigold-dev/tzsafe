@@ -22,6 +22,7 @@
 #import "./common/mock_contract.mligo" "Mock_contract"
 #import "./common/util.mligo" "Util"
 #import "../src/internal/proposal_content.mligo" "Proposal_content"
+#import "../src/internal/storage.mligo" "Storage"
 
 type proposal_content = Proposal_content.Types.t
 
@@ -46,16 +47,29 @@ let case_execute_lambda_proposal =
       in
 
       (* create proposal *)
-      let param = Execute_lambda { metadata = None; lambda = call_add_contract } :: param in
+      let param = Execute_lambda { metadata = None; lambda = Some call_add_contract } :: param in
       let action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
       let sign_action = Breath.Context.act_as bob (Helper.sign_and_resolve_proposal multisig_contract 1n true param) in
 
       let add_contract_storage = Breath.Contract.storage_of add_contract in
+      let storage = Breath.Contract.storage_of multisig_contract in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         action
       ; sign_action
       ; Breath.Assert.is_equal "storage of add contract" add_contract_storage 11n
+      ; Assert.is_proposal_equal "#1 proposal" proposal1
+        ({
+          state            = Executed;
+          signatures       = Map.literal [(bob.address, true)];
+          proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
+          resolver         = Some { actor = bob.address; timestamp = Tezos.get_now () };
+          contents         = [ Execute_lambda {
+            metadata       = None;
+            lambda         = None;
+          }]
+        })
       ])
 
 let test_suite =

@@ -68,7 +68,8 @@ let sign_and_resolve_proposal (type a) (proposal_id, proposal_content, agreement
     let proposal = Storage.Op.update_signature (proposal, owner, agreement) in
     let proposal = Storage.Op.update_proposal_state (proposal, Set.cardinal storage.owners,storage.threshold) in
     let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
-    let ops, storage = Execution.perform_operations proposal storage in
+    let ops, proposal, storage = Execution.perform_operations proposal storage in
+    let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
     let ops = Tezos.emit "%sign_proposal" (proposal_id, owner, agreement)::ops in
     if (proposal.state = (Proposing : storage_types_proposal_state))
     then (ops, storage)
@@ -103,9 +104,10 @@ let resolve_proposal (type a) (proposal_id, proposal_content, storage : Paramete
     let () = Conditions.ready_to_execute proposal.state in
     let () = Conditions.check_proposals_content proposal_content proposal.contents in
     let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
-    let ops, s = Execution.perform_operations proposal storage in
+    let ops, proposal, storage = Execution.perform_operations proposal storage in
+    let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
     let event = Tezos.emit "%resolve_proposal" (proposal_id, owner) in
-    (event::ops, s)
+    (event::ops, storage)
 
 let contract (type a) (action, storage : a request) : a result =
     let _ = Conditions.check_setting storage in

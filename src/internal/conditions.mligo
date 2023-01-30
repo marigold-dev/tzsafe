@@ -54,7 +54,8 @@ let check_proposal (type a) (content: a proposal_content) : unit =
     | Transfer t ->
         assert_with_error (not (t.amount = 0tez)) Errors.amount_is_zero
     | Execute _ -> ()
-    | Execute_lambda _ -> ()
+    | Execute_lambda e ->
+        assert_with_error (Util.is_some e.lambda) Errors.no_proposal
     | Adjust_threshold t ->
         assert_with_error (t > 0n) Errors.invalidated_threshold
     | Add_owners s ->
