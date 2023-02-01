@@ -34,6 +34,7 @@ module Types = struct
     | Adjust_threshold of nat
     | Add_owners of address set
     | Remove_owners of address set
+    | Adjust_effective_period of int
 
     type 'a t =
     | Transfer of unit transaction
@@ -42,4 +43,5 @@ module Types = struct
     | Adjust_threshold of nat
     | Add_owners of address set
     | Remove_owners of address set
+    | Adjust_effective_period of int
 end

@@ -34,6 +34,7 @@ let to_view_proposal_content (type a) (p : a proposal_content) : (a view_proposa
   | Adjust_threshold t -> Adjust_threshold t
   | Add_owners s -> Add_owners s
   | Remove_owners s -> Remove_owners s
+  | Adjust_effective_period e -> Adjust_effective_period e
 
 let to_view_proposal (type a) (p : a proposal) : (a view_proposal) =
   {
@@ -41,7 +42,7 @@ let to_view_proposal (type a) (p : a proposal) : (a view_proposal) =
     signatures       = p.signatures;
     proposer         = p.proposer;
     resolver         = p.resolver;
-    contents          = List.map to_view_proposal_content p.contents;
+    contents         = List.map to_view_proposal_content p.contents;
   }
 
 let rec slice (type a) (start, end_, proposals, acc :
