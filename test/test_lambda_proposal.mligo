@@ -49,7 +49,8 @@ let case_execute_lambda_proposal =
       (* create proposal *)
       let param = Execute_lambda { metadata = None; lambda = Some call_add_contract } :: param in
       let action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
-      let sign_action = Breath.Context.act_as bob (Helper.sign_and_resolve_proposal multisig_contract 1n true param) in
+      let sign_action = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param) in
+      let resolve_action = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param) in
 
       let add_contract_storage = Breath.Contract.storage_of add_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
@@ -58,6 +59,7 @@ let case_execute_lambda_proposal =
       Breath.Result.reduce [
         action
       ; sign_action
+      ; resolve_action
       ; Breath.Assert.is_equal "storage of add contract" add_contract_storage 11n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
