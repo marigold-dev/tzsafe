@@ -25,6 +25,7 @@ module Types = struct
     type proposal_id = Parameter.Types.proposal_id
     type proposal_content = Proposal_content.Types.t
     type view_proposal_content = Proposal_content.Types.view
+    type effective_period = int
 
     type actor =
     [@layout:comb]
@@ -33,7 +34,7 @@ module Types = struct
       timestamp : timestamp;
     }
 
-    type proposal_state = Proposing | Executed | Rejected
+    type proposal_state = Proposing | Executed | Rejected | Expired
 
     type 'a view_proposal =
     [@layout:comb]
@@ -58,11 +59,12 @@ module Types = struct
     type 'a t =
     [@layout:comb]
     {
-        proposal_counter: nat;
-        proposals    : (proposal_id, 'a proposal) big_map;
-        owners          : address set;
-        threshold       : nat;
-        metadata        : (string, bytes) big_map;
+        proposal_counter : nat;
+        proposals        : (proposal_id, 'a proposal) big_map;
+        owners           : address set;
+        threshold        : nat;
+        effective_period : effective_period;
+        metadata         : (string, bytes) big_map;
     }
 end
 
@@ -71,6 +73,8 @@ module Op = struct
     type proposal_id = Parameter.Types.proposal_id
     type agreement = Parameter.Types.agreement
     type proposal = Types.proposal
+    type proposal_state = Types.proposal_state
+    type effective_period = Types.effective_period
     type proposal_state = Types.proposal_state
     type types = Types.t
 
@@ -85,7 +89,7 @@ module Op = struct
                 timestamp = Tezos.get_now ()
               };
             resolver         = None;
-            contents          = contents;
+            contents         = contents;
         }
 
 
@@ -130,7 +134,7 @@ module Op = struct
         else proposal
 
     [@inline]
-    let close_proposal (type a) (proposal, disapprovals, threshold : a proposal * nat * nat) : a proposal =
+    let reject_proposal (type a) (proposal, disapprovals, threshold : a proposal * nat * nat) : a proposal =
         let is_closed = disapprovals > threshold && proposal.state = (Proposing : proposal_state) in
         if is_closed
         then
@@ -146,12 +150,29 @@ module Op = struct
         else proposal
 
     [@inline]
-    let update_proposal_state (type a) (proposal, number_of_owners, threshold: a proposal * nat * nat) : a proposal =
-        let statistic ((t_acc,f_acc), (_, v) : (nat * nat) * (address * bool)) : (nat * nat) =
-          if v then (t_acc + 1n, f_acc) else (t_acc, f_acc + 1n) in
-        let (approvals, disapprovals) = Map.fold statistic proposal.signatures (0n, 0n) in
-        let proposal = ready_execution (proposal, approvals, threshold) in
-        close_proposal (proposal, disapprovals, abs(number_of_owners - threshold))
+    let expire_proposal (type a) (proposal, expiration_time : a proposal * timestamp) : a proposal =
+      if expiration_time < Tezos.get_now () then
+          {
+              proposal with
+              state    = Expired;
+              resolver =
+                Some {
+                  actor = Tezos.get_sender ();
+                  timestamp = Tezos.get_now ()
+                };
+          }
+      else proposal
+
+    [@inline]
+    let update_proposal_state (type a) (proposal, number_of_owners, threshold, expiration_time : a proposal * nat * nat * timestamp) : a proposal =
+        let proposal = expire_proposal (proposal, expiration_time) in
+        if proposal.state = (Expired : proposal_state) then proposal
+        else
+          let statistic ((t_acc,f_acc), (_, v) : (nat * nat) * (address * bool)) : (nat * nat) =
+            if v then (t_acc + 1n, f_acc) else (t_acc, f_acc + 1n) in
+          let (approvals, disapprovals) = Map.fold statistic proposal.signatures (0n, 0n) in
+          let proposal = ready_execution (proposal, approvals, threshold) in
+          reject_proposal (proposal, disapprovals, abs(number_of_owners - threshold))
 
     [@inline]
     let update_proposal (type a) (proposal_number, proposal, storage: proposal_id * a proposal * a types) : a types =
@@ -164,6 +185,10 @@ module Op = struct
     [@inline]
     let adjust_threshold (type a) (threshold : nat) (storage : a types) : a types =
       { storage with threshold = threshold }
+
+    [@inline]
+    let adjust_effective_period (type a) (effective_period: int) (storage : a types) : a types =
+      { storage with effective_period = effective_period }
 
     [@inline]
     let add_owners (type a) (owners: address set) (storage : a types) : a types =

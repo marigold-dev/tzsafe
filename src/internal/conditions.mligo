@@ -26,6 +26,7 @@
 type storage_types = Storage.Types.t
 type storage_types_proposal = Storage.Types.proposal
 type storage_types_proposal_state = Storage.Types.proposal_state
+type effective_period = Storage.Types.effective_period
 type proposal_content = Proposal_content.Types.t
 
 [@inline]
@@ -62,6 +63,8 @@ let check_proposal (type a) (content: a proposal_content) : unit =
         assert_with_error (Set.cardinal s > 0n) Errors.no_owners
     | Remove_owners s ->
         assert_with_error (Set.cardinal s > 0n) Errors.no_owners
+    | Adjust_effective_period p ->
+        assert_with_error (p > 0) Errors.invalid_effective_period
 
 [@inline]
 let not_empty_content (type a) (proposals_content: (a proposal_content) list) : unit =
@@ -73,6 +76,7 @@ let check_setting (type a) (storage : a storage_types) : unit =
     let () = assert_with_error (Set.cardinal storage.owners > 0n) Errors.no_owner  in
     let () = assert_with_error (Set.cardinal storage.owners >= storage.threshold) Errors.no_enough_owner in
     let () = assert_with_error (storage.threshold > 0n) Errors.invalidated_threshold in
+    let () = assert_with_error (storage.effective_period > 0) Errors.invalid_effective_period in
     ()
 
 [@inline]
@@ -80,3 +84,7 @@ let check_proposals_content (type a) (from_input: (a proposal_content) list) (fr
   let pack_from_input = Bytes.pack from_input in
   let pack_from_storage = Bytes.pack from_storage in
   assert_with_error (pack_from_input = pack_from_storage) Errors.not_the_same_content
+
+[@inline]
+let within_expiration_time (created_timestamp: timestamp) (effective_period: effective_period) : unit =
+  assert_with_error (created_timestamp + effective_period > Tezos.get_now ()) Errors.pass_expiration_time

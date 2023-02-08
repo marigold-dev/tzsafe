@@ -22,11 +22,11 @@ module Types = struct
     type proposal_content = Proposal_content.Types.t
     type proposal_id = nat
     type agreement = bool
+    type expiration_time = timestamp
 
     type 'a t =
     | Default of unit
     | Create_proposal of ('a proposal_content) list
-    | Sign_and_resolve_proposal of (proposal_id * ('a proposal_content) list * agreement)
-    | Sign_proposal_only of (proposal_id * ('a proposal_content) list * agreement)
+    | Sign_proposal of (proposal_id * ('a proposal_content) list * agreement)
     | Resolve_proposal of proposal_id * ('a proposal_content) list
 end

@@ -45,6 +45,17 @@ let send (type a) (content : a proposal_content) (storage : a storage_types)
     | Adjust_threshold t -> (None, content, Storage.Op.adjust_threshold t storage)
     | Add_owners s -> (None, content, Storage.Op.add_owners s storage)
     | Remove_owners s -> (None, content, Storage.Op.remove_owners s storage)
+    | Adjust_effective_period i -> (None, content, Storage.Op.adjust_effective_period i storage)
+
+let clear (type a) (content : a proposal_content) : (a proposal_content) =
+    match content with
+    | Transfer _ -> content
+    | Execute _ -> content
+    | Execute_lambda e -> Execute_lambda { e with lambda = None }
+    | Adjust_threshold _ -> content
+    | Add_owners _ -> content
+    | Remove_owners _ -> content
+    | Adjust_effective_period _ -> content
 
 let perform_operations (type a) (proposal: a storage_types_proposal) (storage : a storage_types) : operation list * a storage_types_proposal * a storage_types =
     let batch (type a) ((ops, cs, s), c : (operation list * a proposal_content list * a storage_types) * a proposal_content) : (operation list * a proposal_content list * a storage_types) =
@@ -54,10 +65,17 @@ let perform_operations (type a) (proposal: a storage_types_proposal) (storage : 
       | None ->
           ops, cs, new_s
     in
-    if proposal.state = (Executed : storage_types_proposal_state)
-    then
+    match proposal.state with
+    | Executed ->
       let (ops, cs, s) = List.fold_left batch (Constants.no_operation, [], storage) proposal.contents in
       let ops = Util.reverse ops in
       let cs = Util.reverse cs in
       (ops, { proposal with contents = cs} , s)
-    else (Constants.no_operation, proposal, storage)
+    | Proposing -> (Constants.no_operation, proposal, storage)
+    | Rejected ->
+      let proposal = { proposal with contents = List.map clear proposal.contents } in
+      (Constants.no_operation, proposal, storage)
+    | Expired ->
+      let proposal = { proposal with contents = List.map clear proposal.contents } in
+      (Constants.no_operation, proposal, storage)
+
