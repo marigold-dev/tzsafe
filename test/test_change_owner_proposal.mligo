@@ -133,8 +133,56 @@ let case_execute_remove_nonexisted_owner_proposal =
         action
       ; sign_action
       ; resolve_action
-      ; Breath.Assert.is_equal "storage threshold" storage.owners
+      ; Breath.Assert.is_equal "storage owner" storage.owners
         (Set.literal [alice.address;])
+      ])
+
+let case_resolve_transfer_proposal_after_owner_changed =
+  Breath.Model.case
+  "test resolve transfer proposal after owner changed"
+  "proposal shouldn't be solved if signers don't match owners"
+    (fun (level: Breath.Logger.level) ->
+      let (_, (alice, bob, _)) = Breath.Context.init_default () in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 1n) in
+      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
+
+      let param = ([] : (nat proposal_content) list) in
+
+      (* 1. create transfer proposal *)
+      let param1 = Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param in
+      let action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
+      let sign_action1 = Breath.Context.act_as alice (Helper.sign_proposal multisig_contract 1n true param1) in
+
+      (* 2. create proposal of changing owner and resolve *)
+      let param2 = Remove_owners (Set.literal [alice.address]) :: param in
+      let action2 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param2) in
+      let sign_action2 = Breath.Context.act_as alice (Helper.sign_proposal multisig_contract 2n true param2) in
+      let resolve_action2 = Breath.Context.act_as alice (Helper.resolve_proposal multisig_contract 2n param2) in
+
+      (* 3. try to resolve *)
+      let resolve_action3_1 = Breath.Context.act_as alice (Helper.resolve_proposal multisig_contract 1n param1) in
+      let resolve_action3_2 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
+
+      (* 4. sign and resolve *)
+      let sign_action4 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
+      let resolve_action4 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
+
+      let storage = Breath.Contract.storage_of multisig_contract in
+
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
+
+      Breath.Result.reduce [
+        action1
+      ; sign_action1
+      ; action2
+      ; sign_action2
+      ; resolve_action2
+      ; Breath.Expect.fail_with_message "Only the contract owners can perform this operation" resolve_action3_1
+      ; Breath.Expect.fail_with_message "No enough signature to resolve the proposal" resolve_action3_2
+      ; sign_action4
+      ; resolve_action4
+      ; Breath.Assert.is_equal "signature" proposal1.signatures (Map.literal [(bob.address, true)])
       ])
 
 let test_suite =
@@ -143,5 +191,6 @@ let test_suite =
   ; case_execute_add_existed_owner_proposal
   ; case_execute_remove_owner_proposal
   ; case_execute_remove_nonexisted_owner_proposal
+  ; case_resolve_transfer_proposal_after_owner_changed
   ]
 
