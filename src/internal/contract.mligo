@@ -94,7 +94,7 @@ let resolve_proposal (type a)
     let () = Conditions.check_proposals_content proposal_content proposal.contents in
     let owner = Tezos.get_sender () in
     let expiration_time = proposal.proposer.timestamp + storage.effective_period in
-    let proposal = Storage.Op.update_proposal_state (proposal, Set.cardinal storage.owners, storage.threshold, expiration_time) in
+    let proposal = Storage.Op.update_proposal_state (proposal, storage.owners, storage.threshold, expiration_time) in
     let () = Conditions.ready_to_execute proposal.state in
     let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
     let ops, proposal, storage = Execution.perform_operations proposal storage in
