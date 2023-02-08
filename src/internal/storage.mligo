@@ -24,7 +24,6 @@
 module Types = struct
     type proposal_id = Parameter.Types.proposal_id
     type proposal_content = Proposal_content.Types.t
-    type view_proposal_content = Proposal_content.Types.view
     type effective_period = int
 
     type actor =
@@ -35,16 +34,6 @@ module Types = struct
     }
 
     type proposal_state = Proposing | Executed | Rejected | Expired
-
-    type 'a view_proposal =
-    [@layout:comb]
-    {
-        state: proposal_state;
-        signatures: (address, bool) map;
-        proposer : actor;
-        resolver : actor option;
-        contents : ('a view_proposal_content) list
-    }
 
     type 'a proposal =
     [@layout:comb]

@@ -17,30 +17,12 @@
    SOFTWARE. *)
 
 #import "../src/lib.mligo" "Lib"
-#import "../src/views_lib.mligo" "Views"
 
 type result = Lib.result
 type request =  Lib.request
 
 type storage = Lib.storage_types
 type proposal_id = Lib.Storage.Types.proposal_id
-type view_proposal = Lib.Storage.Types.view_proposal
 
 let main (request : unit request) : unit result =
   Lib.contract request
-
-[@view]
-let owners (input : unit * unit storage) : address set =
-  Views.owners input
-
-[@view]
-let threshold (input : unit * unit storage) : nat =
-  Views.threshold input
-
-[@view]
-let proposal (input : proposal_id * unit storage) : unit view_proposal =
-  Views.proposal input
-
-[@view]
-let proposals (input : (proposal_id * proposal_id) * unit storage) : (proposal_id, unit view_proposal) map =
-  Views.proposals input
