@@ -20,7 +20,6 @@
 #import "../../src/internal/storage.mligo" "Storage"
 
 type storage_types_proposal = Storage.Types.proposal
-type storage_types_view_proposal = Storage.Types.view_proposal
 type storage_types_actor = Storage.Types.actor
 
 let mock_timestamp (timestamp : timestamp) (actor: storage_types_actor) : storage_types_actor =
@@ -36,26 +35,4 @@ let is_proposal_equal (type a) (msg:string) (actual : a storage_types_proposal) 
     proposer = mock_timestamp mock_time expected.proposer ;
     resolver = Option.map (mock_timestamp mock_time) expected.resolver }
   in
-  Breath.Assert.is_equal msg actual expected
-
-let is_view_proposal_equal (type a) (msg:string) (actual : a storage_types_view_proposal) (expected : a storage_types_view_proposal) =
-  let mock_time = Tezos.get_now () in
-  let actual = { actual with
-    proposer = mock_timestamp mock_time actual.proposer ;
-    resolver = Option.map (mock_timestamp mock_time) actual.resolver }
-  in
-  let expected = { expected with
-    proposer = mock_timestamp mock_time expected.proposer ;
-    resolver = Option.map (mock_timestamp mock_time) expected.resolver }
-  in
-  Breath.Assert.is_equal msg actual expected
-
-let is_view_proposals_equal (type a) (msg:string) (actual : (nat, a storage_types_view_proposal) map) (expected : (nat, a storage_types_view_proposal) map) =
-  let mock_time = Tezos.get_now () in
-  let mock (type a) (_, t : (nat * a storage_types_view_proposal)) : a storage_types_view_proposal = { t with
-    proposer = mock_timestamp mock_time t.proposer ;
-    resolver = Option.map (mock_timestamp mock_time) t.resolver }
-  in
-  let actual = Map.map mock actual  in
-  let expected = Map.map mock expected in
   Breath.Assert.is_equal msg actual expected

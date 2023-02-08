@@ -25,7 +25,6 @@
 #import "./test_change_owner_proposal.mligo" "Change_owner_proposal"
 #import "./test_lambda_proposal.mligo" "Lambda_proposal"
 #import "./test_emit_events.mligo" "Emit_events"
-#import "./test_view.mligo" "View"
 #import "./test_sign_only_entrypoint.mligo" "Sign_ony"
 #import "./test_resolve_proposal_entrypoint.mligo" "Exe"
 #import "./test_disapproval.mligo" "Disapproval"
@@ -40,7 +39,6 @@ let () =
   ; Change_owner_proposal.test_suite
   ; Lambda_proposal.test_suite
   ; Emit_events.test_suite
-  ; View.test_suite
   ; Sign_ony.test_suite
   ; Exe.test_suite
   ; Disapproval.test_suite
