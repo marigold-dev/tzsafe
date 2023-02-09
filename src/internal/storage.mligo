@@ -24,7 +24,6 @@
 module Types = struct
     type proposal_id = Parameter.Types.proposal_id
     type proposal_content = Proposal_content.Types.t
-    type view_proposal_content = Proposal_content.Types.view
     type effective_period = int
 
     type actor =
@@ -35,16 +34,6 @@ module Types = struct
     }
 
     type proposal_state = Proposing | Executed | Rejected | Expired
-
-    type 'a view_proposal =
-    [@layout:comb]
-    {
-        state: proposal_state;
-        signatures: (address, bool) map;
-        proposer : actor;
-        resolver : actor option;
-        contents : ('a view_proposal_content) list
-    }
 
     type 'a proposal =
     [@layout:comb]
@@ -164,14 +153,24 @@ module Op = struct
       else proposal
 
     [@inline]
-    let update_proposal_state (type a) (proposal, number_of_owners, threshold, expiration_time : a proposal * nat * nat * timestamp) : a proposal =
+    let remove_invalid_signature (type a) (owners : address set) (proposal : a proposal) : a proposal =
+      let aux ((acc, k): ((address, bool) map * address)) =
+        match Map.find_opt k proposal.signatures with
+        | None -> acc
+        | Some v -> Map.add k v acc in
+      { proposal with signatures = Set.fold aux owners Map.empty }
+
+    [@inline]
+    let update_proposal_state (type a) (proposal, owners , threshold, expiration_time : a proposal * address set * nat * timestamp) : a proposal =
         let proposal = expire_proposal (proposal, expiration_time) in
         if proposal.state = (Expired : proposal_state) then proposal
         else
+          let proposal = remove_invalid_signature owners proposal in
           let statistic ((t_acc,f_acc), (_, v) : (nat * nat) * (address * bool)) : (nat * nat) =
             if v then (t_acc + 1n, f_acc) else (t_acc, f_acc + 1n) in
           let (approvals, disapprovals) = Map.fold statistic proposal.signatures (0n, 0n) in
           let proposal = ready_execution (proposal, approvals, threshold) in
+          let number_of_owners = Set.cardinal owners in
           reject_proposal (proposal, disapprovals, abs(number_of_owners - threshold))
 
     [@inline]
