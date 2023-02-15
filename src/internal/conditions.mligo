@@ -24,14 +24,15 @@
 #import "storage.mligo" "Storage"
 
 type storage_types = Storage.Types.t
+type storage_wallet = Storage.Types.wallet
 type storage_types_proposal = Storage.Types.proposal
 type storage_types_proposal_state = Storage.Types.proposal_state
 type effective_period = Storage.Types.effective_period
 type proposal_content = Proposal_content.Types.t
 
 [@inline]
-let only_owner (type a) (storage : a storage_types) : unit =
-    assert_with_error (Set.mem (Tezos.get_sender ()) storage.owners) Errors.only_owner
+let only_owner (type a) (wallet : a storage_wallet) : unit =
+    assert_with_error (Set.mem (Tezos.get_sender ()) wallet.owners) Errors.only_owner
 
 [@inline]
 let amount_must_be_zero_tez (an_amout : tez) : unit =
@@ -56,7 +57,12 @@ let check_proposal (type a) (content: a proposal_content) : unit =
         assert_with_error (not (t.amount = 0tez)) Errors.amount_is_zero
     | Execute _ -> ()
     | Execute_lambda e ->
-        assert_with_error (Util.is_some e.lambda) Errors.no_proposal
+        let () = assert_with_error (Util.is_some e.lambda) Errors.no_proposal in
+        begin
+          match e.args with
+          | None -> ()
+          | Some (_, _, v) -> assert_with_error (v > 0n) Errors.amount_is_zero
+        end
     | Adjust_threshold t ->
         assert_with_error (t > 0n) Errors.invalidated_threshold
     | Add_owners s ->
@@ -72,19 +78,25 @@ let not_empty_content (type a) (proposals_content: (a proposal_content) list) : 
     List.iter check_proposal proposals_content
 
 [@inline]
-let check_setting (type a) (storage : a storage_types) : unit =
-    let () = assert_with_error (Set.cardinal storage.owners > 0n) Errors.no_owner  in
-    let () = assert_with_error (Set.cardinal storage.owners >= storage.threshold) Errors.no_enough_owner in
-    let () = assert_with_error (storage.threshold > 0n) Errors.invalidated_threshold in
-    let () = assert_with_error (storage.effective_period > 0) Errors.invalid_effective_period in
+let check_setting (type a) (wallet : a storage_wallet) : unit =
+    let () = assert_with_error (Set.cardinal wallet.owners > 0n) Errors.no_owner  in
+    let () = assert_with_error (Set.cardinal wallet.owners >= wallet.threshold) Errors.no_enough_owner in
+    let () = assert_with_error (wallet.threshold > 0n) Errors.invalidated_threshold in
+    let () = assert_with_error (wallet.effective_period > 0) Errors.invalid_effective_period in
     ()
 
 [@inline]
-let check_proposals_content (type a) (from_input: (a proposal_content) list) (from_storage: (a proposal_content) list) : unit =
+let check_proposals_content (type a) (from_input: (a proposal_content) list) (from_wallet: (a proposal_content) list) : unit =
   let pack_from_input = Bytes.pack from_input in
-  let pack_from_storage = Bytes.pack from_storage in
-  assert_with_error (pack_from_input = pack_from_storage) Errors.not_the_same_content
+  let pack_from_wallet = Bytes.pack from_wallet in
+  assert_with_error (pack_from_input = pack_from_wallet) Errors.not_the_same_content
 
 [@inline]
 let within_expiration_time (created_timestamp: timestamp) (effective_period: effective_period) : unit =
   assert_with_error (created_timestamp + effective_period > Tezos.get_now ()) Errors.pass_expiration_time
+
+[@inline]
+let balance_must_be_positive (target: nat) (balance: nat) : nat =
+    let balance = balance - target in
+    let _ = assert_with_error (balance >= 0) Errors.balance_must_be_positive in
+    abs(balance)

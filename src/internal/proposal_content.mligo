@@ -28,7 +28,10 @@ module Types = struct
     type 'a t =
     | Transfer of unit transaction
     | Execute of ('a transaction)
-    | Execute_lambda of { metadata: bytes option; lambda: (unit -> operation) option }
+    | Execute_lambda of
+        { metadata: bytes option
+        ; lambda: (('a ticket) option -> operation * ('a ticket) list) option
+        ; args: ('a * address * nat) option }
     | Adjust_threshold of nat
     | Add_owners of address set
     | Remove_owners of address set
