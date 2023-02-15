@@ -27,6 +27,8 @@
 
 type parameter_types = Parameter.Types.t
 type storage_types = Storage.Types.t
+type storage_wallet = Storage.Types.wallet
+type storage_tickets = Storage.Types.tickets
 type storage_types_proposal = Storage.Types.proposal
 type storage_types_proposal_state = Storage.Types.proposal_state
 type effective_period = Storage.Types.effective_period
@@ -39,76 +41,80 @@ type 'a result = operation list * 'a storage_types
 (**
  * Default entrypoint
  *)
-let default (type a) (_, s : unit * a storage_types) : a result =
+let default (type a) (_, w, t : unit * a storage_wallet * a storage_tickets) : a result =
     let event = Tezos.emit "%receiving_tez" (Tezos.get_sender (), Tezos.get_amount ()) in
-    ([event], s)
+    ([event], ({wallet = w; tickets = t} : a storage_types))
 
 (**
  * Proposal creation
  *)
-let create_proposal (type a) (proposal_content, storage : (a proposal_content) list * a storage_types) : a result =
-    let () = Conditions.only_owner storage in
+let create_proposal (type a) (proposal_content, wallet, tickets: (a proposal_content) list * a storage_wallet * a storage_tickets) : a result =
+    let () = Conditions.only_owner wallet in
     let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
     let () = Conditions.not_empty_content proposal_content in
     let proposal = Storage.Op.create_proposal proposal_content in
-    let storage = Storage.Op.register_proposal(proposal, storage) in
-    let event = Tezos.emit "%create_proposal" (storage.proposal_counter, proposal) in
-    ([event], storage)
+    let wallet = Storage.Op.register_proposal(proposal, wallet) in
+    let event = Tezos.emit "%create_proposal" (wallet.proposal_counter, proposal) in
+    ([event], ({ wallet = wallet; tickets = tickets } : a storage_types))
 
 (**
  * Proposal signature only
  *)
 
 let sign_proposal (type a)
-  ( proposal_id, proposal_content, agreement, storage
+  ( proposal_id, proposal_content, agreement, wallet, tickets
     : Parameter.Types.proposal_id
       * (a proposal_content) list
       * Parameter.Types.agreement
-      * a storage_types)
+      * a storage_wallet
+      * a storage_tickets)
   : a result =
-    let () = Conditions.only_owner storage in
-    let proposal = Storage.Op.retrieve_proposal(proposal_id, storage) in
+    let () = Conditions.only_owner wallet in
+    let proposal = Storage.Op.retrieve_proposal(proposal_id, wallet) in
     let () = Conditions.unresolved proposal.state in
     let () = Conditions.unsigned proposal in
-    let () = Conditions.within_expiration_time proposal.proposer.timestamp storage.effective_period in
+    let () = Conditions.within_expiration_time proposal.proposer.timestamp wallet.effective_period in
     let () = Conditions.check_proposals_content proposal_content proposal.contents in
     let owner = Tezos.get_sender () in
     let proposal = Storage.Op.update_signature (proposal, owner, agreement) in
-    let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
+    let wallet = Storage.Op.update_proposal(proposal_id, proposal, wallet) in
     let event = Tezos.emit "%sign_proposal" (proposal_id, owner, agreement) in
-    ([event], storage)
+    ([event], ({ wallet = wallet; tickets = tickets } : a storage_types))
 
 (**
  * Proposal Execution
  *)
 
 let resolve_proposal (type a)
-  ( proposal_id, proposal_content, storage
+  ( proposal_id, proposal_content, wallet, tickets
       : Parameter.Types.proposal_id
       * (a proposal_content) list
-      * a storage_types)
+      * a storage_wallet
+      * a storage_tickets)
   : a result =
-    let () = Conditions.only_owner storage in
-    let proposal = Storage.Op.retrieve_proposal(proposal_id, storage) in
+    let () = Conditions.only_owner wallet in
+    let proposal = Storage.Op.retrieve_proposal(proposal_id, wallet) in
     let () = Conditions.unresolved proposal.state in
     let () = Conditions.check_proposals_content proposal_content proposal.contents in
     let owner = Tezos.get_sender () in
-    let expiration_time = proposal.proposer.timestamp + storage.effective_period in
-    let proposal = Storage.Op.update_proposal_state (proposal, storage.owners, storage.threshold, expiration_time) in
+    let expiration_time = proposal.proposer.timestamp + wallet.effective_period in
+    let proposal = Storage.Op.update_proposal_state (proposal, wallet.owners, wallet.threshold, expiration_time) in
     let () = Conditions.ready_to_execute proposal.state in
-    let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
-    let ops, proposal, storage = Execution.perform_operations proposal storage in
-    let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
+    let wallet = Storage.Op.update_proposal(proposal_id, proposal, wallet) in
+    let ops, proposal, wallet = Execution.perform_operations proposal wallet in
+    let wallet = Storage.Op.update_proposal(proposal_id, proposal, wallet) in
     let event = Tezos.emit "%resolve_proposal" (proposal_id, owner) in
-    (event::ops, storage)
+    (event::ops, ({ wallet = wallet; tickets = tickets } : a storage_types))
 
 let contract (type a) (action, storage : a request) : a result =
-    let _ = Conditions.check_setting storage in
+    let { wallet; tickets } = storage in
+    let _ = Conditions.check_setting wallet in
     match action with
-    | Default u -> default (u, storage)
+    | Default u ->
+        default (u, wallet, tickets)
     | Create_proposal (proposal_params) ->
-        create_proposal (proposal_params, storage)
+        create_proposal (proposal_params, wallet, tickets)
     | Sign_proposal (proposal_id, proposal_content, agreement) ->
-        sign_proposal (proposal_id, proposal_content, agreement, storage)
+        sign_proposal (proposal_id, proposal_content, agreement, wallet, tickets)
     | Resolve_proposal (proposal_id, proposal_content) ->
-        resolve_proposal (proposal_id, proposal_content, storage)
+        resolve_proposal (proposal_id, proposal_content, wallet, tickets)

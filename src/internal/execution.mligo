@@ -24,6 +24,7 @@
 #import "conditions.mligo" "Conditions"
 
 type storage_types = Storage.Types.t
+type storage_wallet = Storage.Types.wallet
 type storage_types_proposal = Storage.Types.proposal
 type storage_types_proposal_state = Storage.Types.proposal_state
 type proposal_content = Proposal_content.Types.t
@@ -34,18 +35,18 @@ let send_by (type a) (parameter: a) (target : address) (amount : tez) : operatio
     let contract = Option.unopt_with_error contract_opt Errors.unknown_contract in
     Tezos.transaction parameter amount contract
 
-let send (type a) (content : a proposal_content) (storage : a storage_types)
-  : (operation option * a proposal_content * a storage_types) =
+let send (type a) (content : a proposal_content) (wallet: a storage_wallet)
+  : (operation option * a proposal_content * a storage_wallet) =
     match content with
-    | Transfer tx -> (Some (send_by tx.parameter tx.target tx.amount), content, storage)
-    | Execute tx -> (Some (send_by tx.parameter tx.target tx.amount), content, storage)
+    | Transfer tx -> (Some (send_by tx.parameter tx.target tx.amount), content, wallet)
+    | Execute tx -> (Some (send_by tx.parameter tx.target tx.amount), content, wallet)
     | Execute_lambda e ->
        let new_content = Execute_lambda { e with lambda = None } in
-       (Option.map (fun (f : (unit -> operation)) : operation -> f ()) e.lambda, new_content, storage)
-    | Adjust_threshold t -> (None, content, Storage.Op.adjust_threshold t storage)
-    | Add_owners s -> (None, content, Storage.Op.add_owners s storage)
-    | Remove_owners s -> (None, content, Storage.Op.remove_owners s storage)
-    | Adjust_effective_period i -> (None, content, Storage.Op.adjust_effective_period i storage)
+       (Option.map (fun (f : (unit -> operation)) : operation -> f ()) e.lambda, new_content, wallet)
+    | Adjust_threshold t -> (None, content, Storage.Op.adjust_threshold t wallet)
+    | Add_owners s -> (None, content, Storage.Op.add_owners s wallet)
+    | Remove_owners s -> (None, content, Storage.Op.remove_owners s wallet)
+    | Adjust_effective_period i -> (None, content, Storage.Op.adjust_effective_period i wallet)
 
 let clear (type a) (content : a proposal_content) : (a proposal_content) =
     match content with
@@ -57,9 +58,9 @@ let clear (type a) (content : a proposal_content) : (a proposal_content) =
     | Remove_owners _ -> content
     | Adjust_effective_period _ -> content
 
-let perform_operations (type a) (proposal: a storage_types_proposal) (storage : a storage_types) : operation list * a storage_types_proposal * a storage_types =
-    let batch (type a) ((ops, cs, s), c : (operation list * a proposal_content list * a storage_types) * a proposal_content) : (operation list * a proposal_content list * a storage_types) =
-      let (opt_op, new_c, new_s) = send c s in
+let perform_operations (type a) (proposal: a storage_types_proposal) (wallet : a storage_wallet) : operation list * a storage_types_proposal * a storage_wallet =
+    let batch (type a) ((ops, cs, w), c : (operation list * a proposal_content list * a storage_wallet) * a proposal_content) : (operation list * a proposal_content list * a storage_wallet) =
+      let (opt_op, new_c, new_s) = send c w in
       match opt_op with
       | Some op -> op::ops, new_c::cs, new_s
       | None ->
@@ -67,15 +68,15 @@ let perform_operations (type a) (proposal: a storage_types_proposal) (storage : 
     in
     match proposal.state with
     | Executed ->
-      let (ops, cs, s) = List.fold_left batch (Constants.no_operation, [], storage) proposal.contents in
+      let (ops, cs, w) = List.fold_left batch (Constants.no_operation, [], wallet) proposal.contents in
       let ops = Util.reverse ops in
       let cs = Util.reverse cs in
-      (ops, { proposal with contents = cs} , s)
-    | Proposing -> (Constants.no_operation, proposal, storage)
+      (ops, { proposal with contents = cs} , w)
+    | Proposing -> (Constants.no_operation, proposal, wallet)
     | Rejected ->
       let proposal = { proposal with contents = List.map clear proposal.contents } in
-      (Constants.no_operation, proposal, storage)
+      (Constants.no_operation, proposal, wallet)
     | Expired ->
       let proposal = { proposal with contents = List.map clear proposal.contents } in
-      (Constants.no_operation, proposal, storage)
+      (Constants.no_operation, proposal, wallet)
 
