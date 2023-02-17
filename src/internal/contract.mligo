@@ -101,7 +101,7 @@ let resolve_proposal (type a)
     let proposal = Storage.Op.update_proposal_state (proposal, wallet.owners, wallet.threshold, expiration_time) in
     let () = Conditions.ready_to_execute proposal.state in
     let wallet = Storage.Op.update_proposal(proposal_id, proposal, wallet) in
-    let ops, proposal, wallet = Execution.perform_operations proposal wallet in
+    let ops, proposal, wallet, tickets = Execution.perform_operations proposal wallet tickets in
     let wallet = Storage.Op.update_proposal(proposal_id, proposal, wallet) in
     let event = Tezos.emit "%resolve_proposal" (proposal_id, owner) in
     (event::ops, ({ wallet = wallet; tickets = tickets } : a storage_types))

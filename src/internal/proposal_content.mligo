@@ -31,7 +31,7 @@ module Types = struct
     | Execute_lambda of
         { metadata: bytes option
         ; lambda: (('a ticket) option -> operation * ('a ticket) list) option
-        ; args: ('a * address * tez)}
+        ; args: ('a * address * nat) option }
     | Adjust_threshold of nat
     | Add_owners of address set
     | Remove_owners of address set

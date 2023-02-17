@@ -89,3 +89,9 @@ let check_proposals_content (type a) (from_input: (a proposal_content) list) (fr
 [@inline]
 let within_expiration_time (created_timestamp: timestamp) (effective_period: effective_period) : unit =
   assert_with_error (created_timestamp + effective_period > Tezos.get_now ()) Errors.pass_expiration_time
+
+[@inline]
+let balance_must_be_positive (target: nat) (balance: nat) : nat =
+    let balance = balance - target in
+    let _ = assert_with_error (balance >= 0) Errors.balance_must_be_positive in
+    abs(balance)
