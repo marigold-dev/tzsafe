@@ -52,8 +52,8 @@ let case_resolve_proposal =
       let balance = Breath.Contract.balance_of multisig_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
-      let proposal2 = Util.unopt (Big_map.find_opt 2n storage.proposals) "proposal 2 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.wallet.proposals) "proposal 1 doesn't exist" in
+      let proposal2 = Util.unopt (Big_map.find_opt 2n storage.wallet.proposals) "proposal 2 doesn't exist" in
 
       Breath.Result.reduce [
         create_action1
@@ -63,7 +63,7 @@ let case_resolve_proposal =
       ; sign_action2
       ; exe_action2
       ; Breath.Assert.is_equal "balance" balance 80tez
-      ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 2n
+      ; Breath.Assert.is_equal "the counter of proposal" storage.wallet.proposal_counter 2n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
           state            = Executed;
@@ -213,8 +213,8 @@ let case_execute_transaction_1_of_1 =
       let balance = Breath.Contract.balance_of multisig_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
-      let proposal2 = Util.unopt (Big_map.find_opt 2n storage.proposals) "proposal 2 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.wallet.proposals) "proposal 1 doesn't exist" in
+      let proposal2 = Util.unopt (Big_map.find_opt 2n storage.wallet.proposals) "proposal 2 doesn't exist" in
 
       Breath.Result.reduce [
         create_action1
@@ -224,7 +224,7 @@ let case_execute_transaction_1_of_1 =
       ; sign_action2
       ; resolve_action2
       ; Breath.Assert.is_equal "balance" balance 20tez
-      ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 2n
+      ; Breath.Assert.is_equal "the counter of proposal" storage.wallet.proposal_counter 2n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
           state            = Executed;
@@ -274,14 +274,14 @@ let case_execute_transaction_1_of_1_batch =
       let balance = Breath.Contract.balance_of multisig_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.wallet.proposals) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         create_action1
       ; sign_action1
       ; resolve_action1
       ; Breath.Assert.is_equal "balance" balance 20tez
-      ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 1n
+      ; Breath.Assert.is_equal "the counter of proposal" storage.wallet.proposal_counter 1n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
           state            = Executed;
@@ -332,8 +332,8 @@ let case_execute_transaction_3_of_3 =
       let balance = Breath.Contract.balance_of multisig_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
-      let proposal2 = Util.unopt (Big_map.find_opt 2n storage.proposals) "proposal 2 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.wallet.proposals) "proposal 1 doesn't exist" in
+      let proposal2 = Util.unopt (Big_map.find_opt 2n storage.wallet.proposals) "proposal 2 doesn't exist" in
 
       Breath.Result.reduce [
         create_action1
@@ -347,7 +347,7 @@ let case_execute_transaction_3_of_3 =
       ; sign_action2_3
       ; resolve_action2
       ; Breath.Assert.is_equal "balance" balance 20tez
-      ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 2n
+      ; Breath.Assert.is_equal "the counter of proposal" storage.wallet.proposal_counter 2n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
           state            = Executed;

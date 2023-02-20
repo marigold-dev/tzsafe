@@ -44,13 +44,13 @@ let case_sign_for_disapproval =
       let balance = Breath.Contract.balance_of multisig_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.wallet.proposals) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         create_action1
       ; sign_action1
       ; Breath.Assert.is_equal "balance" balance 100tez
-      ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 1n
+      ; Breath.Assert.is_equal "the counter of proposal" storage.wallet.proposal_counter 1n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
           state            = Proposing;
@@ -108,7 +108,7 @@ let case_close_proposal_1_1 =
       let balance = Breath.Contract.balance_of multisig_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.wallet.proposals) "proposal 1 doesn't exist" in
 
       let add_contract_balance = Breath.Contract.balance_of add_contract in
 
@@ -118,7 +118,7 @@ let case_close_proposal_1_1 =
       ; resolve_action1
       ; Breath.Assert.is_equal "balance" balance 100tez
       ; Breath.Assert.is_equal "balance of add contract" add_contract_balance 0tez
-      ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 1n
+      ; Breath.Assert.is_equal "the counter of proposal" storage.wallet.proposal_counter 1n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
           state            = Rejected;
@@ -153,7 +153,7 @@ let case_close_proposal_2_2 =
       let balance = Breath.Contract.balance_of multisig_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.wallet.proposals) "proposal 1 doesn't exist" in
 
       let add_contract_balance = Breath.Contract.balance_of add_contract in
 
@@ -163,7 +163,7 @@ let case_close_proposal_2_2 =
       ; resolve_action1
       ; Breath.Assert.is_equal "balance" balance 100tez
       ; Breath.Assert.is_equal "balance of add contract" add_contract_balance 0tez
-      ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 1n
+      ; Breath.Assert.is_equal "the counter of proposal" storage.wallet.proposal_counter 1n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
           state            = Rejected;
@@ -199,7 +199,7 @@ let case_close_proposal_2_3 =
       let balance = Breath.Contract.balance_of multisig_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.wallet.proposals) "proposal 1 doesn't exist" in
 
       let add_contract_balance = Breath.Contract.balance_of add_contract in
 
@@ -210,7 +210,7 @@ let case_close_proposal_2_3 =
       ; resolve_action1
       ; Breath.Assert.is_equal "balance" balance 100tez
       ; Breath.Assert.is_equal "balance of add contract" add_contract_balance 0tez
-      ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 1n
+      ; Breath.Assert.is_equal "the counter of proposal" storage.wallet.proposal_counter 1n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
           state            = Rejected;
@@ -245,7 +245,7 @@ let case_not_closed_1_2 =
       let balance = Breath.Contract.balance_of multisig_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.wallet.proposals) "proposal 1 doesn't exist" in
 
       let add_contract_balance = Breath.Contract.balance_of add_contract in
 
@@ -255,7 +255,7 @@ let case_not_closed_1_2 =
       ; Breath.Expect.fail_with_message "No enough signature to resolve the proposal" resolve_action1
       ; Breath.Assert.is_equal "balance" balance 100tez
       ; Breath.Assert.is_equal "balance of add contract" add_contract_balance 0tez
-      ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 1n
+      ; Breath.Assert.is_equal "the counter of proposal" storage.wallet.proposal_counter 1n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
           state            = Proposing;

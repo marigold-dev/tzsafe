@@ -41,20 +41,20 @@ let case_execute_lambda_proposal =
       let param = ([] : (nat proposal_content) list) in
 
       (* lambda *)
-      let call_add_contract (_ : unit) : operation =
+      let call_add_contract (type a) (_ : (a ticket) option) : operation * (a ticket) list =
         let add_contr = Tezos.get_contract_with_error add_contract_address "add contract doesn't exist" in
-           Tezos.transaction 10n 0tez add_contr
+           Tezos.transaction 10n 0tez add_contr, []
       in
 
       (* create proposal *)
-      let param = Execute_lambda { metadata = None; lambda = Some call_add_contract } :: param in
+      let param = Execute_lambda { metadata = None; lambda = Some call_add_contract; args = None } :: param in
       let action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
       let sign_action = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param) in
       let resolve_action = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param) in
 
       let add_contract_storage = Breath.Contract.storage_of add_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
-      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.wallet.proposals) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         action
@@ -70,6 +70,7 @@ let case_execute_lambda_proposal =
           contents         = [ Execute_lambda {
             metadata       = None;
             lambda         = None;
+            args           = None;
           }]
         })
       ])

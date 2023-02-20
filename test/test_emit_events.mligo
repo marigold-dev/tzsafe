@@ -49,7 +49,7 @@ let case_emitted_create_proposal =
       let (emitted_id, emitted_proposal) = Option.unopt (List.head_opt events) in
 
       let storage = Breath.Contract.storage_of multisig_contract in
-      let proposal = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
+      let proposal = Util.unopt (Big_map.find_opt 1n storage.wallet.proposals) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         action1
@@ -127,7 +127,7 @@ let case_emitted_receiving_amount =
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
       let contract = Mock_contract.originate_transfer_only_contract level in
 
-      let action = Breath.Context.act_as carol (fun (_u:unit) -> (Breath.Contract.transfert_to contract multisig_contract.originated_address 0tez)) in
+      let action = Breath.Context.act_as carol (fun (_u:unit) -> (Breath.Contract.transfer_to contract multisig_contract.originated_address 0tez)) in
 
       let events = (Util.get_last_events_from multisig_contract.originated_address "receiving_tez" : (address * tez) list) in
 
