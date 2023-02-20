@@ -19,9 +19,11 @@
 #import "ligo-breathalyzer/lib/lib.mligo" "Breath"
 #include "../../src/internal/contract.mligo"
 #import "../../src/internal/proposal_content.mligo" "Proposal_content"
+#import "../../src/internal/storage.mligo" "Storage"
 #import "./util.mligo" "Util"
 
 type proposal_content = Proposal_content.Types.t
+type storage_wallet = Storage.Types.wallet
 
 let init_storage_with_effective_period
   (type a) (owners, threshold, effective_period: address set * nat * int) : a storage_types =
@@ -38,6 +40,11 @@ let init_storage_with_effective_period
 
 let init_storage (type a) (owners, threshold: address set * nat) : a storage_types =
 init_storage_with_effective_period (owners, threshold, 172800)
+
+type 'a unforged_storage =
+{ wallet  : 'a storage_wallet;
+  tickets : ('a * address, 'a unforged_ticket) big_map;
+}
 
 type originated = Breath.Contract.originated
 
