@@ -52,8 +52,8 @@ let case_gathering_signatures =
       let balance = Breath.Contract.balance_of multisig_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
-      let proposal2 = Util.unopt (Big_map.find_opt 2n storage.proposals) "proposal 2 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.wallet.proposals) "proposal 1 doesn't exist" in
+      let proposal2 = Util.unopt (Big_map.find_opt 2n storage.wallet.proposals) "proposal 2 doesn't exist" in
 
       Breath.Result.reduce [
         create_action1
@@ -63,7 +63,7 @@ let case_gathering_signatures =
       ; sign_action2_1
       ; sign_action2_2
       ; Breath.Assert.is_equal "balance" balance 10tez
-      ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 2n
+      ; Breath.Assert.is_equal "the counter of proposal" storage.wallet.proposal_counter 2n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
           state            = Proposing;

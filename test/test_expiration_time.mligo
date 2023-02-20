@@ -32,8 +32,7 @@ let case_sign_proposal_passing_expiration_time =
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
-      let init_storage = Helper.init_storage (owners, 1n) in
-      let init_storage = { init_storage with effective_period = 1_800 } in
+      let init_storage = Helper.init_storage_with_effective_period (owners, 1n, 1_800) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
       let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
       let param = ([] : (nat proposal_content) list) in
@@ -56,8 +55,7 @@ let case_resolve_proposal_passing_expiration_time =
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
-      let init_storage = Helper.init_storage (owners, 1n) in
-      let init_storage = { init_storage with effective_period = 1_800 } in
+      let init_storage = Helper.init_storage_with_effective_period (owners, 1n, 1_800) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
       let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
       let param = ([] : (nat proposal_content) list) in
@@ -70,7 +68,7 @@ let case_resolve_proposal_passing_expiration_time =
       let exe_action1 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
 
       let storage = Breath.Contract.storage_of multisig_contract in
-      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.wallet.proposals) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         create_action1
@@ -97,8 +95,7 @@ let case_resolve_executed_proposal_passing_expiration_time =
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
-      let init_storage = Helper.init_storage (owners, 1n) in
-      let init_storage = { init_storage with effective_period = 1_800 } in
+      let init_storage = Helper.init_storage_with_effective_period (owners, 1n, 1_800) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
       let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
       let param = ([] : (nat proposal_content) list) in
@@ -112,7 +109,7 @@ let case_resolve_executed_proposal_passing_expiration_time =
       let exe_action2 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
 
       let storage = Breath.Contract.storage_of multisig_contract in
-      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.wallet.proposals) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         create_action1
@@ -133,15 +130,14 @@ let case_resolve_executed_proposal_passing_expiration_time =
         })
       ])
 
-let case_resolve_rejected_proposal_passing_expiration_time=
+let case_resolve_rejected_proposal_passing_expiration_time =
   Breath.Model.case
   "test resolve rejected proposal passing expiration time"
   "the state of proposal shouldn't change"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
-      let init_storage = Helper.init_storage (owners, 3n) in
-      let init_storage = { init_storage with effective_period = 1_800 } in
+      let init_storage = Helper.init_storage_with_effective_period (owners, 3n, 1_800) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
       let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
       let param = ([] : (nat proposal_content) list) in
@@ -155,7 +151,7 @@ let case_resolve_rejected_proposal_passing_expiration_time=
       let exe_action2 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
 
       let storage = Breath.Contract.storage_of multisig_contract in
-      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.wallet.proposals) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         create_action1
@@ -183,8 +179,7 @@ let case_adjust_effective_time =
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
-      let init_storage = Helper.init_storage (owners, 1n) in
-      let init_storage = { init_storage with effective_period = 1_800 } in
+      let init_storage = Helper.init_storage_with_effective_period (owners, 1n, 1_800) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
       let param = ([] : (nat proposal_content) list) in
 
@@ -200,7 +195,7 @@ let case_adjust_effective_time =
         create_action1
       ; sign_action1
       ; exe_action1
-      ; Breath.Assert.is_equal  "adjust effective period" 200 storage.effective_period
+      ; Breath.Assert.is_equal  "adjust effective period" 200 storage.wallet.effective_period
       ])
 
 let case_adjust_effective_time_with_invalid_value =
@@ -210,8 +205,7 @@ let case_adjust_effective_time_with_invalid_value =
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
-      let init_storage = Helper.init_storage (owners, 1n) in
-      let init_storage = { init_storage with effective_period = 1_800 } in
+      let init_storage = Helper.init_storage_with_effective_period (owners, 1n, 1_800) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
       let param = ([] : (nat proposal_content) list) in
 
@@ -223,7 +217,7 @@ let case_adjust_effective_time_with_invalid_value =
 
       Breath.Result.reduce [
       Breath.Expect.fail_with_message "Effective period should be greater than 0" create_action1
-      ; Breath.Assert.is_equal  "adjust effective period" 1_800 storage.effective_period
+      ; Breath.Assert.is_equal  "adjust effective period" 1_800 storage.wallet.effective_period
       ])
 
 let test_suite =

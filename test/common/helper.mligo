@@ -23,14 +23,21 @@
 
 type proposal_content = Proposal_content.Types.t
 
-let init_storage (type a) (owners, threshold: address set * nat) : a storage_types =
-{ proposal_counter = 0n;
-  proposals     = (Big_map.empty : (nat, a storage_types_proposal) big_map);
-  owners           = owners;
-  threshold        = threshold;
-  effective_period = 172800;
-  metadata         = (Big_map.empty: (string, bytes) big_map);
+let init_storage_with_effective_period
+  (type a) (owners, threshold, effective_period: address set * nat * int) : a storage_types =
+{ wallet =
+    { proposal_counter = 0n;
+      proposals     = (Big_map.empty : (nat, a storage_types_proposal) big_map);
+      owners           = owners;
+      threshold        = threshold;
+      effective_period = effective_period;
+      metadata         = (Big_map.empty: (string, bytes) big_map);
+    };
+  tickets = Big_map.empty
 }
+
+let init_storage (type a) (owners, threshold: address set * nat) : a storage_types =
+init_storage_with_effective_period (owners, threshold, 172800)
 
 type originated = Breath.Contract.originated
 

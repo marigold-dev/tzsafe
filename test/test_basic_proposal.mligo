@@ -60,10 +60,10 @@ let case_create_proposal =
       let balance = Breath.Contract.balance_of multisig_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
-      let proposal2 = Util.unopt (Big_map.find_opt 2n storage.proposals) "proposal 2 doesn't exist" in
-      let proposal3 = Util.unopt (Big_map.find_opt 3n storage.proposals) "proposal 3 doesn't exist" in
-      let proposal4 = Util.unopt (Big_map.find_opt 4n storage.proposals) "proposal 4 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.wallet.proposals) "proposal 1 doesn't exist" in
+      let proposal2 = Util.unopt (Big_map.find_opt 2n storage.wallet.proposals) "proposal 2 doesn't exist" in
+      let proposal3 = Util.unopt (Big_map.find_opt 3n storage.wallet.proposals) "proposal 3 doesn't exist" in
+      let proposal4 = Util.unopt (Big_map.find_opt 4n storage.wallet.proposals) "proposal 4 doesn't exist" in
 
       Breath.Result.reduce [
         action1
@@ -71,7 +71,7 @@ let case_create_proposal =
       ; action3
       ; action4
       ; Breath.Assert.is_equal "balance" balance 0tez
-      ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 4n
+      ; Breath.Assert.is_equal "the counter of proposal" storage.wallet.proposal_counter 4n
       ; Assert.is_proposal_equal "#1 proposal" proposal1
         ({
           state            = Proposing;
@@ -205,7 +205,7 @@ let case_unauthorized_user_fail_to_create_proposal =
         Breath.Expect.fail_with_message "Only the contract owners can perform this operation" action1
       ; Breath.Expect.fail_with_message "Only the contract owners can perform this operation" action2
       ; Breath.Assert.is_equal "balance" balance 0tez
-      ; Breath.Assert.is_equal "the counter of proposal" storage.proposal_counter 0n
+      ; Breath.Assert.is_equal "the counter of proposal" storage.wallet.proposal_counter 0n
       ])
 
 let test_suite =
