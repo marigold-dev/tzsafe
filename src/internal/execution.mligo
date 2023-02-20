@@ -40,14 +40,15 @@ let store
   (type a)
   (tickets, t: a storage_tickets * a ticket)
   : a storage_tickets =
-     let (addr,(content, _v)), _t = Tezos.read_ticket t in
-     match Big_map.find_opt (content, addr) tickets with
+     let (addr,(content, _v)), t = Tezos.read_ticket t in
+     let (s_opt, tickets) = Big_map.get_and_update (content, addr) None tickets in
+     match s_opt with
      | None -> Big_map.add (content, addr) t tickets
      | Some s ->
         begin
           match Tezos.join_tickets (t, s) with
           | None -> failwith Errors.cannot_happen
-          | Some new_t -> Big_map.update (content, addr) (Some new_t) tickets
+          | Some new_t -> Big_map.add (content, addr) new_t tickets
         end
 
 let execute_lambda_without_args
@@ -64,15 +65,16 @@ let execute_lambda_with_args
   (content, addr, amount:(a * address * nat))
   (tickets: a storage_tickets)
   : (operation option * a storage_tickets) =
-     match Big_map.find_opt (content, addr) tickets with
+     let (t_opt, tickets) = Big_map.get_and_update (content, addr) None tickets in
+     match t_opt with
      | None -> failwith Errors.nonexisted_ticket
      | Some t ->
-        let (_addr,(_content, value)), _t = Tezos.read_ticket t in
+        let (_addr,(_content, value)), t = Tezos.read_ticket t in
         let balance = Conditions.balance_must_be_positive amount value in
         let split_ticket_opt = Tezos.split_ticket t (amount, balance) in
         let (t1, t2) = Option.unopt split_ticket_opt in
         let (op, ts) = f (Some t1) in
-        Some op, List.fold_left store tickets ts
+        Some op, List.fold_left store tickets (t2::ts)
 
 let execute_lambda
   (type a)
