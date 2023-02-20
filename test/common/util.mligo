@@ -29,4 +29,3 @@ let get_last_events_from (type a) (addr : address) (rtag: string) : a list =
     else acc
   in
   List.fold f event_map ([]: a list)
-

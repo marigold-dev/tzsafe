@@ -19,9 +19,11 @@
 #import "ligo-breathalyzer/lib/lib.mligo" "Breath"
 #include "../../src/internal/contract.mligo"
 #import "../../src/internal/proposal_content.mligo" "Proposal_content"
+#import "../../src/internal/storage.mligo" "Storage"
 #import "./util.mligo" "Util"
 
 type proposal_content = Proposal_content.Types.t
+type storage_wallet = Storage.Types.wallet
 
 let init_storage_with_effective_period
   (type a) (owners, threshold, effective_period: address set * nat * int) : a storage_types =
@@ -39,6 +41,11 @@ let init_storage_with_effective_period
 let init_storage (type a) (owners, threshold: address set * nat) : a storage_types =
 init_storage_with_effective_period (owners, threshold, 172800)
 
+type 'a unforged_storage =
+[@layout:comb] { wallet  : 'a storage_wallet;
+                 tickets : ('a * address, 'a unforged_ticket) big_map;
+               }
+
 type originated = Breath.Contract.originated
 
 let originate (type a) (level: Breath.Logger.level) (main : a request -> a result) (init_storage : a storage_types ) (amount : tez) =
@@ -50,10 +57,10 @@ let originate (type a) (level: Breath.Logger.level) (main : a request -> a resul
     amount
 
 let create_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal : (a proposal_content) list) () =
-  Breath.Contract.transfert_with_entrypoint_to contract "create_proposal" proposal 0tez
+  Breath.Contract.transfer_with_entrypoint_to contract "create_proposal" proposal 0tez
 
 let sign_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal_id : nat) (agreement : bool) (proposal : (a proposal_content) list) () =
-  Breath.Contract.transfert_with_entrypoint_to contract "sign_proposal" (proposal_id, proposal, agreement) 0tez
+  Breath.Contract.transfer_with_entrypoint_to contract "sign_proposal" (proposal_id, proposal, agreement) 0tez
 
 let resolve_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal_id : nat) (proposal : (a proposal_content) list) () =
-  Breath.Contract.transfert_with_entrypoint_to contract "resolve_proposal" (proposal_id, proposal) 0tez
+  Breath.Contract.transfer_with_entrypoint_to contract "resolve_proposal" (proposal_id, proposal) 0tez
