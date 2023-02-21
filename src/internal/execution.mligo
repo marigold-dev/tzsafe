@@ -71,10 +71,15 @@ let execute_lambda_with_args
      | Some t ->
         let (_addr,(_content, value)), t = Tezos.read_ticket t in
         let balance = Conditions.balance_must_be_positive amount value in
-        let split_ticket_opt = Tezos.split_ticket t (amount, balance) in
-        let (t1, t2) = Option.unopt split_ticket_opt in
-        let (op, ts) = f (Some t1) in
-        Some op, List.fold_left store tickets (t2::ts)
+        if amount = value
+        then
+          let (op, ts) = f (Some t) in
+          Some op, List.fold_left store tickets ts
+        else
+          let split_ticket_opt = Tezos.split_ticket t (amount, balance) in
+          let (t1, t2) = Option.unopt split_ticket_opt in
+          let (op, ts) = f (Some t1) in
+          Some op, List.fold_left store tickets (t2::ts)
 
 let execute_lambda
   (type a)
@@ -86,7 +91,6 @@ let execute_lambda
   | None -> execute_lambda_without_args f tickets
   | Some args -> execute_lambda_with_args f args tickets
 
-(* TODO: check the args of lambda *)
 let send (type a)
   (content : a proposal_content)
   (wallet: a storage_wallet)

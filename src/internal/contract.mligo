@@ -46,6 +46,15 @@ let default (type a) (_, w, t : unit * a storage_wallet * a storage_tickets) : a
     ([event], ({wallet = w; tickets = t} : a storage_types))
 
 (**
+ * Ticket entrypoint
+ *)
+let ticket (type a) (t, w, ts : a ticket * a storage_wallet * a storage_tickets) : a result =
+    let ticket_info,t  = Tezos.read_ticket t in
+    let ts = Storage.Op.store_ticket t ts in
+    let event = Tezos.emit "%receiving_ticket" (Tezos.get_sender (), ticket_info) in
+    ([event], ({wallet = w; tickets = ts} : a storage_types))
+
+(**
  * Proposal creation
  *)
 let create_proposal (type a) (proposal_content, wallet, tickets: (a proposal_content) list * a storage_wallet * a storage_tickets) : a result =
@@ -112,6 +121,8 @@ let contract (type a) (action, storage : a request) : a result =
     match action with
     | Default u ->
         default (u, wallet, tickets)
+    | Ticket t ->
+        ticket (t, wallet, tickets)
     | Create_proposal (proposal_params) ->
         create_proposal (proposal_params, wallet, tickets)
     | Sign_proposal (proposal_id, proposal_content, agreement) ->
