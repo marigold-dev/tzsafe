@@ -73,6 +73,7 @@ module Op = struct
     type effective_period = Types.effective_period
     type proposal_state = Types.proposal_state
     type wallet = Types.wallet
+    type tickets = Types.tickets
     type types = Types.t
 
     [@inline]
@@ -205,4 +206,18 @@ module Op = struct
     let remove_owners (type a) (owners: address set) (wallet: a wallet) : a wallet =
       let remove (set, s : address set * address) : address set = Set.remove s set in
       { wallet with owners = Set.fold remove owners wallet.owners }
+
+    [@inline]
+    let store_ticket (type a) (ticket: a ticket) (tickets: a tickets) : a tickets =
+      let (addr, (content, _)), ticket = Tezos.read_ticket ticket in
+      let (v, tickets) = Big_map.get_and_update (content, addr) None tickets in
+      match v with
+      | None -> Big_map.add (content, addr) ticket tickets
+      | Some s ->
+         begin
+           let new_t_opt = Tezos.join_tickets (ticket, s) in
+           match new_t_opt with
+           | None -> failwith Errors.cannot_happen
+           | Some new_t -> Big_map.add (content, addr) new_t tickets
+         end
 end
