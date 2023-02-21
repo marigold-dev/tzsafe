@@ -21,6 +21,7 @@
 #import "./common/assert.mligo" "Assert"
 #import "./common/mock_contract.mligo" "Mock_contract"
 #import "./common/util.mligo" "Util"
+#import "./common/proxy_ticket.mligo" "Proxy_ticket"
 #import "../src/internal/proposal_content.mligo" "Proposal_content"
 #import "../src/internal/storage.mligo" "Storage"
 
@@ -78,7 +79,7 @@ let case_execute_lambda_proposal_without_ticket =
 
 type unforged_storage = Helper.unforged_storage
 
-let case_execute_lambda_proposal_with_ticket =
+let case_execute_lambda_proposal_with_returning_ticket =
   Breath.Model.case
   "test create lambda proposal and execute"
   "successuful execute"
@@ -138,9 +139,41 @@ let case_execute_lambda_proposal_with_ticket =
       //  })
       ])
 
+let case_receive_ticket =
+  Breath.Model.case
+  "test receiving ticket"
+  "successuful receiving ticket"
+    (fun (level: Breath.Logger.level) ->
+      let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 1n) in
+      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
+      let multisig_address = multisig_contract.originated_address in
+
+      let proxy_taddr =
+        let mk_param : nat ticket -> nat ticket = fun (t : nat ticket) -> t in
+        Proxy_ticket.init_transfer mk_param
+      in
+
+      let _ =
+        let ticket_info = (1n,10n) in
+        Proxy_ticket.transfer proxy_taddr (ticket_info, multisig_address)
+      in
+
+      let storage_m : michelson_program = Test.get_storage_of_address multisig_address in
+      let unforged_storage = (Test.decompile storage_m : nat unforged_storage) in
+
+      Breath.Result.reduce [
+      ])
+
 let test_suite =
   Breath.Model.suite "Suite for lambda proposal" [
     case_execute_lambda_proposal_without_ticket
-  ; case_execute_lambda_proposal_with_ticket
+  //; case_execute_lambda_proposal_with_returning_ticket
+  //; case_execute_lambda_proposal_with_args_to_withdraw_partial_ticket
+  //; case_execute_lambda_proposal_with_invalid_args
+  //; case_execute_lambda_proposal_with_args_to_withdraw_whole_ticket
+  //; case_execute_lambda_proposal_with_returning_zero_ticket
+  ; case_receive_ticket
   ]
 

@@ -25,6 +25,12 @@
 type proposal_content = Proposal_content.Types.t
 type storage_wallet = Storage.Types.wallet
 
+//let test_tickets (type a) (input, storage: (a ticket) list * ((a * address), (address * (a * nat))) map)
+//   : operation list * ((a * address), (address * (value * nat)) ) map =
+//   let aux (acc, t : (address * (a * nat)) map * a ticket ) : (address * (a * nat)) map =
+//     let (addr, (v, amout)), _t = Tezos.read_ticket t in
+//     Map.add (v, addr) (addr, (v, amout))
+
 let init_storage_with_effective_period
   (type a) (owners, threshold, effective_period: address set * nat * int) : a storage_types =
 { wallet =
