@@ -48,9 +48,9 @@ let init_storage (type a) (owners, threshold: address set * nat) : a storage_typ
 init_storage_with_effective_period (owners, threshold, 172800)
 
 type 'a unforged_storage =
-{ wallet  : 'a storage_wallet;
-  tickets : ('a * address, 'a unforged_ticket) big_map;
-}
+[@layout:comb] { wallet  : 'a storage_wallet;
+                 tickets : ('a * address, 'a unforged_ticket) big_map;
+               }
 
 type originated = Breath.Contract.originated
 

@@ -108,23 +108,20 @@ let case_execute_lambda_proposal_with_returning_ticket =
       let sign_action = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param) in
       let resolve_action = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param) in
 
-      //let storage = Breath.Contract.storage_of multisig_contract in
-      //let proposal1 = Util.unopt (Big_map.find_opt 1n storage.wallet.proposals) "proposal 1 doesn't exist" in
+      let storage = Breath.Contract.storage_of multisig_contract in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.wallet.proposals) "proposal 1 doesn't exist" in
 
       let storage_m : michelson_program = Test.get_storage_of_address multisig_address in
       let unforged_storage = (Test.decompile storage_m : nat unforged_storage) in
 
-      //let ticket1 =
-      //  (Test.decompile
-      //    (Test.compile_value (Util.unopt (Big_map.find_opt (1n, multisig_address) storage.tickets) "ticket 1 doesn't exist"))
-      //    : nat unforged_ticket)
-      //in
+      let ticket1 = Util.unopt (Big_map.find_opt (1n, multisig_address) unforged_storage.tickets) "ticket 1 doesn't exist" in
+      let ticket1_ = ({ ticketer = multisig_address ; amount = 10n ;  value = 1n } : nat unforged_ticket) in
 
       Breath.Result.reduce [
         action
       ; sign_action
       ; resolve_action
-      //; Breath.Assert.is_equal "ticket #1 in multisig storage" (multisig_address, (10n, 1n)) ticket1
+      ; Breath.Assert.is_equal "ticket #1 in multisig storage" ticket1_ ticket1
       //; Assert.is_proposal_equal "#1 proposal" proposal1
       //  ({
       //    state            = Executed;
@@ -160,8 +157,7 @@ let case_receive_ticket =
         Proxy_ticket.transfer proxy_taddr (ticket_info, multisig_address)
       in
 
-      let storage_m : michelson_program = Test.get_storage_of_address multisig_address in
-      let unforged_storage = (Test.decompile storage_m : nat unforged_storage) in
+      let storage = Breath.Contract.storage_of multisig_contract in
 
       Breath.Result.reduce [
       ])
@@ -169,7 +165,7 @@ let case_receive_ticket =
 let test_suite =
   Breath.Model.suite "Suite for lambda proposal" [
     case_execute_lambda_proposal_without_ticket
-  //; case_execute_lambda_proposal_with_returning_ticket
+  ; case_execute_lambda_proposal_with_returning_ticket
   //; case_execute_lambda_proposal_with_args_to_withdraw_partial_ticket
   //; case_execute_lambda_proposal_with_invalid_args
   //; case_execute_lambda_proposal_with_args_to_withdraw_whole_ticket
