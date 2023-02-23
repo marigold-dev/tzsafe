@@ -37,10 +37,9 @@ let case_emitted_create_proposal =
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 2n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
-      let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
       let param = ([] : (nat proposal_content) list) in
 
-      let param1 = (Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
       let action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let multisig_address = multisig_contract.originated_address in
 
@@ -66,10 +65,9 @@ let case_emitted_sign_proposal =
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 2n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
-      let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
       let param = ([] : (nat proposal_content) list) in
 
-      let param1 = (Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;} :: param) in
+      let param1 = (Transfer { target = bob.address; parameter = (); amount = 10tez;} :: param) in
       let action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
       let multisig_address = multisig_contract.originated_address in
@@ -94,11 +92,10 @@ let case_emitted_exe_proposal =
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
-      let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
+      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
       let param = ([] : (nat proposal_content) list) in
 
-      let param1 = (Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
       let action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
       let exe_action1 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in

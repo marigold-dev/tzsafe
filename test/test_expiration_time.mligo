@@ -34,11 +34,10 @@ let case_sign_proposal_passing_expiration_time =
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage_with_effective_period (owners, 1n, 1_800) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
-      let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
       let param = ([] : (nat proposal_content) list) in
 
       (* create proposal 1 *)
-      let param1 = (Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let _ = Test.bake_until_n_cycle_end 100n in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
@@ -57,11 +56,10 @@ let case_resolve_proposal_passing_expiration_time =
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage_with_effective_period (owners, 1n, 1_800) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
-      let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
       let param = ([] : (nat proposal_content) list) in
 
       (* create proposal 1 *)
-      let param1 = (Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
       let _ = Test.bake_until_n_cycle_end 100n in
@@ -80,10 +78,10 @@ let case_resolve_proposal_passing_expiration_time =
           signatures       = Map.literal [(bob.address, true)];
           proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
           resolver         = Some { actor = bob.address; timestamp = Tezos.get_now () };
-          contents         = [ Execute {
-            amount           = 0tez;
-            target           = add_contract.originated_address;
-            parameter        = 10n;
+          contents         = [ Transfer {
+            amount           = 10tez;
+            target           = alice.address;
+            parameter        = ();
           }]
         })
       ])
@@ -97,11 +95,10 @@ let case_resolve_executed_proposal_passing_expiration_time =
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage_with_effective_period (owners, 1n, 1_800) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
-      let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
       let param = ([] : (nat proposal_content) list) in
 
       (* create proposal 1 *)
-      let param1 = (Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
       let exe_action1 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
@@ -122,10 +119,10 @@ let case_resolve_executed_proposal_passing_expiration_time =
           signatures       = Map.literal [(bob.address, true)];
           proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
           resolver         = Some { actor = bob.address; timestamp = Tezos.get_now () };
-          contents         = [ Execute {
-            amount           = 0tez;
-            target           = add_contract.originated_address;
-            parameter        = 10n;
+          contents         = [ Transfer {
+            amount           = 10tez;
+            target           = alice.address;
+            parameter        = ();
           }]
         })
       ])
@@ -139,11 +136,10 @@ let case_resolve_rejected_proposal_passing_expiration_time =
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage_with_effective_period (owners, 3n, 1_800) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
-      let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
       let param = ([] : (nat proposal_content) list) in
 
       (* create proposal 1 *)
-      let param1 = (Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n false param1) in
       let exe_action1 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
@@ -164,10 +160,10 @@ let case_resolve_rejected_proposal_passing_expiration_time =
           signatures       = Map.literal [(bob.address, false)];
           proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
           resolver         = Some { actor = bob.address; timestamp = Tezos.get_now () };
-          contents         = [ Execute {
-            amount           = 0tez;
-            target           = add_contract.originated_address;
-            parameter        = 10n;
+          contents         = [ Transfer {
+            amount           = 10tez;
+            target           = alice.address;
+            parameter        = ();
           }]
         })
       ])
