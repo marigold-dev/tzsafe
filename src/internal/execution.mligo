@@ -98,7 +98,6 @@ let send (type a)
   : (operation option * a proposal_content * a storage_wallet * a storage_tickets) =
     match content with
     | Transfer tx -> (Some (send_by tx.parameter tx.target tx.amount), content, wallet, tickets)
-    | Execute tx -> (Some (send_by tx.parameter tx.target tx.amount), content, wallet, tickets)
     | Execute_lambda e ->
        let lambda = Option.unopt e.lambda in (* cannnot happend *)
        let (op_opt, ts) = execute_lambda lambda e.args tickets in
@@ -112,7 +111,6 @@ let send (type a)
 let clear (type a) (content : a proposal_content) : (a proposal_content) =
     match content with
     | Transfer _ -> content
-    | Execute _ -> content
     | Execute_lambda e -> Execute_lambda { e with lambda = None }
     | Adjust_threshold _ -> content
     | Add_owners _ -> content

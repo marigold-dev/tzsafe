@@ -55,7 +55,6 @@ let check_proposal (type a) (content: a proposal_content) : unit =
     match content with
     | Transfer t ->
         assert_with_error (not (t.amount = 0tez)) Errors.amount_is_zero
-    | Execute _ -> ()
     | Execute_lambda e ->
         let () = assert_with_error (Util.is_some e.lambda) Errors.no_proposal in
         begin
