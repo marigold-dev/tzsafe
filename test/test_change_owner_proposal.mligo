@@ -150,7 +150,7 @@ let case_resolve_transfer_proposal_after_owner_changed =
       let param = ([] : (nat proposal_content) list) in
 
       (* 1. create transfer proposal *)
-      let param1 = Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param in
+      let param1 = Transfer { target = alice.address; amount = 10tez;} :: param in
       let action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as alice (Helper.sign_proposal multisig_contract 1n true param1) in
 

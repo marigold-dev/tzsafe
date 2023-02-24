@@ -45,13 +45,13 @@ let case_create_proposal =
       let action2 = Breath.Context.act_as bob (Helper.create_proposal multisig_contract param2) in
 
       (* create proposal 3 *)
-      let param3 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
+      let param3 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
       let action3 = Breath.Context.act_as bob (Helper.create_proposal multisig_contract param3) in
 
       (* create proposal 4 *)
       let param4 =
-        [ Transfer { target = alice.address; parameter = (); amount = 10tez;}
-        ; Transfer { target = alice.address; parameter = (); amount = 10tez;}
+        [ Transfer { target = alice.address; amount = 10tez;}
+        ; Transfer { target = alice.address; amount = 10tez;}
         ; Adjust_threshold 10n
         ] in
       let action4 = Breath.Context.act_as bob (Helper.create_proposal multisig_contract param4) in
@@ -94,7 +94,6 @@ let case_create_proposal =
           proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
           resolver         = None;
           contents         = [ Transfer {
-            parameter        = ();
             amount           = 10tez;
             target           = alice.address;
           }]
@@ -106,8 +105,8 @@ let case_create_proposal =
           proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
           resolver         = None;
           contents         =
-            [ Transfer {parameter = (); amount = 10tez; target = alice.address; }
-            ; Transfer {parameter = (); amount = 10tez; target = alice.address; }
+            [ Transfer {amount = 10tez; target = alice.address; }
+            ; Transfer {amount = 10tez; target = alice.address; }
             ; Adjust_threshold 10n
             ]
         })
@@ -140,7 +139,7 @@ let case_fail_to_create_transfer_0_amount_proposal =
       let init_storage = Helper.init_storage (owners, 2n) in
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
       let param = ([] : (nat proposal_content) list) in
-      let param = (Transfer { target = alice.address; parameter = (); amount = 0tez;} :: param) in
+      let param = (Transfer { target = alice.address; amount = 0tez;} :: param) in
 
       let action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
 
@@ -181,7 +180,7 @@ let case_unauthorized_user_fail_to_create_proposal =
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
 
       (* create proposal 1 *)
-      let param1 = [Transfer { target = alice.address; parameter = (); amount = 0tez;}] in
+      let param1 = [Transfer { target = alice.address; amount = 0tez;}] in
       let action1 = Breath.Context.act_as carol (Helper.create_proposal multisig_contract param1) in
 
       let balance = Breath.Contract.balance_of multisig_contract in

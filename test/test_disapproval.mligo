@@ -36,7 +36,7 @@ let case_sign_for_disapproval =
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
       let param = ([] : (nat proposal_content) list) in
 
-      let param1 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n false param1) in
 
@@ -59,7 +59,6 @@ let case_sign_for_disapproval =
           contents         = [ Transfer {
             amount           = 10tez;
             target           = alice.address;
-            parameter        = ();
           }]
         })
       ])
@@ -75,7 +74,7 @@ let case_fail_double_sign =
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
       let param = ([] : (nat proposal_content) list) in
 
-      let param1 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
       let action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
       let sign_action2 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n false param1) in
@@ -97,7 +96,7 @@ let case_close_proposal_1_1 =
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
       let param = ([] : (nat proposal_content) list) in
 
-      let param1 = (Transfer { target = bob.address; parameter = (); amount = 10tez;} :: param) in
+      let param1 = (Transfer { target = bob.address; amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as bob (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n false param1) in
       let resolve_action1 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
@@ -122,7 +121,6 @@ let case_close_proposal_1_1 =
           contents         = [ Transfer {
             amount           = 10tez;
             target           = bob.address;
-            parameter        = ();
           }]
         })
       ])
@@ -138,7 +136,7 @@ let case_close_proposal_2_2 =
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
       let param = ([] : (nat proposal_content) list) in
 
-      let param1 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as bob (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as alice (Helper.sign_proposal multisig_contract 1n false param1) in
       let resolve_action1 = Breath.Context.act_as alice (Helper.resolve_proposal multisig_contract 1n param1) in
@@ -163,7 +161,6 @@ let case_close_proposal_2_2 =
           contents         = [ Transfer {
             amount           = 10tez;
             target           = alice.address;
-            parameter        = ();
           }]
         })
       ])
@@ -179,7 +176,7 @@ let case_close_proposal_2_3 =
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
       let param = ([] : (nat proposal_content) list) in
 
-      let param1 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as bob (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as alice (Helper.sign_proposal multisig_contract 1n false param1) in
       let sign_action2 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n false param1) in
@@ -206,7 +203,6 @@ let case_close_proposal_2_3 =
           contents         = [ Transfer {
             amount           = 10tez;
             target           = alice.address;
-            parameter        = ();
           }]
         })
       ])
@@ -222,7 +218,7 @@ let case_not_closed_1_2 =
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
       let param = ([] : (nat proposal_content) list) in
 
-      let param1 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as bob (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as alice (Helper.sign_proposal multisig_contract 1n false param1) in
       let resolve_action1 = Breath.Context.act_as alice (Helper.resolve_proposal multisig_contract 1n param1) in
@@ -247,7 +243,6 @@ let case_not_closed_1_2 =
           contents         = [ Transfer {
             amount           = 10tez;
             target           = alice.address;
-            parameter        = ();
           }]
         })
       ])

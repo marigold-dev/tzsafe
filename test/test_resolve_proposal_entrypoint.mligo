@@ -37,13 +37,13 @@ let case_resolve_proposal =
       let param = ([] : (nat proposal_content) list) in
 
       (* create proposal 1 *)
-      let param1 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
       let exe_action1 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
 
       (* create proposal 2 *)
-      let param2 = (Transfer { target = bob.address; parameter = (); amount = 20tez;} :: param) in
+      let param2 = (Transfer { target = bob.address; amount = 20tez;} :: param) in
       let create_action2 = Breath.Context.act_as bob (Helper.create_proposal multisig_contract param2) in
       let sign_action2 = Breath.Context.act_as carol (Helper.sign_proposal multisig_contract 2n true param2) in
       let exe_action2 = Breath.Context.act_as alice (Helper.resolve_proposal multisig_contract 2n param2) in
@@ -72,7 +72,6 @@ let case_resolve_proposal =
           contents         = [ Transfer {
             amount           = 10tez;
             target           = alice.address;
-            parameter        = ();
           }]
         })
       ; Assert.is_proposal_equal "#2 proposal" proposal2
@@ -82,7 +81,6 @@ let case_resolve_proposal =
           proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
           resolver         = Some { actor = alice.address; timestamp = Tezos.get_now () };
           contents         = [ Transfer {
-            parameter        = ();
             target           = bob.address;
             amount           = 20tez;
           }]
@@ -101,7 +99,7 @@ let case_fail_to_resolve_proposal_twice =
       let param = ([] : (nat proposal_content) list) in
 
       (* create proposal 1 *)
-      let param1 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
       let exe_action1 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
@@ -125,7 +123,7 @@ let case_not_owner =
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
       let param = ([] : (nat proposal_content) list) in
 
-      let param1 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
       let exe_action1 = Breath.Context.act_as carol (Helper.resolve_proposal multisig_contract 1n param1) in
@@ -147,7 +145,7 @@ let case_no_enough_signature =
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
       let param = ([] : (nat proposal_content) list) in
 
-      let param1 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
       let exe_action1 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
@@ -170,7 +168,7 @@ let case_wrong_content_bytes =
       let param = ([] : (nat proposal_content) list) in
 
       (* create proposal 1 *)
-      let param1 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
       let exe_action1 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param) in
@@ -193,13 +191,13 @@ let case_execute_transaction_1_of_1 =
       let param = ([] : (nat proposal_content) list) in
 
       (* create proposal 1 *)
-      let param1 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
       let resolve_action1 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
 
       (* create proposal 2 *)
-      let param2 = (Transfer { target = bob.address; parameter = (); amount = 20tez;} :: param) in
+      let param2 = (Transfer { target = bob.address; amount = 20tez;} :: param) in
       let create_action2 = Breath.Context.act_as bob (Helper.create_proposal multisig_contract param2) in
       let sign_action2 = Breath.Context.act_as carol (Helper.sign_proposal multisig_contract 2n true param2) in
       let resolve_action2 = Breath.Context.act_as carol (Helper.resolve_proposal multisig_contract 2n param2) in
@@ -228,7 +226,6 @@ let case_execute_transaction_1_of_1 =
           contents         = [ Transfer {
             target           = alice.address;
             amount           = 10tez;
-            parameter        = ();
           }]
         })
       ; Assert.is_proposal_equal "#2 proposal" proposal2
@@ -239,7 +236,6 @@ let case_execute_transaction_1_of_1 =
           resolver         = Some { actor = carol.address; timestamp = Tezos.get_now () };
           contents         = [ Transfer {
             target           = bob.address;
-            parameter        = ();
             amount           = 20tez;
           }]
         })
@@ -257,8 +253,8 @@ let case_execute_transaction_1_of_1_batch =
 
       (* create proposal 1 *)
       let param1 =
-        [ Transfer { target = alice.address; parameter = (); amount = 10tez;}
-        ; Transfer { target = bob.address; parameter = (); amount = 20tez;}
+        [ Transfer { target = alice.address; amount = 10tez;}
+        ; Transfer { target = bob.address; amount = 20tez;}
         ] in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
@@ -285,10 +281,9 @@ let case_execute_transaction_1_of_1_batch =
             [ Transfer {
               target           = alice.address;
               amount           = 10tez;
-              parameter        = (); }
+            }
             ; Transfer {
               target           = bob.address;
-              parameter        = ();
               amount           = 20tez; }
             ]
         })
@@ -306,7 +301,7 @@ let case_execute_transaction_3_of_3 =
       let param = ([] : (nat proposal_content) list) in
 
       (* create proposal 1 *)
-      let param1 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1_1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
       let sign_action1_2 = Breath.Context.act_as carol (Helper.sign_proposal multisig_contract 1n true param1) in
@@ -314,7 +309,7 @@ let case_execute_transaction_3_of_3 =
       let resolve_action1 = Breath.Context.act_as alice (Helper.resolve_proposal multisig_contract 1n param1) in
 
       (* create proposal 2 *)
-      let param2 = (Transfer { target = bob.address; parameter = (); amount = 20tez;} :: param) in
+      let param2 = (Transfer { target = bob.address; amount = 20tez;} :: param) in
       let create_action2 = Breath.Context.act_as bob (Helper.create_proposal multisig_contract param2) in
       let sign_action2_1 = Breath.Context.act_as carol (Helper.sign_proposal multisig_contract 2n true param2) in
       let sign_action2_2 = Breath.Context.act_as alice (Helper.sign_proposal multisig_contract 2n true param2) in
@@ -348,7 +343,6 @@ let case_execute_transaction_3_of_3 =
           resolver         = Some { actor = alice.address; timestamp = Tezos.get_now () };
           contents         = [ Transfer {
             target           = alice.address;
-            parameter        = ();
             amount           = 10tez;
           }]
         })
@@ -360,7 +354,6 @@ let case_execute_transaction_3_of_3 =
           resolver         = Some { actor = bob.address; timestamp = Tezos.get_now () };
           contents         = [ Transfer {
             target           = bob.address;
-            parameter        = ();
             amount           = 20tez;
           }]
         })

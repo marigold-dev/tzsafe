@@ -37,7 +37,7 @@ let case_sign_proposal_passing_expiration_time =
       let param = ([] : (nat proposal_content) list) in
 
       (* create proposal 1 *)
-      let param1 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let _ = Test.bake_until_n_cycle_end 100n in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
@@ -59,7 +59,7 @@ let case_resolve_proposal_passing_expiration_time =
       let param = ([] : (nat proposal_content) list) in
 
       (* create proposal 1 *)
-      let param1 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
       let _ = Test.bake_until_n_cycle_end 100n in
@@ -81,7 +81,6 @@ let case_resolve_proposal_passing_expiration_time =
           contents         = [ Transfer {
             amount           = 10tez;
             target           = alice.address;
-            parameter        = ();
           }]
         })
       ])
@@ -98,7 +97,7 @@ let case_resolve_executed_proposal_passing_expiration_time =
       let param = ([] : (nat proposal_content) list) in
 
       (* create proposal 1 *)
-      let param1 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
       let exe_action1 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
@@ -122,7 +121,6 @@ let case_resolve_executed_proposal_passing_expiration_time =
           contents         = [ Transfer {
             amount           = 10tez;
             target           = alice.address;
-            parameter        = ();
           }]
         })
       ])
@@ -139,7 +137,7 @@ let case_resolve_rejected_proposal_passing_expiration_time =
       let param = ([] : (nat proposal_content) list) in
 
       (* create proposal 1 *)
-      let param1 = (Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n false param1) in
       let exe_action1 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
@@ -163,7 +161,6 @@ let case_resolve_rejected_proposal_passing_expiration_time =
           contents         = [ Transfer {
             amount           = 10tez;
             target           = alice.address;
-            parameter        = ();
           }]
         })
       ])
