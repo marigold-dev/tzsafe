@@ -25,6 +25,7 @@ module Types = struct
     type proposal_id = Parameter.Types.proposal_id
     type proposal_content = Proposal_content.Types.t
     type effective_period = int
+    type 'a tickets = ('a * address, 'a ticket) big_map
 
     type actor =
     [@layout:comb]
@@ -45,7 +46,7 @@ module Types = struct
         contents : ('a proposal_content) list
     }
 
-    type 'a t =
+    type 'a wallet =
     [@layout:comb]
     {
         proposal_counter : nat;
@@ -54,6 +55,12 @@ module Types = struct
         threshold        : nat;
         effective_period : effective_period;
         metadata         : (string, bytes) big_map;
+    }
+
+    type 'a t =
+    [@layout:comb]
+    { wallet  : 'a wallet;
+      tickets : 'a tickets;
     }
 end
 
@@ -65,6 +72,8 @@ module Op = struct
     type proposal_state = Types.proposal_state
     type effective_period = Types.effective_period
     type proposal_state = Types.proposal_state
+    type wallet = Types.wallet
+    type tickets = Types.tickets
     type types = Types.t
 
     [@inline]
@@ -83,21 +92,20 @@ module Op = struct
 
 
     [@inline]
-    let register_proposal (type a) (proposal, storage: a proposal * a types) : a types =
-        let proposal_counter = storage.proposal_counter + 1n in
-        let proposals = Big_map.add proposal_counter proposal storage.proposals in
+    let register_proposal (type a) (proposal, wallet: a proposal * a wallet) : a wallet =
+        let proposal_counter = wallet.proposal_counter + 1n in
+        let proposals = Big_map.add proposal_counter proposal wallet.proposals in
         {
-            storage with
+            wallet with
             proposals     = proposals;
             proposal_counter = proposal_counter
         }
 
     [@inline]
-    let retrieve_proposal (type a) (proposal_number, storage : proposal_id * a types) : a proposal =
-        match Big_map.find_opt proposal_number storage.proposals with
+    let retrieve_proposal (type a) (proposal_number, wallet: proposal_id * a wallet) : a proposal =
+        match Big_map.find_opt proposal_number wallet.proposals with
         | None -> failwith Errors.no_proposal_exist
         | Some proposal  -> proposal
-
 
     [@inline]
     let update_signature (type a) (proposal, owner, agreement: a proposal * address * agreement) : a proposal =
@@ -174,28 +182,44 @@ module Op = struct
           reject_proposal (proposal, disapprovals, abs(number_of_owners - threshold))
 
     [@inline]
-    let update_proposal (type a) (proposal_number, proposal, storage: proposal_id * a proposal * a types) : a types =
-        let proposals = Big_map.update proposal_number (Some proposal) storage.proposals in
+    let update_proposal (type a) (proposal_number, proposal, wallet: proposal_id * a proposal * a wallet) : a wallet =
+        let proposals = Big_map.update proposal_number (Some proposal) wallet.proposals in
         {
-            storage with
+            wallet with
             proposals = proposals
         }
 
     [@inline]
-    let adjust_threshold (type a) (threshold : nat) (storage : a types) : a types =
-      { storage with threshold = threshold }
+    let adjust_threshold (type a) (threshold : nat) (wallet: a wallet) : a wallet =
+      { wallet with threshold = threshold }
 
     [@inline]
-    let adjust_effective_period (type a) (effective_period: int) (storage : a types) : a types =
-      { storage with effective_period = effective_period }
+    let adjust_effective_period (type a) (effective_period: int) (wallet: a wallet) : a wallet =
+      { wallet with effective_period = effective_period }
 
     [@inline]
-    let add_owners (type a) (owners: address set) (storage : a types) : a types =
+    let add_owners (type a) (owners: address set) (wallet : a wallet) : a wallet =
       let add (set, s : address set * address) : address set = Set.add s set in
-      { storage with owners = Set.fold add owners storage.owners }
+      { wallet with owners = Set.fold add owners wallet.owners }
 
     [@inline]
-    let remove_owners (type a) (owners: address set) (storage : a types) : a types =
+    let remove_owners (type a) (owners: address set) (wallet: a wallet) : a wallet =
       let remove (set, s : address set * address) : address set = Set.remove s set in
-      { storage with owners = Set.fold remove owners storage.owners }
+      { wallet with owners = Set.fold remove owners wallet.owners }
+
+    [@inline]
+    let store_ticket
+      (type a)
+      (tickets, t: a tickets * a ticket)
+      : a tickets =
+         let (addr,(content, _v)), t = Tezos.read_ticket t in
+         let (s_opt, tickets) = Big_map.get_and_update (content, addr) None tickets in
+         match s_opt with
+         | None -> Big_map.add (content, addr) t tickets
+         | Some s ->
+            begin
+              match Tezos.join_tickets (t, s) with
+              | None -> failwith Errors.cannot_happen
+              | Some new_t -> Big_map.add (content, addr) new_t tickets
+            end
 end

@@ -26,6 +26,7 @@ module Types = struct
 
     type 'a t =
     | Default of unit
+    | Ticket of 'a ticket
     | Create_proposal of ('a proposal_content) list
     | Sign_proposal of (proposal_id * ('a proposal_content) list * agreement)
     | Resolve_proposal of proposal_id * ('a proposal_content) list

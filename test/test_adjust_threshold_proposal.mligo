@@ -49,7 +49,7 @@ let case_execute_adjust_threshold_proposal =
         action
       ; sign_action
       ; resolve_action
-      ; Breath.Assert.is_equal "storage threshold" storage.threshold 2n
+      ; Breath.Assert.is_equal "storage threshold" storage.wallet.threshold 2n
       ])
 
 let case_adjust_invalid_threshold_proposal =

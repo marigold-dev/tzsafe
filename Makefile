@@ -17,7 +17,7 @@ BUILT_APP_DIRECTORY:=$(BUILD_DIRECTORY)/$(APP_DIRECTORY)
 
 # Ligo compiler
 LIGO_COMPILER_ARGS:=--protocol kathmandu
-LIGO_VERSION:=0.59.0
+LIGO_VERSION:=0.60.0
 LIGO?=ligo
 LIGO_BUILD=$(LIGO) compile contract $(LIGO_COMPILER_ARGS)
 LIGO_TEST=$(LIGO) run test
@@ -72,8 +72,8 @@ gen-wallet:
 
 deploy:
 	$(eval SIGNER := $(shell TEZOS_CLIENT_UNSAFE_DISABLE_DISCLAIMER=yes ./_build/octez-client --endpoint https://ghostnet.tezos.marigold.dev show address wallet_address | grep Hash | awk '{print $$2}'))
-	$(BUILD_DIRECTORY)/octez-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME)_unit transferring 2 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_unit.tez --init '(Pair 0 {} {"$(SIGNER)";} 1 604800 {})' --burn-cap 2 -f
-	$(BUILD_DIRECTORY)/octez-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME)_bytes transferring 2 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_bytes.tez --init '(Pair 0 {} {"$(SIGNER)";} 1 604800 {})' --burn-cap 2 -f
+	$(BUILD_DIRECTORY)/octez-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME)_unit transferring 2 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_unit.tez --init '(Pair (Pair 0 {} {"$(SIGNER)";} 1 604800 {}) {})' --burn-cap 2 -f
+	$(BUILD_DIRECTORY)/octez-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME)_bytes transferring 2 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_bytes.tez --init '(Pair (Pair 0 {} {"$(SIGNER)";} 1 604800 {}) {})' --burn-cap 2 -f
 
 get-tezos-binary:
 	wget -O $(BUILD_DIRECTORY)/octez-client $(TEZOS_BINARIES_URL)/octez-client

@@ -49,7 +49,7 @@ let case_execute_add_owner_proposal =
         action
       ; sign_action
       ; resolve_action
-      ; Breath.Assert.is_equal "storage threshold" storage.owners
+      ; Breath.Assert.is_equal "storage threshold" storage.wallet.owners
         (Set.literal [alice.address; bob.address; carol.address])
       ])
 
@@ -77,7 +77,7 @@ let case_execute_add_existed_owner_proposal =
         action
       ; sign_action
       ; resolve_action
-      ; Breath.Assert.is_equal "storage threshold" storage.owners
+      ; Breath.Assert.is_equal "storage threshold" storage.wallet.owners
         (Set.literal [alice.address;])
       ])
 
@@ -105,7 +105,7 @@ let case_execute_remove_owner_proposal =
         action
       ; sign_action
       ; resolve_action
-      ; Breath.Assert.is_equal "storage threshold" storage.owners
+      ; Breath.Assert.is_equal "storage threshold" storage.wallet.owners
         (Set.literal [alice.address;])
       ])
 
@@ -133,7 +133,7 @@ let case_execute_remove_nonexisted_owner_proposal =
         action
       ; sign_action
       ; resolve_action
-      ; Breath.Assert.is_equal "storage owner" storage.owners
+      ; Breath.Assert.is_equal "storage owner" storage.wallet.owners
         (Set.literal [alice.address;])
       ])
 
@@ -150,7 +150,7 @@ let case_resolve_transfer_proposal_after_owner_changed =
       let param = ([] : (nat proposal_content) list) in
 
       (* 1. create transfer proposal *)
-      let param1 = Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param in
+      let param1 = Transfer { target = alice.address; amount = 10tez;} :: param in
       let action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as alice (Helper.sign_proposal multisig_contract 1n true param1) in
 
@@ -170,7 +170,7 @@ let case_resolve_transfer_proposal_after_owner_changed =
 
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.wallet.proposals) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         action1

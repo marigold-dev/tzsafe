@@ -17,18 +17,19 @@
    SOFTWARE. *)
 
 module Types = struct
-    type 'a transaction =
+    type transaction =
     [@layout:comb]
     {
         target: address;
-        parameter: 'a;
         amount: tez;
     }
 
     type 'a t =
-    | Transfer of unit transaction
-    | Execute of ('a transaction)
-    | Execute_lambda of { metadata: bytes option; lambda: (unit -> operation) option }
+    | Transfer of transaction
+    | Execute_lambda of
+        { metadata: bytes option
+        ; lambda: (('a ticket) option -> operation * ('a ticket) list) option
+        ; args: ('a * address * nat) option }
     | Adjust_threshold of nat
     | Add_owners of address set
     | Remove_owners of address set
