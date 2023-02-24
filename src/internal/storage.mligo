@@ -208,16 +208,18 @@ module Op = struct
       { wallet with owners = Set.fold remove owners wallet.owners }
 
     [@inline]
-    let store_ticket (type a) (ticket: a ticket) (tickets: a tickets) : a tickets =
-      let (addr, (content, _)), ticket = Tezos.read_ticket ticket in
-      let (v, tickets) = Big_map.get_and_update (content, addr) None tickets in
-      match v with
-      | None -> Big_map.add (content, addr) ticket tickets
-      | Some s ->
-         begin
-           let new_t_opt = Tezos.join_tickets (ticket, s) in
-           match new_t_opt with
-           | None -> failwith Errors.cannot_happen
-           | Some new_t -> Big_map.add (content, addr) new_t tickets
-         end
+    let store_ticket
+      (type a)
+      (tickets, t: a tickets * a ticket)
+      : a tickets =
+         let (addr,(content, _v)), t = Tezos.read_ticket t in
+         let (s_opt, tickets) = Big_map.get_and_update (content, addr) None tickets in
+         match s_opt with
+         | None -> Big_map.add (content, addr) t tickets
+         | Some s ->
+            begin
+              match Tezos.join_tickets (t, s) with
+              | None -> failwith Errors.cannot_happen
+              | Some new_t -> Big_map.add (content, addr) new_t tickets
+            end
 end

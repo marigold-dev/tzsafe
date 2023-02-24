@@ -30,26 +30,12 @@ type storage_types_proposal = Storage.Types.proposal
 type storage_types_proposal_state = Storage.Types.proposal_state
 type proposal_content = Proposal_content.Types.t
 
-let send_by (type a) (parameter: a) (target : address) (amount : tez) : operation =
+let send_by (target : address) (amount : tez) : operation =
     [@no_mutation]
-    let contract_opt : a contract option = Tezos.get_contract_opt target in
+    let contract_opt : unit contract option = Tezos.get_contract_opt target in
     let contract = Option.unopt_with_error contract_opt Errors.unknown_contract in
-    Tezos.transaction parameter amount contract
+    Tezos.transaction () amount contract
 
-let store
-  (type a)
-  (tickets, t: a storage_tickets * a ticket)
-  : a storage_tickets =
-     let (addr,(content, _v)), t = Tezos.read_ticket t in
-     let (s_opt, tickets) = Big_map.get_and_update (content, addr) None tickets in
-     match s_opt with
-     | None -> Big_map.add (content, addr) t tickets
-     | Some s ->
-        begin
-          match Tezos.join_tickets (t, s) with
-          | None -> failwith Errors.cannot_happen
-          | Some new_t -> Big_map.add (content, addr) new_t tickets
-        end
 
 let execute_lambda_without_args
   (type a)
@@ -57,7 +43,7 @@ let execute_lambda_without_args
   (tickets: a storage_tickets)
   : (operation option * a storage_tickets) =
   let (op, ts) = f (None : (a ticket) option) in
-  Some op, List.fold_left store tickets ts
+  Some op, List.fold_left Storage.Op.store_ticket tickets ts
 
 let execute_lambda_with_args
   (type a)
@@ -74,12 +60,12 @@ let execute_lambda_with_args
         if amount = value
         then
           let (op, ts) = f (Some t) in
-          Some op, List.fold_left store tickets ts
+          Some op, List.fold_left Storage.Op.store_ticket tickets ts
         else
           let split_ticket_opt = Tezos.split_ticket t (amount, balance) in
           let (t1, t2) = Option.unopt split_ticket_opt in
           let (op, ts) = f (Some t1) in
-          Some op, List.fold_left store tickets (t2::ts)
+          Some op, List.fold_left Storage.Op.store_ticket tickets (t2::ts)
 
 let execute_lambda
   (type a)
@@ -97,7 +83,7 @@ let send (type a)
   (tickets: a storage_tickets)
   : (operation option * a proposal_content * a storage_wallet * a storage_tickets) =
     match content with
-    | Transfer tx -> (Some (send_by tx.parameter tx.target tx.amount), content, wallet, tickets)
+    | Transfer tx -> (Some (send_by tx.target tx.amount), content, wallet, tickets)
     | Execute_lambda e ->
        let lambda = Option.unopt e.lambda in (* cannnot happend *)
        let (op_opt, ts) = execute_lambda lambda e.args tickets in

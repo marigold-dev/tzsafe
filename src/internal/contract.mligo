@@ -50,7 +50,7 @@ let default (type a) (_, w, t : unit * a storage_wallet * a storage_tickets) : a
  *)
 let ticket (type a) (t, w, ts : a ticket * a storage_wallet * a storage_tickets) : a result =
     let ticket_info,t  = Tezos.read_ticket t in
-    let ts = Storage.Op.store_ticket t ts in
+    let ts = Storage.Op.store_ticket (ts, t) in
     let event = Tezos.emit "%receiving_ticket" (Tezos.get_sender (), ticket_info) in
     ([event], ({wallet = w; tickets = ts} : a storage_types))
 

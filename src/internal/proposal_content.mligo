@@ -17,16 +17,15 @@
    SOFTWARE. *)
 
 module Types = struct
-    type 'a transaction =
+    type transaction =
     [@layout:comb]
     {
         target: address;
-        parameter: 'a;
         amount: tez;
     }
 
     type 'a t =
-    | Transfer of unit transaction
+    | Transfer of transaction
     | Execute_lambda of
         { metadata: bytes option
         ; lambda: (('a ticket) option -> operation * ('a ticket) list) option
