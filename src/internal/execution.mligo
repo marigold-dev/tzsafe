@@ -116,7 +116,7 @@ let perform_operations (type a)
       let (opt_op, new_c, new_s, new_ts) = send c w ts in
       match opt_op with
       | Some op -> op::ops, new_c::cs, new_s, new_ts
-      | None -> ops, cs, new_s, new_ts
+      | None -> ops, new_c::cs, new_s, new_ts
     in
     match proposal.state with
     | Executed ->
