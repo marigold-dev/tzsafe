@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - hotfix-0.0.11-1
   pull_request:
     branches:
       - main
@@ -41,7 +42,6 @@ jobs:
       - name: Package
         run: make tarball-app
       - name: release
-        if: github.ref == 'refs/heads/main'
         uses: actions/create-release@v1
         id: create_release
         with:
@@ -52,7 +52,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
       - name: Upload metadata
-        if: github.ref == 'refs/heads/main'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -62,7 +61,6 @@ jobs:
           asset_name: metadata.json
           asset_content_type: application/json
       - name: Upload unit contract
-        if: github.ref == 'refs/heads/main'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -72,7 +70,6 @@ jobs:
           asset_name: multisig_unit.tez
           asset_content_type: application/text
       - name: Upload bytes contract
-        if: github.ref == 'refs/heads/main'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -82,7 +79,6 @@ jobs:
           asset_name: multisig_bytes.tez
           asset_content_type: application/text
       - name: Upload artifact
-        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v3
         with:
           name: app
