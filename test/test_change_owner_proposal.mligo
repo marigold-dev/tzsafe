@@ -45,12 +45,22 @@ let case_execute_add_owner_proposal =
 
       let storage = Breath.Contract.storage_of multisig_contract in
 
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
+
       Breath.Result.reduce [
         action
       ; sign_action
       ; resolve_action
       ; Breath.Assert.is_equal "storage threshold" storage.owners
         (Set.literal [alice.address; bob.address; carol.address])
+      ; Assert.is_proposal_equal "#1 proposal" proposal1
+        ({
+          state            = Executed;
+          signatures       = Map.literal [(alice.address, true)];
+          proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
+          resolver         = Some { actor = alice.address; timestamp = Tezos.get_now () };
+          contents         = [ Add_owners (Set.literal [bob.address; carol.address]) ]
+        })
       ])
 
 let case_execute_add_existed_owner_proposal =

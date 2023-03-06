@@ -62,8 +62,7 @@ let perform_operations (type a) (proposal: a storage_types_proposal) (storage : 
       let (opt_op, new_c, new_s) = send c s in
       match opt_op with
       | Some op -> op::ops, new_c::cs, new_s
-      | None ->
-          ops, cs, new_s
+      | None -> ops, new_c::cs, new_s
     in
     match proposal.state with
     | Executed ->

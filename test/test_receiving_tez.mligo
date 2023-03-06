@@ -15,7 +15,7 @@ let case_receive_tez =
       let multisig = Helper.originate level App.main init_storage 0tez in
       let contract = Mock.originate_transfer_only_contract level in
 
-      let action = Breath.Context.act_as carol (fun (_u:unit) -> (Breath.Contract.transfert_to contract multisig.originated_address 0tez)) in
+      let action = Breath.Context.act_as carol (fun (_u:unit) -> (Breath.Contract.transfer_to contract multisig.originated_address 0tez)) in
 
       let balance = Breath.Contract.balance_of multisig in
 
@@ -35,7 +35,7 @@ let case_invalidated_setting =
       let multisig = Helper.originate level App.main init_storage 0tez in
       let contract = Mock.originate_transfer_only_contract level in
 
-      let action = Breath.Context.act_as alice (fun (_u:unit) -> (Breath.Contract.transfert_to contract multisig.originated_address 0tez)) in
+      let action = Breath.Context.act_as alice (fun (_u:unit) -> (Breath.Contract.transfer_to contract multisig.originated_address 0tez)) in
 
       Breath.Result.reduce [
         Breath.Expect.fail_with_message "Threshold must be greater than 1" action

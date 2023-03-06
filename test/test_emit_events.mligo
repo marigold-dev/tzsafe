@@ -127,7 +127,7 @@ let case_emitted_receiving_amount =
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
       let contract = Mock_contract.originate_transfer_only_contract level in
 
-      let action = Breath.Context.act_as carol (fun (_u:unit) -> (Breath.Contract.transfert_to contract multisig_contract.originated_address 0tez)) in
+      let action = Breath.Context.act_as carol (fun (_u:unit) -> (Breath.Contract.transfer_to contract multisig_contract.originated_address 0tez)) in
 
       let events = (Util.get_last_events_from multisig_contract.originated_address "receiving_tez" : (address * tez) list) in
 
