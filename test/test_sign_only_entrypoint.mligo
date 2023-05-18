@@ -164,7 +164,7 @@ let case_no_owner =
       let action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
 
       Breath.Result.reduce [
-        Breath.Expect.fail_with_message "No owner is set in the contract" action1
+        Breath.Expect.fail_with_message "Only the contract owners can perform this operation" action1
       ])
 
 let case_fail_to_sign_after_executed_flag_set =

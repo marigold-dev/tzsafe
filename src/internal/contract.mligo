@@ -117,15 +117,18 @@ let resolve_proposal (type a)
 
 let contract (type a) (action, storage : a request) : a result =
     let { wallet; tickets } = storage in
-    let _ = Conditions.check_setting wallet in
-    match action with
-    | Default u ->
-        default (u, wallet, tickets)
-    | Ticket t ->
-        ticket (t, wallet, tickets)
-    | Create_proposal (proposal_params) ->
-        create_proposal (proposal_params, wallet, tickets)
-    | Sign_proposal (proposal_id, proposal_content, agreement) ->
-        sign_proposal (proposal_id, proposal_content, agreement, wallet, tickets)
-    | Resolve_proposal (proposal_id, proposal_content) ->
-        resolve_proposal (proposal_id, proposal_content, wallet, tickets)
+    let ops, { wallet; tickets } =
+      match action with
+      | Default u ->
+          default (u, wallet, tickets)
+      | Ticket t ->
+          ticket (t, wallet, tickets)
+      | Create_proposal (proposal_params) ->
+          create_proposal (proposal_params, wallet, tickets)
+      | Sign_proposal (proposal_id, proposal_content, agreement) ->
+          sign_proposal (proposal_id, proposal_content, agreement, wallet, tickets)
+      | Resolve_proposal (proposal_id, proposal_content) ->
+          resolve_proposal (proposal_id, proposal_content, wallet, tickets)
+    in
+    let storage = Conditions.check_setting (wallet, tickets) in
+    (ops, storage)

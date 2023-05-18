@@ -72,9 +72,80 @@ let case_adjust_invalid_threshold_proposal =
         Breath.Expect.fail_with_message "Threshold must be greater than 1" action
       ])
 
+let case_fail_to_remove_all_owners_proposal =
+  Breath.Model.case
+  "test case fail to remove all owners proposal"
+  "failed to execute proposal"
+    (fun (level: Breath.Logger.level) ->
+      let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 1n) in
+      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
+
+      let param = ([] : (nat proposal_content) list) in
+
+      (* create proposal *)
+      let param = Remove_owners owners :: param in
+      let create_action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
+      let sign_action = Breath.Context.act_as alice (Helper.sign_proposal multisig_contract 1n true param) in
+      let exe_action = Breath.Context.act_as alice (Helper.resolve_proposal multisig_contract 1n param) in
+
+      Breath.Result.reduce [
+        create_action
+      ; sign_action
+      ; Breath.Expect.fail_with_message "Require at least one owner in the contract" exe_action
+      ])
+
+let case_fail_to_reduce_number_of_owners_below_threshold_proposal =
+  Breath.Model.case
+  "test case fail to reduce the number of owners below the threshold"
+  "failed to execute proposal"
+    (fun (level: Breath.Logger.level) ->
+      let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 2n) in
+      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
+
+      let param = ([] : (nat proposal_content) list) in
+
+      (* create proposal *)
+      let param = Remove_owners (Set.literal [alice.address; ]) :: param in
+      let create_action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
+      let sign_action = Breath.Context.act_as alice (Helper.sign_proposal multisig_contract 1n true param) in
+      let exe_action = Breath.Context.act_as alice (Helper.resolve_proposal multisig_contract 1n param) in
+
+      Breath.Result.reduce [
+        create_action
+      ; sign_action
+      ; Breath.Expect.fail_with_message "No enough signature to resolve the proposal" exe_action
+      ])
+
+let case_fail_to_set_invalid_effective_proposal =
+  Breath.Model.case
+  "test case fail to set invalid effective proposal"
+  "failed to execute proposal"
+    (fun (level: Breath.Logger.level) ->
+      let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 2n) in
+      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
+
+      let param = ([] : (nat proposal_content) list) in
+
+      (* create proposal *)
+      let param = Adjust_effective_period (-1) :: param in
+      let create_action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
+
+      Breath.Result.reduce [
+        Breath.Expect.fail_with_message "Effective period should be greater than 0" create_action
+      ])
+
 let test_suite =
   Breath.Model.suite "Suite for reset threshold proposal" [
     case_execute_adjust_threshold_proposal
   ; case_adjust_invalid_threshold_proposal
+  ; case_fail_to_remove_all_owners_proposal
+  ; case_fail_to_reduce_number_of_owners_below_threshold_proposal
+  ; case_fail_to_set_invalid_effective_proposal
   ]
 
