@@ -103,12 +103,15 @@ let resolve_proposal (type a)
     (event::ops, storage)
 
 let contract (type a) (action, storage : a request) : a result =
+    let ops, storage =
+      match action with
+      | Default u -> default (u, storage)
+      | Create_proposal (proposal_params) ->
+          create_proposal (proposal_params, storage)
+      | Sign_proposal (proposal_id, proposal_content, agreement) ->
+          sign_proposal (proposal_id, proposal_content, agreement, storage)
+      | Resolve_proposal (proposal_id, proposal_content) ->
+          resolve_proposal (proposal_id, proposal_content, storage)
+    in
     let _ = Conditions.check_setting storage in
-    match action with
-    | Default u -> default (u, storage)
-    | Create_proposal (proposal_params) ->
-        create_proposal (proposal_params, storage)
-    | Sign_proposal (proposal_id, proposal_content, agreement) ->
-        sign_proposal (proposal_id, proposal_content, agreement, storage)
-    | Resolve_proposal (proposal_id, proposal_content) ->
-        resolve_proposal (proposal_id, proposal_content, storage)
+    (ops, storage)
