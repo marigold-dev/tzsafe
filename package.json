@@ -1,6 +1,6 @@
 {
   "name": "TzSafe",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": "Marigold <contact@marigold.dev>",
   "description": "TzSafe is a multisig wallet aiming at providing better assurance of security and management of ownership than a traditional single-signed wallet",
   "scripts": {
