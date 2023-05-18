@@ -7,6 +7,6 @@
     "test": "ligo run test test/test.mligo --project-root ."
   },
   "dependencies": {
-    "ligo-breathalyzer": "1.2.1"
+    "ligo-breathalyzer": "1.3.0"
   }
 }
