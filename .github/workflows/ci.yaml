@@ -2,11 +2,10 @@ name: CI
 on:
   push:
     branches:
-      - main
-      - hotfix-0.0.11-1
+      - 0.1.0
   pull_request:
     branches:
-      - main
+      - 0.1.0
 
 jobs:
   set_env_vars:
