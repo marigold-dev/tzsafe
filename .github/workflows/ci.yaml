@@ -68,8 +68,8 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./_build/app/multisig_unit.tez
-          asset_name: multisig_unit.tez
+          asset_path: ./_build/app/tzsafe_unit.tez
+          asset_name: tzsafe_unit.tez
           asset_content_type: application/text
       - name: Upload bytes contract
         if: github.ref == 'refs/heads/main'
@@ -78,8 +78,8 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./_build/app/multisig_bytes.tez
-          asset_name: multisig_bytes.tez
+          asset_path: ./_build/app/tzsafe_bytes.tez
+          asset_name: tzsafe_bytes.tez
           asset_content_type: application/text
       - name: Upload artifact
         if: github.ref == 'refs/heads/main'
