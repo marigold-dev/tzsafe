@@ -1,4 +1,6 @@
-# Multi-signature
+# TzSafe
+Tzsafe is a multisig wallet aiming at providing better assurance of security and management of ownership than a traditional single-signed wallet.
+
 Multi-signature (also multisig) wallet allows to share the ownership of an account by a smart contract. Each owner can create a proposal to propose transferring Tez or executing other contracts. Signer provides approval stored on-chain by performing Tezos transaction. Once gathering the minimal approvals, the multisig will perform the proposal.
 
 # Requirements

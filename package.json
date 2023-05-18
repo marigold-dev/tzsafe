@@ -1,12 +1,12 @@
 {
-  "name": "multi-signature",
-  "version": "0.0.13",
+  "name": "TzSafe",
+  "version": "0.2.0",
   "author": "Marigold <contact@marigold.dev>",
-  "description": "Multi-signature wallet",
+  "description": "TzSafe is a multisig wallet aiming at providing better assurance of security and management of ownership than a traditional single-signed wallet",
   "scripts": {
     "test": "ligo run test test/test.mligo --project-root ."
   },
   "dependencies": {
-    "ligo-breathalyzer": "^1.2.1"
+    "ligo-breathalyzer": "1.3.0"
   }
 }
