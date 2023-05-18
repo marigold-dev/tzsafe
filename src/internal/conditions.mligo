@@ -25,6 +25,7 @@
 
 type storage_types = Storage.Types.t
 type storage_wallet = Storage.Types.wallet
+type storage_tickets = Storage.Types.tickets
 type storage_types_proposal = Storage.Types.proposal
 type storage_types_proposal_state = Storage.Types.proposal_state
 type effective_period = Storage.Types.effective_period
@@ -77,12 +78,12 @@ let not_empty_content (type a) (proposals_content: (a proposal_content) list) : 
     List.iter check_proposal proposals_content
 
 [@inline]
-let check_setting (type a) (wallet : a storage_wallet) : unit =
-    let () = assert_with_error (Set.cardinal wallet.owners > 0n) Errors.no_owner  in
-    let () = assert_with_error (Set.cardinal wallet.owners >= wallet.threshold) Errors.no_enough_owner in
-    let () = assert_with_error (wallet.threshold > 0n) Errors.invalidated_threshold in
-    let () = assert_with_error (wallet.effective_period > 0) Errors.invalid_effective_period in
-    ()
+let check_setting (type a) (w, t: a storage_wallet * a storage_tickets) : a storage_types =
+    let () = assert_with_error (Set.cardinal w.owners > 0n) Errors.no_owner  in
+    let () = assert_with_error (Set.cardinal w.owners >= w.threshold) Errors.no_enough_owner in
+    let () = assert_with_error (w.threshold > 0n) Errors.invalidated_threshold in
+    let () = assert_with_error (w.effective_period > 0) Errors.invalid_effective_period in
+    ({wallet = w; tickets = t} : a storage_types)
 
 [@inline]
 let check_proposals_content (type a) (from_input: (a proposal_content) list) (from_wallet: (a proposal_content) list) : unit =
