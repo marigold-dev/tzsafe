@@ -192,6 +192,24 @@ let case_unauthorized_user_fail_to_create_proposal =
       ; Breath.Assert.is_equal "the counter of proposal" storage.wallet.proposal_counter 0n
       ])
 
+let case_fail_to_create_proposal_with_nonzero_amount =
+  Breath.Model.case
+  "create proposal with nonzero amount"
+  "fail to create proposal"
+    (fun (level: Breath.Logger.level) ->
+      let (_, (alice, bob, carol)) = Breath.Context.init_default () in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 2n) in
+      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
+
+      (* create proposal 1 *)
+      let param1 = [Transfer { target = alice.address; amount = 0tez;}] in
+      let action1 = Breath.Context.act_as alice (Helper.create_proposal_with_amount 1tez multisig_contract param1) in
+
+      Breath.Result.reduce [
+        Breath.Expect.fail_with_message "You must not send tez to the smart contract" action1
+      ])
+
 let test_suite =
   Breath.Model.suite "Suite for create proposal" [
     case_create_proposal
@@ -199,5 +217,6 @@ let test_suite =
   ; case_fail_to_create_empty_proposal
   ; case_fail_to_create_transfer_0_amount_proposal
   ; case_fail_to_create_proposal_with_empty_owner_adjustment
+  ; case_fail_to_create_proposal_with_nonzero_amount
   ]
 

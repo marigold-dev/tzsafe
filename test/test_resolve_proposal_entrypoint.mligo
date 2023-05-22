@@ -87,6 +87,31 @@ let case_resolve_proposal =
         })
       ])
 
+let case_fail_to_resolve_proposal_with_nonzero_amount =
+  Breath.Model.case
+  "test resolve proposal with nonzero amount"
+  "fail resolve proposal"
+    (fun (level: Breath.Logger.level) ->
+      let (_, (alice, bob, carol)) = Breath.Context.init_default () in
+      let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
+      let init_storage = Helper.init_storage (owners, 1n) in
+      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
+      let param = ([] : (nat proposal_content) list) in
+
+      (* create proposal 1 *)
+      let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
+      let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
+      let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
+      let exe_action1 = Breath.Context.act_as bob (Helper.resolve_proposal_with_amount 1tez multisig_contract 1n param1) in
+
+
+      Breath.Result.reduce [
+        create_action1
+      ; sign_action1
+      ; Breath.Expect.fail_with_message "You must not send tez to the smart contract" exe_action1
+      ])
+
+
 let case_fail_to_resolve_proposal_twice =
   Breath.Model.case
   "test execute proposal twice"
@@ -362,6 +387,7 @@ let case_execute_transaction_3_of_3 =
 let test_suite =
   Breath.Model.suite "Suite for resolving proposal" [
     case_resolve_proposal
+  ; case_fail_to_resolve_proposal_with_nonzero_amount
   ; case_fail_to_resolve_proposal_twice
   ; case_not_owner
   ; case_no_enough_signature
