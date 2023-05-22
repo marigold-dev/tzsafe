@@ -87,6 +87,26 @@ let case_gathering_signatures =
         })
       ])
 
+let case_fail_to_sign_proposal_with_nonzero_amount =
+  Breath.Model.case
+  "sign the proposal with nonzero amount"
+  "fail to sign"
+    (fun (level: Breath.Logger.level) ->
+      let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
+      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let init_storage = Helper.init_storage (owners, 2n) in
+      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
+      let param = ([] : (nat proposal_content) list) in
+
+      let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
+      let action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
+      let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal_with_amount 1tez multisig_contract 1n true param1) in
+
+      Breath.Result.reduce [
+        action1
+      ; Breath.Expect.fail_with_message "You must not send tez to the smart contract" sign_action1
+      ])
+
 let case_fail_double_sign =
   Breath.Model.case
   "sign the same proposal twice"
@@ -216,6 +236,7 @@ let case_wrong_content_bytes =
 let test_suite =
   Breath.Model.suite "Suite for sign proposal only" [
     case_gathering_signatures
+  ; case_fail_to_sign_proposal_with_nonzero_amount
   ; case_fail_double_sign
   ; case_unauthorized_user_fail_to_sign
   ; case_sign_nonexisted_proposal
