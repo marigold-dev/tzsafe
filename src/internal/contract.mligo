@@ -67,6 +67,7 @@ let sign_proposal (type a)
       * a storage_types)
   : a result =
     let () = Conditions.only_owner storage in
+    let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
     let proposal = Storage.Op.retrieve_proposal(proposal_id, storage) in
     let () = Conditions.unresolved proposal.state in
     let () = Conditions.unsigned proposal in
@@ -89,6 +90,7 @@ let resolve_proposal (type a)
       * a storage_types)
   : a result =
     let () = Conditions.only_owner storage in
+    let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
     let proposal = Storage.Op.retrieve_proposal(proposal_id, storage) in
     let () = Conditions.unresolved proposal.state in
     let () = Conditions.check_proposals_content proposal_content proposal.contents in
