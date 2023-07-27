@@ -85,7 +85,7 @@ module Op = struct
     [@inline]
     let register_proposal (type a) (proposal, storage: a proposal * a types) : a types =
         let proposal_counter = storage.proposal_counter + 1n in
-        let proposals = Big_map.add proposal_counter proposal storage.proposals in
+        let proposals = Big_map.add (bytes proposal_counter) proposal storage.proposals in
         {
             storage with
             proposals     = proposals;
