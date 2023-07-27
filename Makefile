@@ -16,8 +16,8 @@ TEST_DIRECTORY:=test
 BUILT_APP_DIRECTORY:=$(BUILD_DIRECTORY)/$(APP_DIRECTORY)
 
 # Ligo compiler
-LIGO_COMPILER_ARGS:=--protocol kathmandu
-LIGO_VERSION:=0.60.0
+LIGO_COMPILER_ARGS:=--protocol nairobi
+LIGO_VERSION:=0.70.1
 LIGO?=ligo
 LIGO_BUILD=$(LIGO) compile contract $(LIGO_COMPILER_ARGS)
 LIGO_TEST=$(LIGO) run test
@@ -25,7 +25,7 @@ LIGO_CURRENT_VERSION:=$(shell $(LIGO) --version)
 LIGO_INSTALL=$(LIGO) install
 
 # Tezos binaries
-TEZOS_BINARIES_VERSION:=v15.1-1
+TEZOS_BINARIES_VERSION:=v17.1-1
 TEZOS_BINARIES_REPO:=https://github.com/serokell/tezos-packaging/releases/download/
 TEZOS_BINARIES_URL:=$(TEZOS_BINARIES_REPO)$(TEZOS_BINARIES_VERSION)
 
