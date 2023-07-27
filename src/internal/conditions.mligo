@@ -80,8 +80,7 @@ let check_setting (type a) (storage : a storage_types) : unit =
     ()
 
 [@inline]
-let check_proposals_content (type a) (from_input: (a proposal_content) list) (from_storage: (a proposal_content) list) : unit =
-  let pack_from_input = Bytes.pack from_input in
+let check_proposals_content (type a) (pack_from_input : bytes) (from_storage: (a proposal_content) list) : unit =
   let pack_from_storage = Bytes.pack from_storage in
   assert_with_error (pack_from_input = pack_from_storage) Errors.not_the_same_content
 
