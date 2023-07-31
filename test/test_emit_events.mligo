@@ -105,8 +105,10 @@ let case_emitted_exe_proposal =
 
       let multisig_address = multisig_contract.originated_address in
       let events = (Util.get_last_events_from multisig_address "resolve_proposal" : (storage_types_proposal_id * address) list) in
+      let poe_events = (Util.get_last_events_from multisig_address "proof_of_event" : (bytes * bytes) list) in
 
       let (emitted_proposal_id, emitted_addr) = Option.unopt (List.head_opt events) in
+      let (emitted_chellenge_id, emitted_payload) = Option.unopt (List.head_opt poe_events) in
 
       Breath.Result.reduce [
         action1
@@ -114,6 +116,8 @@ let case_emitted_exe_proposal =
       ; exe_action1
       ; Breath.Assert.is_equal "proposal id" emitted_proposal_id 0x01
       ; Breath.Assert.is_equal "owner" emitted_addr bob.address
+      ; Breath.Assert.is_equal "proposal id" emitted_chellenge_id 0x01
+      ; Breath.Assert.is_equal "owner" emitted_payload (Bytes.pack param1)
       ])
 
 let case_emitted_receiving_amount =
