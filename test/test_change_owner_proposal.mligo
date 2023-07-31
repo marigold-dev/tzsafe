@@ -45,7 +45,7 @@ let case_execute_add_owner_proposal =
 
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 0x01 storage.proposals) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         action
@@ -180,7 +180,7 @@ let case_resolve_transfer_proposal_after_owner_changed =
 
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 0x01 storage.proposals) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         action1

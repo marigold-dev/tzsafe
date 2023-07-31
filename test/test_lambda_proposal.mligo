@@ -54,7 +54,7 @@ let case_execute_lambda_proposal =
 
       let add_contract_storage = Breath.Contract.storage_of add_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
-      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 0x01 storage.proposals) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         action

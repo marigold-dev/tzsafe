@@ -49,11 +49,11 @@ let case_emitted_create_proposal =
       let (emitted_id, emitted_proposal) = Option.unopt (List.head_opt events) in
 
       let storage = Breath.Contract.storage_of multisig_contract in
-      let proposal = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
+      let proposal = Util.unopt (Big_map.find_opt 0x01 storage.proposals) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         action1
-      ; Breath.Assert.is_equal "proposal id" emitted_id 1n
+      ; Breath.Assert.is_equal "proposal id" emitted_id 0x01
       ; Breath.Assert.is_equal "proposal" emitted_proposal proposal
       ])
 
@@ -81,7 +81,7 @@ let case_emitted_sign_proposal =
       Breath.Result.reduce [
         action1
       ; sign_action1
-      ; Breath.Assert.is_equal "proposal id" emitted_proposal_id 1n
+      ; Breath.Assert.is_equal "proposal id" emitted_proposal_id 0x01
       ; Breath.Assert.is_equal "owner" emitted_addr bob.address
       ; Breath.Assert.is_equal "agreement" emitted_agreement true
       ])
@@ -112,7 +112,7 @@ let case_emitted_exe_proposal =
         action1
       ; sign_action1
       ; exe_action1
-      ; Breath.Assert.is_equal "proposal id" emitted_proposal_id 1n
+      ; Breath.Assert.is_equal "proposal id" emitted_proposal_id 0x01
       ; Breath.Assert.is_equal "owner" emitted_addr bob.address
       ])
 
