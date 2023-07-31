@@ -60,10 +60,10 @@ let case_create_proposal =
       let balance = Breath.Contract.balance_of multisig_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
-      let proposal2 = Util.unopt (Big_map.find_opt 2n storage.proposals) "proposal 2 doesn't exist" in
-      let proposal3 = Util.unopt (Big_map.find_opt 3n storage.proposals) "proposal 3 doesn't exist" in
-      let proposal4 = Util.unopt (Big_map.find_opt 4n storage.proposals) "proposal 4 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 0x01 storage.proposals) "proposal 1 doesn't exist" in
+      let proposal2 = Util.unopt (Big_map.find_opt 0x02 storage.proposals) "proposal 2 doesn't exist" in
+      let proposal3 = Util.unopt (Big_map.find_opt 0x03 storage.proposals) "proposal 3 doesn't exist" in
+      let proposal4 = Util.unopt (Big_map.find_opt 0x04 storage.proposals) "proposal 4 doesn't exist" in
 
       Breath.Result.reduce [
         action1
@@ -133,7 +133,7 @@ let case_fail_to_create_empty_proposal =
       let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
       let param = ([] : (nat proposal_content) list) in
 
-      let action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
+      let action : Breath.Result.result = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
 
       Breath.Result.reduce [
         Breath.Expect.fail_with_message "There is no content in proposal" action
