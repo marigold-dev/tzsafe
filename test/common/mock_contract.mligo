@@ -19,22 +19,8 @@
 #import "ligo-breathalyzer/lib/lib.mligo" "Breath"
 #import "../../src/internal/contract.mligo" "Contract"
 
-(* multisig wallet 1 *)
-type result = Contract.result
-type request =  Contract.request
-
 (* ------------------------ *)
 (* contract 1 *)
-type add_action = nat
-let add_main (n,storage : add_action * nat) : operation list * nat =
-  [], n + storage
-
-
-let multisig_main (request : add_action request) : add_action result =
-  Contract.contract request
-
-(* ------------------------ *)
-(* contract 2 *)
 let transfer_only_contract (addr, storage: address * unit) : operation list * unit =
   let contr = Tezos.get_contract_with_error addr "contract doesn't exist" in
   [Tezos.transaction () 10tez contr], storage

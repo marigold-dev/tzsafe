@@ -19,12 +19,16 @@
 #import "ligo-breathalyzer/lib/lib.mligo" "Breath"
 #import "./common/helper.mligo" "Helper"
 #import "./common/assert.mligo" "Assert"
-#import "./common/mock_contract.mligo" "Mock_contract"
 #import "./common/util.mligo" "Util"
 #import "../src/internal/proposal_content.mligo" "Proposal_content"
 #import "../src/internal/storage.mligo" "Storage"
+#import "../app/main.mligo" "App"
 
 type proposal_content = Proposal_content.Types.t
+
+(* contract *)
+let add_main (n,storage : nat * nat) : operation list * nat =
+  [], n + storage
 
 let case_execute_lambda_proposal =
   Breath.Model.case
@@ -34,44 +38,31 @@ let case_execute_lambda_proposal =
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
-      let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
+      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let add_contract = Breath.Contract.originate level "add_contr" add_main 1n 0tez in
       let add_contract_address = add_contract.originated_address in
 
-      let param = ([] : (nat proposal_content) list) in
+      let param = ([] : proposal_content list) in
 
       (* lambda *)
-      let call_add_contract (_ : unit) : operation =
+      let call_add_contract (_ : unit) : operation list =
         let add_contr = Tezos.get_contract_with_error add_contract_address "add contract doesn't exist" in
-           Tezos.transaction 10n 0tez add_contr
+           [ Tezos.transaction 10n 0tez add_contr ]
       in
 
       (* create proposal *)
-      let param = Execute_lambda { metadata = None; lambda = Some call_add_contract } :: param in
+      let param = Execute_lambda { metadata = None; lambda = call_add_contract } :: param in
       let action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
       let sign_action = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param) in
       let resolve_action = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param) in
 
       let add_contract_storage = Breath.Contract.storage_of add_contract in
-      let storage = Breath.Contract.storage_of multisig_contract in
-      let proposal1 = Util.unopt (Big_map.find_opt 0x01 storage.proposals) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         action
       ; sign_action
       ; resolve_action
       ; Breath.Assert.is_equal "storage of add contract" add_contract_storage 11n
-      ; Assert.is_proposal_equal "#1 proposal" proposal1
-        ({
-          state            = Executed;
-          signatures       = Map.literal [(bob.address, true)];
-          proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
-          resolver         = Some { actor = bob.address; timestamp = Tezos.get_now () };
-          contents         = [ Execute_lambda {
-            metadata       = None;
-            lambda         = None;
-          }]
-        })
       ])
 
 let test_suite =

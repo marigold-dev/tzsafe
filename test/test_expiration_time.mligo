@@ -22,6 +22,7 @@
 #import "./common/mock_contract.mligo" "Mock_contract"
 #import "./common/util.mligo" "Util"
 #import "../src/internal/proposal_content.mligo" "Proposal_content"
+#import "../app/main.mligo" "App"
 
 type proposal_content = Proposal_content.Types.t
 
@@ -34,12 +35,11 @@ let case_sign_proposal_passing_expiration_time =
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage (owners, 1n) in
       let init_storage = { init_storage with effective_period = 1_800 } in
-      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
-      let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
-      let param = ([] : (nat proposal_content) list) in
+      let multisig_contract = Helper.originate level App.main init_storage 100tez in
+      let param = ([] : proposal_content list) in
 
       (* create proposal 1 *)
-      let param1 = (Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let _ = Test.bake_until_n_cycle_end 100n in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
@@ -58,36 +58,24 @@ let case_resolve_proposal_passing_expiration_time =
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage (owners, 1n) in
       let init_storage = { init_storage with effective_period = 1_800 } in
-      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
-      let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
-      let param = ([] : (nat proposal_content) list) in
+      let multisig_contract = Helper.originate level App.main init_storage 100tez in
+      let param = ([] : proposal_content list) in
 
       (* create proposal 1 *)
-      let param1 = (Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
       let _ = Test.bake_until_n_cycle_end 100n in
       let exe_action1 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
 
       let storage = Breath.Contract.storage_of multisig_contract in
-      let proposal1 = Util.unopt (Big_map.find_opt 0x01 storage.proposals) "proposal 1 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 0x01 storage.archives) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         create_action1
       ; sign_action1
       ; exe_action1
-      ; Assert.is_proposal_equal "#1 proposal" proposal1
-        ({
-          state            = Expired;
-          signatures       = Map.literal [(bob.address, true)];
-          proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
-          resolver         = Some { actor = bob.address; timestamp = Tezos.get_now () };
-          contents         = [ Execute {
-            amount           = 0tez;
-            target           = add_contract.originated_address;
-            parameter        = 10n;
-          }]
-        })
+      ; Breath.Assert.is_equal "#1 proposal" proposal1 Expired
       ])
 
 let case_resolve_executed_proposal_passing_expiration_time =
@@ -99,12 +87,11 @@ let case_resolve_executed_proposal_passing_expiration_time =
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage (owners, 1n) in
       let init_storage = { init_storage with effective_period = 1_800 } in
-      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
-      let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
-      let param = ([] : (nat proposal_content) list) in
+      let multisig_contract = Helper.originate level App.main init_storage 100tez in
+      let param = ([] : proposal_content list) in
 
       (* create proposal 1 *)
-      let param1 = (Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
       let exe_action1 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
@@ -112,25 +99,14 @@ let case_resolve_executed_proposal_passing_expiration_time =
       let exe_action2 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
 
       let storage = Breath.Contract.storage_of multisig_contract in
-      let proposal1 = Util.unopt (Big_map.find_opt 0x01 storage.proposals) "proposal 1 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 0x01 storage.archives) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         create_action1
       ; sign_action1
       ; exe_action1
       ; Breath.Expect.fail_with_message "This proposal has been resolved" exe_action2
-      ; Assert.is_proposal_equal "#1 proposal" proposal1
-        ({
-          state            = Executed;
-          signatures       = Map.literal [(bob.address, true)];
-          proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
-          resolver         = Some { actor = bob.address; timestamp = Tezos.get_now () };
-          contents         = [ Execute {
-            amount           = 0tez;
-            target           = add_contract.originated_address;
-            parameter        = 10n;
-          }]
-        })
+      ; Breath.Assert.is_equal "#1 proposal" proposal1 Executed
       ])
 
 let case_resolve_rejected_proposal_passing_expiration_time=
@@ -142,12 +118,11 @@ let case_resolve_rejected_proposal_passing_expiration_time=
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage (owners, 3n) in
       let init_storage = { init_storage with effective_period = 1_800 } in
-      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
-      let add_contract = Breath.Contract.originate level "add_contr" Mock_contract.add_main 1n 0tez in
-      let param = ([] : (nat proposal_content) list) in
+      let multisig_contract = Helper.originate level App.main init_storage 100tez in
+      let param = ([] : proposal_content list) in
 
       (* create proposal 1 *)
-      let param1 = (Execute { target = add_contract.originated_address; parameter = 10n; amount = 0tez;} :: param) in
+      let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
       let create_action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n false param1) in
       let exe_action1 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
@@ -155,25 +130,14 @@ let case_resolve_rejected_proposal_passing_expiration_time=
       let exe_action2 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
 
       let storage = Breath.Contract.storage_of multisig_contract in
-      let proposal1 = Util.unopt (Big_map.find_opt 0x01 storage.proposals) "proposal 1 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 0x01 storage.archives) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         create_action1
       ; sign_action1
       ; exe_action1
       ; Breath.Expect.fail_with_message "This proposal has been resolved" exe_action2
-      ; Assert.is_proposal_equal "#1 proposal" proposal1
-        ({
-          state            = Rejected;
-          signatures       = Map.literal [(bob.address, false)];
-          proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
-          resolver         = Some { actor = bob.address; timestamp = Tezos.get_now () };
-          contents         = [ Execute {
-            amount           = 0tez;
-            target           = add_contract.originated_address;
-            parameter        = 10n;
-          }]
-        })
+      ; Breath.Assert.is_equal "#1 proposal" proposal1 Rejected
       ])
 
 let case_adjust_effective_time =
@@ -185,8 +149,8 @@ let case_adjust_effective_time =
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage (owners, 1n) in
       let init_storage = { init_storage with effective_period = 1_800 } in
-      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
-      let param = ([] : (nat proposal_content) list) in
+      let multisig_contract = Helper.originate level App.main init_storage 100tez in
+      let param = ([] : proposal_content list) in
 
       (* create proposal 1 *)
       let param1 = (Adjust_effective_period 200) :: param in
@@ -212,8 +176,8 @@ let case_adjust_effective_time_with_invalid_value =
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage (owners, 1n) in
       let init_storage = { init_storage with effective_period = 1_800 } in
-      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
-      let param = ([] : (nat proposal_content) list) in
+      let multisig_contract = Helper.originate level App.main init_storage 100tez in
+      let param = ([] : proposal_content list) in
 
       (* create proposal 1 *)
       let param1 = (Adjust_effective_period 0) :: param in
