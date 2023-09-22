@@ -22,59 +22,51 @@
 #import "proposal_content.mligo" "Proposal_content"
 #import "./storage.mligo" "Storage"
 #import "conditions.mligo" "Conditions"
+#import "event.mligo" "Event"
 
 type storage_types = Storage.Types.t
+type storage_types_challenge_id = Storage.Types.challenge_id
 type storage_types_proposal = Storage.Types.proposal
 type storage_types_proposal_state = Storage.Types.proposal_state
 type proposal_content = Proposal_content.Types.t
 
-let send_by (type a) (parameter: a) (target : address) (amount : tez) : operation =
-    [@no_mutation]
-    let contract_opt : a contract option = Tezos.get_contract_opt target in
+let send_by (target : address) (amount : tez) : operation =
+    let contract_opt : unit contract option = Tezos.get_contract_opt target in
     let contract = Option.unopt_with_error contract_opt Errors.unknown_contract in
-    Tezos.transaction parameter amount contract
+    Tezos.transaction () amount contract
 
-let send (type a) (content : a proposal_content) (storage : a storage_types)
-  : (operation option * a proposal_content * a storage_types) =
+let send (content : proposal_content) (storage : storage_types)
+  : (operation list  * storage_types) =
     match content with
-    | Transfer tx -> (Some (send_by tx.parameter tx.target tx.amount), content, storage)
-    | Execute tx -> (Some (send_by tx.parameter tx.target tx.amount), content, storage)
-    | Execute_lambda e ->
-       let new_content = Execute_lambda { e with lambda = None } in
-       (Option.map (fun (f : (unit -> operation)) : operation -> f ()) e.lambda, new_content, storage)
-    | Adjust_threshold t -> (None, content, Storage.Op.adjust_threshold t storage)
-    | Add_owners s -> (None, content, Storage.Op.add_owners s storage)
-    | Remove_owners s -> (None, content, Storage.Op.remove_owners s storage)
-    | Adjust_effective_period i -> (None, content, Storage.Op.adjust_effective_period i storage)
+    | Transfer tx -> ([send_by tx.target tx.amount], storage)
+    | Execute_lambda e -> (e.lambda (), storage)
+    | Adjust_threshold t -> ([], Storage.Op.adjust_threshold t storage)
+    | Add_owners s -> ([], Storage.Op.add_owners s storage)
+    | Remove_owners s -> ([], Storage.Op.remove_owners s storage)
+    | Adjust_effective_period i -> ([], Storage.Op.adjust_effective_period i storage)
 
-let clear (type a) (content : a proposal_content) : (a proposal_content) =
-    match content with
-    | Transfer _ -> content
-    | Execute _ -> content
-    | Execute_lambda e -> Execute_lambda { e with lambda = None }
-    | Adjust_threshold _ -> content
-    | Add_owners _ -> content
-    | Remove_owners _ -> content
-    | Adjust_effective_period _ -> content
-
-let perform_operations (type a) (proposal: a storage_types_proposal) (storage : a storage_types) : operation list * a storage_types_proposal * a storage_types =
-    let batch (type a) ((ops, cs, s), c : (operation list * a proposal_content list * a storage_types) * a proposal_content) : (operation list * a proposal_content list * a storage_types) =
-      let (opt_op, new_c, new_s) = send c s in
-      match opt_op with
-      | Some op -> op::ops, new_c::cs, new_s
-      | None -> ops, new_c::cs, new_s
+let perform_operations
+  (challenge_id: storage_types_challenge_id)
+  (proposal: storage_types_proposal)
+  (storage : storage_types)
+  : operation list * storage_types =
+    let batch ((ops, s), c : (operation list * storage_types) * proposal_content) : (operation list * storage_types) =
+      let (new_ops, new_s) = send c s in
+      let acc (x,ys : (operation * operation list)) : operation list = x :: ys in
+      List.fold_right acc ops new_ops, new_s
     in
+    let proof = Tezos.emit "%proof_of_event" ({challenge_id; payload = Bytes.pack proposal} : Event.Types.proof_of_event) in
     match proposal.state with
     | Executed ->
-      let (ops, cs, s) = List.fold_left batch (Constants.no_operation, [], storage) proposal.contents in
-      let ops = Util.reverse ops in
-      let cs = Util.reverse cs in
-      (ops, { proposal with contents = cs} , s)
-    | Proposing -> (Constants.no_operation, proposal, storage)
+      let (ops, s) = List.fold_left batch (Constants.no_operation, storage) proposal.contents in
+      let new_s = Storage.Op.archive_proposal (challenge_id, Executed, s) in
+      (proof::ops, new_s)
+    | Proposing ->
+      (Constants.no_operation, storage)
     | Rejected ->
-      let proposal = { proposal with contents = List.map clear proposal.contents } in
-      (Constants.no_operation, proposal, storage)
+      let new_s = Storage.Op.archive_proposal (challenge_id, Rejected, storage) in
+      ([proof], new_s)
     | Expired ->
-      let proposal = { proposal with contents = List.map clear proposal.contents } in
-      (Constants.no_operation, proposal, storage)
+      let new_s = Storage.Op.archive_proposal (challenge_id, Expired, storage) in
+      ([proof], new_s)
 

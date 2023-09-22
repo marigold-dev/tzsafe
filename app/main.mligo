@@ -16,19 +16,10 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-#import "proposal_content.mligo" "Proposal_content"
+#import "../src/lib.mligo" "Lib"
 
-module Types = struct
-    type proposal_content = Proposal_content.Types.t
-    type challenge_id = bytes
-    type payload = bytes
-    type agreement = bool
-    type expiration_time = timestamp
+type result = Lib.result
+type request =  Lib.request
 
-    type t =
-    | Default of unit
-    | Create_proposal of { proposal_contents: proposal_content list }
-    | Sign_proposal of { challenge_id: challenge_id ; payload: payload; agreement: agreement }
-    | Proof_of_event_challenge of { challenge_id: challenge_id; payload: payload }
-    | Update_metadata of { key: string; value: bytes; }
-end
+let main (request : request) : result =
+  Lib.contract request
