@@ -59,23 +59,14 @@ jobs:
           asset_path: ./_build/app/metadata.json
           asset_name: metadata.json
           asset_content_type: application/json
-      - name: Upload unit contract
+      - name: Upload contract
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./_build/app/tzsafe_unit.tez
-          asset_name: tzsafe_unit.tez
-          asset_content_type: application/text
-      - name: Upload bytes contract
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./_build/app/tzsafe_bytes.tez
-          asset_name: tzsafe_bytes.tez
+          asset_path: ./_build/app/tzsafe.tez
+          asset_name: tzsafe.tez
           asset_content_type: application/text
       - name: Upload artifact
         uses: actions/upload-artifact@v3
