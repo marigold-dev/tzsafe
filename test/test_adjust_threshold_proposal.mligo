@@ -22,6 +22,7 @@
 #import "./common/util.mligo" "Util"
 #import "./common/mock_contract.mligo" "Mock_contract"
 #import "../src/internal/proposal_content.mligo" "Proposal_content"
+#import "../app/main.mligo" "App"
 
 type proposal_content = Proposal_content.Types.t
 
@@ -33,9 +34,9 @@ let case_execute_adjust_threshold_proposal =
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
+      let multisig_contract = Helper.originate level App.main init_storage 0tez in
 
-      let param = ([] : (nat proposal_content) list) in
+      let param = ([] : proposal_content list) in
 
       (* create proposal *)
       let param = Adjust_threshold 2n :: param in
@@ -60,9 +61,9 @@ let case_adjust_invalid_threshold_proposal =
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
+      let multisig_contract = Helper.originate level App.main init_storage 0tez in
 
-      let param = ([] : (nat proposal_content) list) in
+      let param = ([] : proposal_content list) in
 
       (* create proposal *)
       let param = Adjust_threshold 0n :: param in
@@ -80,9 +81,9 @@ let case_fail_to_remove_all_owners_proposal =
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
+      let multisig_contract = Helper.originate level App.main init_storage 0tez in
 
-      let param = ([] : (nat proposal_content) list) in
+      let param = ([] : proposal_content list) in
 
       (* create proposal *)
       let param = Remove_owners owners :: param in
@@ -104,20 +105,22 @@ let case_fail_to_reduce_number_of_owners_below_threshold_proposal =
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 2n) in
-      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
+      let multisig_contract = Helper.originate level App.main init_storage 0tez in
 
-      let param = ([] : (nat proposal_content) list) in
+      let param = ([] : proposal_content list) in
 
       (* create proposal *)
       let param = Remove_owners (Set.literal [alice.address; ]) :: param in
       let create_action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
-      let sign_action = Breath.Context.act_as alice (Helper.sign_proposal multisig_contract 1n true param) in
+      let sign_action1 = Breath.Context.act_as alice (Helper.sign_proposal multisig_contract 1n true param) in
+      let sign_action2 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param) in
       let exe_action = Breath.Context.act_as alice (Helper.resolve_proposal multisig_contract 1n param) in
 
       Breath.Result.reduce [
         create_action
-      ; sign_action
-      ; Breath.Expect.fail_with_message "No enough signature to resolve the proposal" exe_action
+      ; sign_action1
+      ; sign_action2
+      ; Breath.Expect.fail_with_message "Number of owner should be greater than threshold" exe_action
       ])
 
 let case_fail_to_set_invalid_effective_proposal =
@@ -128,9 +131,9 @@ let case_fail_to_set_invalid_effective_proposal =
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 2n) in
-      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
+      let multisig_contract = Helper.originate level App.main init_storage 0tez in
 
-      let param = ([] : (nat proposal_content) list) in
+      let param = ([] : proposal_content list) in
 
       (* create proposal *)
       let param = Adjust_effective_period (-1) :: param in

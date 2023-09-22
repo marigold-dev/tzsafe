@@ -29,34 +29,23 @@ type storage_types_proposal_state = Storage.Types.proposal_state
 type effective_period = Storage.Types.effective_period
 type proposal_content = Proposal_content.Types.t
 
-[@inline]
-let only_owner (type a) (storage : a storage_types) : unit =
+let only_owner (storage : storage_types) : unit =
     assert_with_error (Set.mem (Tezos.get_sender ()) storage.owners) Errors.only_owner
 
-[@inline]
-let amount_must_be_zero_tez (an_amout : tez) : unit =
-    assert_with_error (an_amout = 0tez) Errors.amount_must_be_zero_tez
+let amount_must_be_zero_tez (amount : tez) : unit =
+    assert_with_error (amount = 0tez) Errors.amount_must_be_zero_tez
 
-[@inline]
-let unsigned (type a) (proposal : a storage_types_proposal) : unit =
+let unsigned (proposal : storage_types_proposal) : unit =
     assert_with_error (not Map.mem (Tezos.get_sender ()) proposal.signatures) Errors.has_already_signed
 
-[@inline]
 let ready_to_execute (state : storage_types_proposal_state) : unit =
     assert_with_error (not (state = (Proposing : storage_types_proposal_state))) Errors.no_enough_signature_to_resolve
 
-[@inline]
-let unresolved (state : storage_types_proposal_state) : unit =
-    assert_with_error (state = (Proposing : storage_types_proposal_state)) Errors.unresolved
-
-[@inline]
-let check_proposal (type a) (content: a proposal_content) : unit =
+let check_proposal (content: proposal_content) : unit =
     match content with
     | Transfer t ->
         assert_with_error (not (t.amount = 0tez)) Errors.amount_is_zero
-    | Execute _ -> ()
-    | Execute_lambda e ->
-        assert_with_error (Util.is_some e.lambda) Errors.no_proposal
+    | Execute_lambda _ -> ()
     | Adjust_threshold t ->
         assert_with_error (t > 0n) Errors.invalidated_threshold
     | Add_owners s ->
@@ -66,24 +55,20 @@ let check_proposal (type a) (content: a proposal_content) : unit =
     | Adjust_effective_period p ->
         assert_with_error (p > 0) Errors.invalid_effective_period
 
-[@inline]
-let not_empty_content (type a) (proposals_content: (a proposal_content) list) : unit =
+let not_empty_content (proposals_content: proposal_content list) : unit =
     let () = assert_with_error ((List.length proposals_content) > 0n) Errors.no_proposal in
     List.iter check_proposal proposals_content
 
-[@inline]
-let check_setting (type a) (storage : a storage_types) : unit =
+let check_setting (storage : storage_types) : unit =
     let () = assert_with_error (Set.cardinal storage.owners > 0n) Errors.no_owner  in
     let () = assert_with_error (Set.cardinal storage.owners >= storage.threshold) Errors.no_enough_owner in
     let () = assert_with_error (storage.threshold > 0n) Errors.invalidated_threshold in
     let () = assert_with_error (storage.effective_period > 0) Errors.invalid_effective_period in
     ()
 
-[@inline]
-let check_proposals_content (type a) (pack_from_input : bytes) (from_storage: (a proposal_content) list) : unit =
+let check_proposals_content (from_input: bytes) (from_storage: proposal_content list) : unit =
   let pack_from_storage = Bytes.pack from_storage in
-  assert_with_error (pack_from_input = pack_from_storage) Errors.not_the_same_content
+  assert_with_error (from_input = pack_from_storage) Errors.not_the_same_content
 
-[@inline]
 let within_expiration_time (created_timestamp: timestamp) (effective_period: effective_period) : unit =
   assert_with_error (created_timestamp + effective_period > Tezos.get_now ()) Errors.pass_expiration_time

@@ -20,14 +20,15 @@
 
 module Types = struct
     type proposal_content = Proposal_content.Types.t
-    type proposal_id = bytes
+    type challenge_id = bytes
+    type payload = bytes
     type agreement = bool
     type expiration_time = timestamp
-    type proof_of_event_challenge = { challenge_id : bytes; payload : bytes; }
 
-    type 'a t =
+    type t =
     | Default of unit
-    | Create_proposal of ('a proposal_content) list
-    | Sign_proposal of (proposal_id * ('a proposal_content) list * agreement)
-    | Proof_of_event_challenge of proof_of_event_challenge
+    | Create_proposal of { proposal_contents: proposal_content list }
+    | Sign_proposal of { challenge_id: challenge_id ; payload: payload; agreement: agreement }
+    | Proof_of_event_challenge of { challenge_id: challenge_id; payload: payload }
+    | Update_metadata of { key: string; value: bytes; }
 end

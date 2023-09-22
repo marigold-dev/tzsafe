@@ -22,7 +22,7 @@
 #import "proposal_content.mligo" "Proposal_content"
 
 module Types = struct
-    type proposal_id = Parameter.Types.proposal_id
+    type challenge_id = Parameter.Types.challenge_id
     type proposal_content = Proposal_content.Types.t
     type effective_period = int
 
@@ -35,21 +35,22 @@ module Types = struct
 
     type proposal_state = Proposing | Executed | Rejected | Expired
 
-    type 'a proposal =
+    type proposal =
     [@layout:comb]
     {
         state: proposal_state;
         signatures: (address, bool) map;
         proposer : actor;
         resolver : actor option;
-        contents : ('a proposal_content) list
+        contents : proposal_content list
     }
 
-    type 'a t =
+    type t =
     [@layout:comb]
     {
         proposal_counter : nat;
-        proposals        : (proposal_id, 'a proposal) big_map;
+        proposals        : (challenge_id, proposal) big_map;
+        archives         : (challenge_id, proposal_state) big_map;
         owners           : address set;
         threshold        : nat;
         effective_period : effective_period;
@@ -59,7 +60,7 @@ end
 
 module Op = struct
     type proposal_content = Proposal_content.Types.t
-    type proposal_id = Parameter.Types.proposal_id
+    type challenge_id = Parameter.Types.challenge_id
     type agreement = Parameter.Types.agreement
     type proposal = Types.proposal
     type proposal_state = Types.proposal_state
@@ -67,8 +68,7 @@ module Op = struct
     type proposal_state = Types.proposal_state
     type types = Types.t
 
-    [@inline]
-    let create_proposal (type a) (contents: (a proposal_content) list) : a proposal =
+    let create_proposal (contents: proposal_content list) : proposal =
         {
             state            = Proposing;
             signatures       = Map.empty;
@@ -82,8 +82,7 @@ module Op = struct
         }
 
 
-    [@inline]
-    let register_proposal (type a) (proposal, storage: a proposal * a types) : a types =
+    let register_proposal (proposal, storage: proposal * types) : types =
         let proposal_counter = storage.proposal_counter + 1n in
         let proposals = Big_map.add (bytes proposal_counter) proposal storage.proposals in
         {
@@ -92,22 +91,23 @@ module Op = struct
             proposal_counter = proposal_counter
         }
 
-    [@inline]
-    let retrieve_proposal (type a) (proposal_number, storage : proposal_id * a types) : a proposal =
+    let retrieve_proposal (proposal_number, storage : challenge_id * types) : proposal =
         match Big_map.find_opt proposal_number storage.proposals with
-        | None -> failwith Errors.no_proposal_exist
-        | Some proposal  -> proposal
+        | Some proposal -> proposal
+        | None ->
+          begin
+            match Big_map.find_opt proposal_number storage.archives with
+            | Some _ -> failwith Errors.already_resolved
+            | None -> failwith Errors.no_proposal_exist
+          end
 
-
-    [@inline]
-    let update_signature (type a) (proposal, owner, agreement: a proposal * address * agreement) : a proposal =
+    let update_signature (proposal, owner, agreement: proposal * address * agreement) : proposal =
         {
             proposal with
             signatures = Map.update owner (Some agreement) proposal.signatures;
         }
 
-    [@inline]
-    let ready_execution (type a) (proposal, approvals, threshold : a proposal * nat * nat) : a proposal =
+    let ready_execution (proposal, approvals, threshold : proposal * nat * nat) : proposal =
         let is_executed = approvals >= threshold && proposal.state = (Proposing : proposal_state) in
         if is_executed
         then
@@ -122,8 +122,7 @@ module Op = struct
           }
         else proposal
 
-    [@inline]
-    let reject_proposal (type a) (proposal, disapprovals, threshold : a proposal * nat * nat) : a proposal =
+    let reject_proposal (proposal, disapprovals, threshold : proposal * nat * nat) : proposal =
         let is_closed = disapprovals > threshold && proposal.state = (Proposing : proposal_state) in
         if is_closed
         then
@@ -138,8 +137,7 @@ module Op = struct
           }
         else proposal
 
-    [@inline]
-    let expire_proposal (type a) (proposal, expiration_time : a proposal * timestamp) : a proposal =
+    let expire_proposal (proposal, expiration_time : proposal * timestamp) : proposal =
       if expiration_time < Tezos.get_now () then
           {
               proposal with
@@ -152,16 +150,14 @@ module Op = struct
           }
       else proposal
 
-    [@inline]
-    let remove_invalid_signature (type a) (owners : address set) (proposal : a proposal) : a proposal =
+    let remove_invalid_signature (owners : address set) (proposal : proposal) : proposal =
       let aux ((acc, k): ((address, bool) map * address)) =
         match Map.find_opt k proposal.signatures with
         | None -> acc
         | Some v -> Map.add k v acc in
       { proposal with signatures = Set.fold aux owners Map.empty }
 
-    [@inline]
-    let update_proposal_state (type a) (proposal, owners , threshold, expiration_time : a proposal * address set * nat * timestamp) : a proposal =
+    let update_proposal_state (proposal, owners , threshold, expiration_time : proposal * address set * nat * timestamp) : proposal =
         let proposal = expire_proposal (proposal, expiration_time) in
         if proposal.state = (Expired : proposal_state) then proposal
         else
@@ -173,29 +169,40 @@ module Op = struct
           let number_of_owners = Set.cardinal owners in
           reject_proposal (proposal, disapprovals, abs(number_of_owners - threshold))
 
-    [@inline]
-    let update_proposal (type a) (proposal_number, proposal, storage: proposal_id * a proposal * a types) : a types =
-        let proposals = Big_map.update proposal_number (Some proposal) storage.proposals in
+    let update_proposal (challenge_id, proposal, storage: challenge_id * proposal * types) : types =
+        let proposals = Big_map.update challenge_id (Some proposal) storage.proposals in
         {
             storage with
             proposals = proposals
         }
 
-    [@inline]
-    let adjust_threshold (type a) (threshold : nat) (storage : a types) : a types =
+    let archive_proposal (challenge_id, proposal_state, storage: challenge_id * proposal_state * types) : types =
+        let proposals = Big_map.remove challenge_id storage.proposals in
+        let archives = Big_map.add challenge_id proposal_state storage.archives in
+        {
+            storage with
+            proposals = proposals;
+            archives = archives
+        }
+
+    let update_metadata (key, value, storage: string * bytes * types) : types =
+        let metadata = Big_map.update key (Some value) storage.metadata in
+        {
+            storage with
+            metadata = metadata
+        }
+
+    let adjust_threshold (threshold : nat) (storage : types) : types =
       { storage with threshold = threshold }
 
-    [@inline]
-    let adjust_effective_period (type a) (effective_period: int) (storage : a types) : a types =
+    let adjust_effective_period (effective_period: int) (storage : types) : types =
       { storage with effective_period = effective_period }
 
-    [@inline]
-    let add_owners (type a) (owners: address set) (storage : a types) : a types =
+    let add_owners (owners: address set) (storage : types) : types =
       let add (set, s : address set * address) : address set = Set.add s set in
       { storage with owners = Set.fold add owners storage.owners }
 
-    [@inline]
-    let remove_owners (type a) (owners: address set) (storage : a types) : a types =
+    let remove_owners (owners: address set) (storage : types) : types =
       let remove (set, s : address set * address) : address set = Set.remove s set in
       { storage with owners = Set.fold remove owners storage.owners }
 end

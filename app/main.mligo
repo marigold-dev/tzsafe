@@ -16,23 +16,10 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-#import "ligo-breathalyzer/lib/lib.mligo" "Breath"
-#import "../../src/internal/storage.mligo" "Storage"
+#import "../src/lib.mligo" "Lib"
 
-type storage_types_proposal = Storage.Types.proposal
-type storage_types_actor = Storage.Types.actor
+type result = Lib.result
+type request =  Lib.request
 
-let mock_timestamp (timestamp : timestamp) (actor: storage_types_actor) : storage_types_actor =
-  { actor with timestamp = timestamp }
-
-let is_proposal_equal (msg:string) (actual : storage_types_proposal) (expected : storage_types_proposal) =
-  let mock_time = Tezos.get_now () in
-  let actual = { actual with
-    proposer = mock_timestamp mock_time actual.proposer ;
-    resolver = Option.map (mock_timestamp mock_time) actual.resolver }
-  in
-  let expected = { expected with
-    proposer = mock_timestamp mock_time expected.proposer ;
-    resolver = Option.map (mock_timestamp mock_time) expected.resolver }
-  in
-  Breath.Assert.is_equal msg actual expected
+let main (request : request) : result =
+  Lib.contract request

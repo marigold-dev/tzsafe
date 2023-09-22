@@ -17,7 +17,7 @@ BUILT_APP_DIRECTORY:=$(BUILD_DIRECTORY)/$(APP_DIRECTORY)
 
 # Ligo compiler
 LIGO_COMPILER_ARGS:=--protocol nairobi
-LIGO_VERSION:=0.70.1
+LIGO_VERSION:=0.73.0
 LIGO?=ligo
 LIGO_BUILD=$(LIGO) compile contract $(LIGO_COMPILER_ARGS)
 LIGO_TEST=$(LIGO) run test
@@ -25,7 +25,7 @@ LIGO_CURRENT_VERSION:=$(shell $(LIGO) --version)
 LIGO_INSTALL=$(LIGO) install
 
 # Tezos binaries
-TEZOS_BINARIES_VERSION:=v17.1-1
+TEZOS_BINARIES_VERSION:=v15.1-1
 TEZOS_BINARIES_REPO:=https://github.com/serokell/tezos-packaging/releases/download/
 TEZOS_BINARIES_URL:=$(TEZOS_BINARIES_REPO)$(TEZOS_BINARIES_VERSION)
 
@@ -42,8 +42,7 @@ build-metadata:
 
 build-contract: check-ligo-version
 	mkdir -p $(BUILT_APP_DIRECTORY)
-	$(LIGO_BUILD) $(APP_DIRECTORY)/main_unit.mligo > $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_unit.tez
-	$(LIGO_BUILD) $(APP_DIRECTORY)/main_bytes.mligo > $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_bytes.tez
+	$(LIGO_BUILD) $(APP_DIRECTORY)/main.mligo > $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME).tez
 
 test:
 	$(LIGO_TEST) $(TEST_DIRECTORY)/test.mligo
@@ -72,8 +71,7 @@ gen-wallet:
 
 deploy:
 	$(eval SIGNER := $(shell TEZOS_CLIENT_UNSAFE_DISABLE_DISCLAIMER=yes ./_build/octez-client --endpoint https://ghostnet.tezos.marigold.dev show address wallet_address | grep Hash | awk '{print $$2}'))
-	$(BUILD_DIRECTORY)/octez-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME)_unit transferring 2 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_unit.tez --init '(Pair 0 {} {"$(SIGNER)";} 1 604800 {})' --burn-cap 2 -f
-	$(BUILD_DIRECTORY)/octez-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME)_bytes transferring 2 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_bytes.tez --init '(Pair 0 {} {"$(SIGNER)";} 1 604800 {})' --burn-cap 2 -f
+	$(BUILD_DIRECTORY)/octez-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME) transferring 2 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME).tez --init '(Pair 0 {} {} {"$(SIGNER)"; "tz1inzFwAjE4oWXMabJFZdPHoDQN5S4XB3wH"} 1 604800 {})' --burn-cap 3 -f
 
 get-tezos-binary:
 	wget -O $(BUILD_DIRECTORY)/octez-client $(TEZOS_BINARIES_URL)/octez-client

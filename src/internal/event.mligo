@@ -16,23 +16,19 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-#import "ligo-breathalyzer/lib/lib.mligo" "Breath"
-#import "../../src/internal/storage.mligo" "Storage"
+#import "parameter.mligo" "Parameter"
+#import "storage.mligo" "Storage"
 
-type storage_types_proposal = Storage.Types.proposal
-type storage_types_actor = Storage.Types.actor
+module Types = struct
 
-let mock_timestamp (timestamp : timestamp) (actor: storage_types_actor) : storage_types_actor =
-  { actor with timestamp = timestamp }
+  type challenge_id = Parameter.Types.challenge_id
+  type payload = Parameter.Types.payload
+  type agreement = Parameter.Types.agreement
+  type proposal_state = Storage.Types.proposal_state
 
-let is_proposal_equal (msg:string) (actual : storage_types_proposal) (expected : storage_types_proposal) =
-  let mock_time = Tezos.get_now () in
-  let actual = { actual with
-    proposer = mock_timestamp mock_time actual.proposer ;
-    resolver = Option.map (mock_timestamp mock_time) actual.resolver }
-  in
-  let expected = { expected with
-    proposer = mock_timestamp mock_time expected.proposer ;
-    resolver = Option.map (mock_timestamp mock_time) expected.resolver }
-  in
-  Breath.Assert.is_equal msg actual expected
+  type create_proposal = { challenge_id: challenge_id; payload: payload}
+  type sign_proposal = { challenge_id: challenge_id; signer: address; agreement: agreement}
+  type resolve_proposal = { challenge_id: challenge_id; proposal_state: proposal_state}
+  type proof_of_event = { challenge_id: challenge_id; payload: payload}
+  type receiving_tez = { from :address ; amount : tez}
+end

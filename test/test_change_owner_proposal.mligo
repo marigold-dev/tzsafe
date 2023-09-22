@@ -22,6 +22,7 @@
 #import "./common/util.mligo" "Util"
 #import "./common/mock_contract.mligo" "Mock_contract"
 #import "../src/internal/proposal_content.mligo" "Proposal_content"
+#import "../app/main.mligo" "App"
 
 type proposal_content = Proposal_content.Types.t
 
@@ -33,9 +34,9 @@ let case_execute_add_owner_proposal =
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
+      let multisig_contract = Helper.originate level App.main init_storage 0tez in
 
-      let param = ([] : (nat proposal_content) list) in
+      let param = ([] : proposal_content list) in
 
       (* create proposal *)
       let param = Add_owners (Set.literal [bob.address; carol.address]) :: param in
@@ -45,22 +46,12 @@ let case_execute_add_owner_proposal =
 
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let proposal1 = Util.unopt (Big_map.find_opt 0x01 storage.proposals) "proposal 1 doesn't exist" in
-
       Breath.Result.reduce [
         action
       ; sign_action
       ; resolve_action
       ; Breath.Assert.is_equal "storage threshold" storage.owners
         (Set.literal [alice.address; bob.address; carol.address])
-      ; Assert.is_proposal_equal "#1 proposal" proposal1
-        ({
-          state            = Executed;
-          signatures       = Map.literal [(alice.address, true)];
-          proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
-          resolver         = Some { actor = alice.address; timestamp = Tezos.get_now () };
-          contents         = [ Add_owners (Set.literal [bob.address; carol.address]) ]
-        })
       ])
 
 let case_execute_add_existed_owner_proposal =
@@ -71,9 +62,9 @@ let case_execute_add_existed_owner_proposal =
       let (_, (alice, _bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
+      let multisig_contract = Helper.originate level App.main init_storage 0tez in
 
-      let param = ([] : (nat proposal_content) list) in
+      let param = ([] : proposal_content list) in
 
       (* create proposal *)
       let param = Add_owners (Set.literal [alice.address;]) :: param in
@@ -99,9 +90,9 @@ let case_execute_remove_owner_proposal =
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
+      let multisig_contract = Helper.originate level App.main init_storage 0tez in
 
-      let param = ([] : (nat proposal_content) list) in
+      let param = ([] : proposal_content list) in
 
       (* create proposal *)
       let param = Remove_owners (Set.literal [bob.address; carol.address]) :: param in
@@ -127,9 +118,9 @@ let case_execute_remove_nonexisted_owner_proposal =
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address;] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 0tez in
+      let multisig_contract = Helper.originate level App.main init_storage 0tez in
 
-      let param = ([] : (nat proposal_content) list) in
+      let param = ([] : proposal_content list) in
 
       (* create proposal *)
       let param = Remove_owners (Set.literal [bob.address; carol.address]) :: param in
@@ -155,12 +146,12 @@ let case_resolve_transfer_proposal_after_owner_changed =
       let (_, (alice, bob, _)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level Mock_contract.multisig_main init_storage 100tez in
+      let multisig_contract = Helper.originate level App.main init_storage 100tez in
 
-      let param = ([] : (nat proposal_content) list) in
+      let param = ([] : proposal_content list) in
 
       (* 1. create transfer proposal *)
-      let param1 = Transfer { target = alice.address; parameter = (); amount = 10tez;} :: param in
+      let param1 = Transfer { target = alice.address; amount = 10tez;} :: param in
       let action1 = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param1) in
       let sign_action1 = Breath.Context.act_as alice (Helper.sign_proposal multisig_contract 1n true param1) in
 
@@ -178,10 +169,6 @@ let case_resolve_transfer_proposal_after_owner_changed =
       let sign_action4 = Breath.Context.act_as bob (Helper.sign_proposal multisig_contract 1n true param1) in
       let resolve_action4 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
 
-      let storage = Breath.Contract.storage_of multisig_contract in
-
-      let proposal1 = Util.unopt (Big_map.find_opt 0x01 storage.proposals) "proposal 1 doesn't exist" in
-
       Breath.Result.reduce [
         action1
       ; sign_action1
@@ -192,7 +179,6 @@ let case_resolve_transfer_proposal_after_owner_changed =
       ; Breath.Expect.fail_with_message "No enough signature to resolve the proposal" resolve_action3_2
       ; sign_action4
       ; resolve_action4
-      ; Breath.Assert.is_equal "signature" proposal1.signatures (Map.literal [(bob.address, true)])
       ])
 
 let test_suite =

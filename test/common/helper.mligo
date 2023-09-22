@@ -17,20 +17,16 @@
    SOFTWARE. *)
 
 #import "ligo-breathalyzer/lib/lib.mligo" "Breath"
-#import "../../src/internal/contract.mligo" "Contract"
+#include "../../src/internal/contract.mligo"
 #import "../../src/internal/proposal_content.mligo" "Proposal_content"
 #import "./util.mligo" "Util"
 
 type proposal_content = Proposal_content.Types.t
-type storage_types = Contract.storage_types
-type storage_types_proposal = Contract.storage_types_proposal
-type parameter_types = Contract.parameter_types
-type contract_request = Contract.request
-type contract_result = Contract.result
 
-let init_storage (type a) (owners, threshold: address set * nat) : a storage_types =
+let init_storage (owners, threshold: address set * nat) : storage_types =
 { proposal_counter = 0n;
-  proposals     = (Big_map.empty : (bytes, a storage_types_proposal) big_map);
+  proposals     = (Big_map.empty : (bytes, storage_types_proposal) big_map);
+  archives      = (Big_map.empty : (bytes, storage_types_proposal_state) big_map);
   owners           = owners;
   threshold        = threshold;
   effective_period = 172800;
@@ -39,25 +35,32 @@ let init_storage (type a) (owners, threshold: address set * nat) : a storage_typ
 
 type originated = Breath.Contract.originated
 
-let originate (type a) (level: Breath.Logger.level) (main : a contract_request -> a contract_result) (init_storage : a storage_types ) (amount : tez) =
-  Breath.Contract.originate level "multisig" main init_storage amount
+let originate (level: Breath.Logger.level) (main : request -> result) (init_storage : storage_types ) (amount : tez) =
+  Breath.Contract.originate
+    level
+    "multisig"
+    main
+    init_storage
+    amount
 
-let create_proposal_with_amount (type a) (amount : tez) (contract : (a parameter_types, a storage_types) originated) (proposal : (a proposal_content) list) () : Breath.Result.result =
+let create_proposal_with_amount (amount : tez) (contract : (parameter_types, storage_types) originated) (proposal : (proposal_content) list) () =
   Breath.Contract.transfer_with_entrypoint_to contract "create_proposal" proposal amount
 
-let sign_proposal_with_amount (type a) (amount : tez) (contract : (a parameter_types, a storage_types) originated) (proposal_id : nat) (agreement : bool) (proposal : (a proposal_content) list) () : Breath.Result.result =
-  let b_proposal_id = bytes proposal_id in
-  Breath.Contract.transfer_with_entrypoint_to contract "sign_proposal" (b_proposal_id, proposal, agreement) amount
+let sign_proposal_with_amount (amount : tez) (contract : (parameter_types, storage_types) originated) (proposal_id : nat) (agreement : bool) (proposal_contents : (proposal_content) list) () =
+  let challenge_id = bytes proposal_id in
+  let payload = Bytes.pack proposal_contents in
+  Breath.Contract.transfer_with_entrypoint_to contract "sign_proposal" { challenge_id; payload; agreement } amount
 
-let resolve_proposal_with_amount (type a) (amount : tez) (contract : (a parameter_types, a storage_types) originated) (proposal_id : nat) (proposal : (a proposal_content) list) () : Breath.Result.result =
-  let poe = { challenge_id = bytes proposal_id; payload = Bytes.pack proposal} in
-  Breath.Contract.transfer_with_entrypoint_to contract "proof_of_event_challenge" poe amount
+let resolve_proposal_with_amount (amount : tez) (contract : (parameter_types, storage_types) originated) (proposal_id : nat) (proposal_contents: (proposal_content) list) () =
+  let challenge_id = bytes proposal_id in
+  let payload = Bytes.pack proposal_contents in
+  Breath.Contract.transfer_with_entrypoint_to contract "proof_of_event_challenge" {challenge_id; payload; } amount
 
-let create_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal : (a proposal_content) list) () : Breath.Result.result =
-  create_proposal_with_amount 0tez contract proposal ()
+let create_proposal =
+  create_proposal_with_amount 0tez
 
-let sign_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal_id : nat) (agreement : bool) (proposal : (a proposal_content) list) () : Breath.Result.result =
-  sign_proposal_with_amount 0tez contract proposal_id agreement proposal ()
+let sign_proposal =
+  sign_proposal_with_amount 0tez
 
-let resolve_proposal (type a) (contract : (a parameter_types, a storage_types) originated) (proposal_id : nat) (proposal : (a proposal_content) list) () : Breath.Result.result =
-  resolve_proposal_with_amount 0tez contract proposal_id proposal ()
+let resolve_proposal =
+  resolve_proposal_with_amount 0tez

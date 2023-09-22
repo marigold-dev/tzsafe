@@ -32,5 +32,5 @@ type request = Contract.request
 (* type ['a request] is an alias of [operation list * 'a storage_types]  *)
 type result = Contract.result
 
-let contract (type a) (request : a request) : a result =
+let contract (request : request) : result =
   Contract.contract request
