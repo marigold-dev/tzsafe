@@ -25,7 +25,7 @@ type storage_types_actor = Storage.Types.actor
 let mock_timestamp (timestamp : timestamp) (actor: storage_types_actor) : storage_types_actor =
   { actor with timestamp = timestamp }
 
-let is_proposal_equal (type a) (msg:string) (actual : a storage_types_proposal) (expected : a storage_types_proposal) =
+let is_proposal_equal (msg:string) (actual : storage_types_proposal) (expected : storage_types_proposal) =
   let mock_time = Tezos.get_now () in
   let actual = { actual with
     proposer = mock_timestamp mock_time actual.proposer ;
