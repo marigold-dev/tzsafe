@@ -24,98 +24,106 @@
 #import "storage.mligo" "Storage"
 #import "conditions.mligo" "Conditions"
 #import "execution.mligo" "Execution"
+#import "event.mligo" "Event"
 
 type parameter_types = Parameter.Types.t
+type payload = Parameter.Types.payload
+type challenge_id = Parameter.Types.challenge_id
 type storage_types = Storage.Types.t
 type storage_types_proposal = Storage.Types.proposal
 type storage_types_proposal_state = Storage.Types.proposal_state
 type effective_period = Storage.Types.effective_period
 type proposal_content = Proposal_content.Types.t
 
-type 'a request = 'a parameter_types * 'a storage_types
-type 'a result = operation list * 'a storage_types
+type request = parameter_types * storage_types
+type result = operation list * storage_types
 
 
 (**
  * Default entrypoint
  *)
-let default (type a) (_, s : unit * a storage_types) : a result =
-    let event = Tezos.emit "%receiving_tez" (Tezos.get_sender (), Tezos.get_amount ()) in
+let default (_, s : unit * storage_types) : result =
+    let event = Tezos.emit "%receiving_tez" ({ from = Tezos.get_sender (); amount = Tezos.get_amount (); } : Event.Types.receiving_tez) in
     ([event], s)
 
 (**
  * Proposal creation
  *)
-let create_proposal (type a) (proposal_content, storage : (a proposal_content) list * a storage_types) : a result =
+
+let create_proposal (proposal_contents, storage : proposal_content list * storage_types) : result =
     let () = Conditions.only_owner storage in
     let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
-    let () = Conditions.not_empty_content proposal_content in
-    let proposal = Storage.Op.create_proposal proposal_content in
+    let () = Conditions.not_empty_content proposal_contents in
+    let proposal = Storage.Op.create_proposal proposal_contents in
     let storage = Storage.Op.register_proposal(proposal, storage) in
-    let event = Tezos.emit "%create_proposal" (bytes storage.proposal_counter, proposal) in
+    let packed_proposal_contents = Bytes.pack proposal_contents in
+    let event = Tezos.emit "%create_proposal" ({ challenge_id = bytes storage.proposal_counter; payload = packed_proposal_contents } : Event.Types.create_proposal) in
     ([event], storage)
 
 (**
- * Proposal signature only
+ * Proposal Signing
  *)
 
-let sign_proposal (type a)
-  ( proposal_id, proposal_content, agreement, storage
-    : Parameter.Types.proposal_id
-      * (a proposal_content) list
+let sign_proposal
+  ( challenge_id, proposal_content, agreement, storage
+    : challenge_id
+      * payload
       * Parameter.Types.agreement
-      * a storage_types)
-  : a result =
+      * storage_types)
+  : result =
     let () = Conditions.only_owner storage in
     let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
-    let proposal = Storage.Op.retrieve_proposal(proposal_id, storage) in
-    let () = Conditions.unresolved proposal.state in
+    let proposal = Storage.Op.retrieve_proposal (challenge_id, storage) in
     let () = Conditions.unsigned proposal in
     let () = Conditions.within_expiration_time proposal.proposer.timestamp storage.effective_period in
-    let packed_proposal_content = Bytes.pack proposal_content in
-    let () = Conditions.check_proposals_content packed_proposal_content proposal.contents in
+    let () = Conditions.check_proposals_content proposal_content proposal.contents in
     let owner = Tezos.get_sender () in
     let proposal = Storage.Op.update_signature (proposal, owner, agreement) in
-    let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
-    let event = Tezos.emit "%sign_proposal" (proposal_id, owner, agreement) in
+    let storage = Storage.Op.update_proposal(challenge_id, proposal, storage) in
+    let event = Tezos.emit "%sign_proposal" ({challenge_id; signer = owner; agreement } : Event.Types.sign_proposal) in
     ([event], storage)
 
 (**
  * Proposal Execution
  *)
 
-let resolve_proposal (type a)
-  ( proposal_id, packed_proposal_content, storage
-      : Parameter.Types.proposal_id
-      * bytes
-      * a storage_types)
-  : a result =
+let resolve_proposal
+  ( challenge_id, proposal_content, storage
+      : challenge_id
+      * payload
+      * storage_types)
+  : result =
     let () = Conditions.only_owner storage in
     let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
-    let proposal = Storage.Op.retrieve_proposal(proposal_id, storage) in
-    let () = Conditions.unresolved proposal.state in
-    let () = Conditions.check_proposals_content packed_proposal_content proposal.contents in
-    let owner = Tezos.get_sender () in
+    let proposal = Storage.Op.retrieve_proposal(challenge_id, storage) in
+    let () = Conditions.check_proposals_content proposal_content proposal.contents in
     let expiration_time = proposal.proposer.timestamp + storage.effective_period in
     let proposal = Storage.Op.update_proposal_state (proposal, storage.owners, storage.threshold, expiration_time) in
     let () = Conditions.ready_to_execute proposal.state in
-    let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
-    let ops, proposal, storage = Execution.perform_operations proposal storage in
-    let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
-    let event = Tezos.emit "%resolve_proposal" (proposal_id, owner) in
-    let poe = Tezos.emit "%proof_of_event" (proposal_id, packed_proposal_content) in
-    (poe::event::ops, storage)
+    let storage = Storage.Op.update_proposal(challenge_id, proposal, storage) in
+    let ops, storage = Execution.perform_operations challenge_id proposal storage in
+    let event = Tezos.emit "%resolve_proposal" ({ challenge_id = challenge_id; proposal_state = proposal.state } : Event.Types.resolve_proposal) in
+    (event::ops, storage)
 
-let contract (type a) (action, storage : a request) : a result =
+(**
+ * Update Metadata
+ *)
+let update_metadata (key, value, storage : string * bytes * storage_types) : result =
+   let s = Storage.Op.update_metadata (key, value, storage) in
+   ([], s)
+
+let contract (action, storage : request) : result =
     let ops, storage =
       match action with
       | Default u -> default (u, storage)
-      | Create_proposal (proposal_params) ->
-          create_proposal (proposal_params, storage)
-      | Sign_proposal (proposal_id, proposal_content, agreement) ->
-          sign_proposal (proposal_id, proposal_content, agreement, storage)
-      | Proof_of_event_challenge { challenge_id; payload; } ->
+      | Create_proposal { proposal_contents } ->
+          create_proposal (proposal_contents, storage)
+      | Sign_proposal { challenge_id; payload; agreement } ->
+          sign_proposal (challenge_id, payload, agreement, storage)
+      | Proof_of_event_challenge { challenge_id; payload } ->
           resolve_proposal (challenge_id, payload, storage)
+      | Update_metadata { key; value } ->
+          update_metadata(key, value, storage)
     in
     let _ = Conditions.check_setting storage in
     (ops, storage)
