@@ -30,7 +30,7 @@ let init_storage (owners, threshold: address set * nat) : storage_types =
   owners           = owners;
   threshold        = threshold;
   effective_period = 172800;
-  metadata         = (Big_map.empty: (string, bytes) big_map);
+  metadata         = Big_map.literal [("", 0x01)];
 }
 
 type originated = Breath.Contract.originated

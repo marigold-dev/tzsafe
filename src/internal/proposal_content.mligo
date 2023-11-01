@@ -31,4 +31,6 @@ module Types = struct
     | Add_owners of address set
     | Remove_owners of address set
     | Adjust_effective_period of int
+    | Add_or_update_metadata of { key: string; value: bytes; }
+    | Remove_metadata of { key: string }
 end

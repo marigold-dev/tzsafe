@@ -44,6 +44,8 @@ let send (content : proposal_content) (storage : storage_types)
     | Add_owners s -> ([], Storage.Op.add_owners s storage)
     | Remove_owners s -> ([], Storage.Op.remove_owners s storage)
     | Adjust_effective_period i -> ([], Storage.Op.adjust_effective_period i storage)
+    | Add_or_update_metadata { key; value } -> ([], Storage.Op.update_metadata (key, (Some value), storage))
+    | Remove_metadata { key } -> ([], Storage.Op.update_metadata (key, None, storage))
 
 let perform_operations
   (challenge_id: storage_types_challenge_id)

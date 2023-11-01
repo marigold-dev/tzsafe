@@ -185,8 +185,8 @@ module Op = struct
             archives = archives
         }
 
-    let update_metadata (key, value, storage: string * bytes * types) : types =
-        let metadata = Big_map.update key (Some value) storage.metadata in
+    let update_metadata (key, value, storage: string * bytes option * types) : types =
+        let metadata = Big_map.update key value storage.metadata in
         {
             storage with
             metadata = metadata
