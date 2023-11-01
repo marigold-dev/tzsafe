@@ -105,13 +105,6 @@ let resolve_proposal
     let event = Tezos.emit "%resolve_proposal" ({ challenge_id = challenge_id; proposal_state = proposal.state } : Event.Types.resolve_proposal) in
     (event::ops, storage)
 
-(**
- * Update Metadata
- *)
-let update_metadata (key, value, storage : string * bytes * storage_types) : result =
-   let s = Storage.Op.update_metadata (key, value, storage) in
-   ([], s)
-
 let contract (action, storage : request) : result =
     let ops, storage =
       match action with
@@ -122,8 +115,6 @@ let contract (action, storage : request) : result =
           sign_proposal (challenge_id, payload, agreement, storage)
       | Proof_of_event_challenge { challenge_id; payload } ->
           resolve_proposal (challenge_id, payload, storage)
-      | Update_metadata { key; value } ->
-          update_metadata(key, value, storage)
     in
     let _ = Conditions.check_setting storage in
     (ops, storage)

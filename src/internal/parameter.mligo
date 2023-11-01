@@ -30,5 +30,4 @@ module Types = struct
     | Create_proposal of { proposal_contents: proposal_content list }
     | Sign_proposal of { challenge_id: challenge_id ; payload: payload; agreement: agreement }
     | Proof_of_event_challenge of { challenge_id: challenge_id; payload: payload }
-    | Update_metadata of { key: string; value: bytes; }
 end
