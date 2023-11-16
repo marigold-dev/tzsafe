@@ -57,8 +57,11 @@ let create_proposal (challenge_id, payload, storage : challenge_id * payload * s
     let proposal = Storage.Op.create_proposal (challenge_id, payload) in
     let () = Conditions.not_empty_content proposal.contents in
     let storage = Storage.Op.register_proposal(proposal, storage) in
-    let packed_proposal_contents = Bytes.pack proposal.contents in
-    let event = Tezos.emit "%create_proposal" ({ challenge_id = bytes storage.proposal_counter; payload = packed_proposal_contents } : Event.Types.create_proposal) in
+    let event = Tezos.emit "%create_proposal"
+        ({ challenge_id
+         ; payload
+         ; proposal_id = storage.proposal_counter }
+         : Event.Types.create_proposal) in
     ([event], storage)
 
 (**
@@ -81,7 +84,8 @@ let sign_proposal
     let owner = Tezos.get_sender () in
     let proposal = Storage.Op.update_signature (proposal, owner, agreement) in
     let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
-    let event = Tezos.emit "%sign_proposal" ({challenge_id; signer = owner; agreement } : Event.Types.sign_proposal) in
+    let event = Tezos.emit "%sign_proposal"
+        ({proposal_id; signer = owner; agreement } : Event.Types.sign_proposal) in
     ([event], storage)
 
 (**
@@ -102,9 +106,8 @@ let resolve_proposal
     let proposal = Storage.Op.update_proposal_state (proposal, storage.owners, storage.threshold, expiration_time) in
     let () = Conditions.ready_to_execute proposal.state in
     let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
-    let ops, storage = Execution.perform_operations proposal_id proposal storage in
-    let event = Tezos.emit "%resolve_proposal" ({ challenge_id = challenge_id; proposal_state = proposal.state } : Event.Types.resolve_proposal) in
-    (event::ops, storage)
+    let ops, storage = Execution.perform_operations challenge_id proposal_id proposal storage in
+    (ops, storage)
 
 let contract (action, storage : request) : result =
     let ops, storage =

@@ -22,13 +22,16 @@
 module Types = struct
 
   type challenge_id = Parameter.Types.challenge_id
+  type proposal_id = Parameter.Types.proposal_id
   type payload = Parameter.Types.payload
   type agreement = Parameter.Types.agreement
   type proposal_state = Storage.Types.proposal_state
+  type proposal = Storage.Types.proposal
 
-  type create_proposal = { challenge_id: challenge_id; payload: payload}
-  type sign_proposal = { challenge_id: challenge_id; signer: address; agreement: agreement}
-  type resolve_proposal = { challenge_id: challenge_id; proposal_state: proposal_state}
+  type create_proposal = { challenge_id: challenge_id; payload: payload; proposal_id }
+  type sign_proposal = { proposal_id: proposal_id; signer: address; agreement: agreement}
+  type resolve_proposal = { proposal_id: proposal_id; proposal_state: proposal_state}
+  type archive_proposal = { proposal_id: proposal_id; proposal: bytes }
   type proof_of_event = { challenge_id: challenge_id; payload: payload}
   type receiving_tez = { from :address ; amount : tez}
 end

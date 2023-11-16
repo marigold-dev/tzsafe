@@ -48,12 +48,18 @@ let case_emitted_create_proposal =
 
       let events = (Util.get_last_events_from multisig_address "create_proposal" : Event.Types.create_proposal list) in
 
-      let { challenge_id = emitted_id; payload = emitted_proposal_content} = Option.unopt (List.head_opt events) in
+      let { challenge_id = emitted_challenge_id
+          ;proposal_id = emitted_id
+          ; payload = emitted_payload}
+          = Option.unopt (List.head_opt events) in
+
+      let exp_challenge_id = Bytes.pack ({ sender_id = 0x01; dapp_URL = "testDapp"; proposal_contents = param1} : Storage.Types.challenge_id) in
 
       Breath.Result.reduce [
         action1
-      ; Breath.Assert.is_equal "challenge id" emitted_id 0x01
-      ; Breath.Assert.is_equal "proposal payload" emitted_proposal_content (Bytes.pack param1)
+      ; Breath.Assert.is_equal "challenge challenge id" emitted_challenge_id exp_challenge_id
+      ; Breath.Assert.is_equal "challenge id" emitted_id 1n
+      ; Breath.Assert.is_equal "payload" emitted_payload 0x00
       ])
 
 let case_emitted_sign_proposal =

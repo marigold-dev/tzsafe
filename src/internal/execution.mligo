@@ -21,6 +21,7 @@
 #import "../common/util.mligo" "Util"
 #import "proposal_content.mligo" "Proposal_content"
 #import "./storage.mligo" "Storage"
+#import "./parameter.mligo" "Parameter"
 #import "conditions.mligo" "Conditions"
 #import "event.mligo" "Event"
 
@@ -30,6 +31,7 @@ type storage_types_proposal_id = Storage.Types.proposal_id
 type storage_types_proposal = Storage.Types.proposal
 type storage_types_proposal_state = Storage.Types.proposal_state
 type proposal_content = Proposal_content.Types.t
+type parameter_types_challenge_id = Parameter.Types.challenge_id
 
 let send_by (target : address) (amount : tez) : operation =
     let contract_opt : unit contract option = Tezos.get_contract_opt target in
@@ -49,6 +51,7 @@ let send (content : proposal_content) (storage : storage_types)
     | Remove_metadata { key } -> ([], Storage.Op.update_metadata (key, None, storage))
 
 let perform_operations
+  (challenge_id: parameter_types_challenge_id)
   (proposal_id: storage_types_proposal_id)
   (proposal: storage_types_proposal)
   (storage : storage_types)
@@ -58,17 +61,26 @@ let perform_operations
       let acc (x,ys : (operation * operation list)) : operation list = x :: ys in
       List.fold_right acc ops new_ops, new_s
     in
+    let pack_proposal = Bytes.pack proposal in
+    let archive = Tezos.emit "%archive_proposal"
+        ({ proposal_id; proposal = pack_proposal}
+        : Event.Types.archive_proposal) in
+    let resolve = Tezos.emit "%resolve_proposal"
+        ({ proposal_id; proposal_state = proposal.state }
+        : Event.Types.resolve_proposal) in
+
     match proposal.state with
     | Executed ->
       let (ops, s) = List.fold_left batch (Constants.no_operation, storage) proposal.contents in
+      let proof = Tezos.emit "%proof_of_event" ({challenge_id; payload = pack_proposal} : Event.Types.proof_of_event) in
       let new_s = Storage.Op.archive_proposal (proposal_id, Executed, s) in
-      (ops, new_s)
+      (proof::archive::resolve::ops, new_s)
     | Proposing ->
-      (Constants.no_operation, storage)
+      ([archive; resolve], storage)
     | Rejected ->
       let new_s = Storage.Op.archive_proposal (proposal_id, Rejected, storage) in
-      (Constants.no_operation, new_s)
+      ([archive; resolve], new_s)
     | Expired ->
       let new_s = Storage.Op.archive_proposal (proposal_id, Expired, storage) in
-      (Constants.no_operation, new_s)
+      ([archive; resolve], new_s)
 
