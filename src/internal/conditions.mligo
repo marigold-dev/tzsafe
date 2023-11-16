@@ -28,6 +28,8 @@ type storage_types_proposal = Storage.Types.proposal
 type storage_types_proposal_state = Storage.Types.proposal_state
 type effective_period = Storage.Types.effective_period
 type proposal_content = Proposal_content.Types.t
+type challenge_id = Parameter.Types.challenge_id
+type payload = Parameter.Types.payload
 
 let only_owner (storage : storage_types) : unit =
     assert_with_error (Set.mem (Tezos.get_sender ()) storage.owners) Errors.only_owner
@@ -68,14 +70,15 @@ let check_setting (storage : storage_types) : unit =
     let () = assert_with_error (storage.effective_period > 0) Errors.invalid_effective_period in
     ()
 
-let check_proposals_data (from_input: bytes) (from_storage: storage_types_proposal) : unit =
+let check_proposals_data (challenge_id: challenge_id) (payload : payload) (proposal: storage_types_proposal) : unit =
   let pack_from_storage = Bytes.pack
         ({
-          sender_id = from_storage.sender_id;
-          dapp_URL = from_storage.dapp_URL;
-          proposal_contents = from_storage.contents;
+          sender_id = proposal.sender_id;
+          dapp_URL = proposal.dapp_URL;
+          proposal_contents = proposal.contents;
         } : Storage.Types.challenge_id ) in
-  assert_with_error (from_input = pack_from_storage) Errors.not_the_same_content
+  let () = assert_with_error (challenge_id = pack_from_storage) Errors.not_the_same_content in
+  assert_with_error (payload = proposal.request_payload) Errors.not_the_same_content
 
 let within_expiration_time (created_timestamp: timestamp) (effective_period: effective_period) : unit =
   assert_with_error (created_timestamp + effective_period > Tezos.get_now ()) Errors.pass_expiration_time

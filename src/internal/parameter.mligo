@@ -27,7 +27,7 @@ module Types = struct
 
     type t =
     | Default of unit
-    | Proof_of_event_challenge of { challenge_id: challenge_id ; payload: payload; }
-    | Sign_proposal of { challenge_id: challenge_id ; proposal_id: proposal_id; agreement: agreement }
-    | Resolve_proposal of { challenge_id: challenge_id; proposal_id: proposal_id}
+    | Proof_of_event_challenge of { challenge_id: challenge_id; payload: payload; }
+    | Sign_proposal of { challenge_id: challenge_id; payload: payload; proposal_id: proposal_id; agreement: agreement }
+    | Resolve_proposal of { challenge_id: challenge_id; payload: payload; proposal_id: proposal_id}
 end

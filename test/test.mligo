@@ -39,7 +39,7 @@ let () =
   ; Adjust_threshold_proposal.test_suite
   ; Change_owner_proposal.test_suite
   ; Lambda_proposal.test_suite
-  //; Emit_events.test_suite
+  ; Emit_events.test_suite
   ; Sign_ony.test_suite
   ; Exe.test_suite
   ; Disapproval.test_suite

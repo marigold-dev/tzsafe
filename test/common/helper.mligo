@@ -49,11 +49,13 @@ let create_proposal_with_amount (amount : tez) (contract : (parameter_types, sto
 
 let sign_proposal_with_amount (amount : tez) (contract : (parameter_types, storage_types) originated) (proposal_id : nat) (agreement : bool) (proposal_contents : (proposal_content) list) () =
   let challenge_id = Bytes.pack ({ sender_id = 0x01; dapp_URL = "testDapp"; proposal_contents } : Storage.Types.challenge_id) in
-  Breath.Contract.transfer_with_entrypoint_to contract "sign_proposal" { challenge_id; proposal_id; agreement } amount
+  let payload = 0x00 in
+  Breath.Contract.transfer_with_entrypoint_to contract "sign_proposal" { challenge_id; payload; proposal_id; agreement } amount
 
 let resolve_proposal_with_amount (amount : tez) (contract : (parameter_types, storage_types) originated) (proposal_id : nat) (proposal_contents: (proposal_content) list) () =
   let challenge_id = Bytes.pack ({ sender_id = 0x01; dapp_URL = "testDapp"; proposal_contents } : Storage.Types.challenge_id) in
-  Breath.Contract.transfer_with_entrypoint_to contract "resolve_proposal" {challenge_id; proposal_id; } amount
+  let payload = 0x00 in
+  Breath.Contract.transfer_with_entrypoint_to contract "resolve_proposal" {challenge_id; payload; proposal_id; } amount
 
 let create_proposal =
   create_proposal_with_amount 0tez

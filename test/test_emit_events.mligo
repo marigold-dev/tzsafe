@@ -49,7 +49,7 @@ let case_emitted_create_proposal =
       let events = (Util.get_last_events_from multisig_address "create_proposal" : Event.Types.create_proposal list) in
 
       let { challenge_id = emitted_challenge_id
-          ;proposal_id = emitted_id
+          ; proposal_id = emitted_id
           ; payload = emitted_payload}
           = Option.unopt (List.head_opt events) in
 
@@ -80,12 +80,12 @@ let case_emitted_sign_proposal =
 
       let events = (Util.get_last_events_from multisig_address "sign_proposal" : Event.Types.sign_proposal list) in
 
-      let {challenge_id = emitted_challenge_id; signer = emitted_addr; agreement = emitted_agreement} = Option.unopt (List.head_opt events) in
+      let {proposal_id = emitted_proposal_id; signer = emitted_addr; agreement = emitted_agreement} = Option.unopt (List.head_opt events) in
 
       Breath.Result.reduce [
         action1
       ; sign_action1
-      ; Breath.Assert.is_equal "challenge_id id" emitted_challenge_id 0x01
+      ; Breath.Assert.is_equal "proposal id" emitted_proposal_id 1n
       ; Breath.Assert.is_equal "owner" emitted_addr bob.address
       ; Breath.Assert.is_equal "agreement" emitted_agreement true
       ])
@@ -110,22 +110,41 @@ let case_emitted_exe_proposal =
       let multisig_address = multisig_contract.originated_address in
 
       let events = (Util.get_last_events_from multisig_address "resolve_proposal" : Event.Types.resolve_proposal list) in
-      let {challenge_id = emitted_challenge_id1; proposal_state = emitted_state} = Option.unopt (List.head_opt events) in
+      let {proposal_id = emitted_proposal_id1; proposal_state = emitted_state} = Option.unopt (List.head_opt events) in
+
+      let events = (Util.get_last_events_from multisig_address "archive_proposal" : Event.Types.archive_proposal list) in
+      let {proposal_id = emitted_proposal_id2; proposal = emitted_proposal2} = Option.unopt (List.head_opt events) in
 
       let proof = (Util.get_last_events_from multisig_address "proof_of_event" : Event.Types.proof_of_event list) in
-      let {challenge_id = emitted_challenge_id2; payload = emitted_payload} = Option.unopt (List.head_opt proof) in
+      let {challenge_id = emitted_challenge_id3; payload = emitted_payload3} = Option.unopt (List.head_opt proof) in
 
-      let unpack_payload_opt = (Bytes.unpack emitted_payload : storage_types_proposal option ) in
-      let unpack_payload = Option.unopt unpack_payload_opt in
+      let unpack_proposal_opt2 = (Bytes.unpack emitted_proposal2 : storage_types_proposal option ) in
+      let unpack_proposal2 = Option.unopt unpack_proposal_opt2 in
+
+      let unpack_payload_opt3 = (Bytes.unpack emitted_payload3 : storage_types_proposal option ) in
+      let unpack_payload3 = Option.unopt unpack_payload_opt3 in
+
+      let exp_challenge_id = Bytes.pack ({ sender_id = 0x01; dapp_URL = "testDapp"; proposal_contents = param1 } : Storage.Types.challenge_id) in
 
       Breath.Result.reduce [
         action1
       ; sign_action1
       ; exe_action1
-      ; Breath.Assert.is_equal "challenge id" emitted_challenge_id1 0x01
+      ; Breath.Assert.is_equal "proposal id" emitted_proposal_id1 1n
       ; Breath.Assert.is_equal "state" emitted_state Executed
-      ; Breath.Assert.is_equal "challenge id" emitted_challenge_id2 0x01
-      ; Assert.is_proposal_equal "payload" unpack_payload
+      ; Breath.Assert.is_equal "proposal id" emitted_proposal_id2 1n
+      ; Assert.is_proposal_equal "payload" unpack_proposal2
+          { contents = param1
+          ; proposer = { actor = alice.address; timestamp = Tezos.get_now () }
+          ; resolver = (Some {actor = bob.address; timestamp = Tezos.get_now ()})
+          ; signatures = Map.literal [ (bob.address, true) ]
+          ; state = Executed
+          ; sender_id        = 0x01
+          ; dapp_URL         = "testDapp"
+          ; request_payload  = 0x00
+          }
+      ; Breath.Assert.is_equal "challenge challenge id" emitted_challenge_id3 exp_challenge_id
+      ; Assert.is_proposal_equal "payload" unpack_payload3
           { contents = param1
           ; proposer = { actor = alice.address; timestamp = Tezos.get_now () }
           ; resolver = (Some {actor = bob.address; timestamp = Tezos.get_now ()})

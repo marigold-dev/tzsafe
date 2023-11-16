@@ -69,8 +69,9 @@ let create_proposal (challenge_id, payload, storage : challenge_id * payload * s
  *)
 
 let sign_proposal
-  ( challenge_id, proposal_id, agreement, storage
+  ( challenge_id, payload, proposal_id, agreement, storage
     : challenge_id
+      * payload
       * proposal_id
       * Parameter.Types.agreement
       * storage_types)
@@ -80,7 +81,7 @@ let sign_proposal
     let proposal = Storage.Op.retrieve_proposal (proposal_id, storage) in
     let () = Conditions.unsigned proposal in
     let () = Conditions.within_expiration_time proposal.proposer.timestamp storage.effective_period in
-    let () = Conditions.check_proposals_data challenge_id proposal in
+    let () = Conditions.check_proposals_data challenge_id payload proposal in
     let owner = Tezos.get_sender () in
     let proposal = Storage.Op.update_signature (proposal, owner, agreement) in
     let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
@@ -93,15 +94,16 @@ let sign_proposal
  *)
 
 let resolve_proposal
-  ( challenge_id, proposal_id, storage
+  ( challenge_id, payload, proposal_id, storage
       : challenge_id
+      * payload
       * proposal_id
       * storage_types)
   : result =
     let () = Conditions.only_owner storage in
     let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
     let proposal = Storage.Op.retrieve_proposal(proposal_id, storage) in
-    let () = Conditions.check_proposals_data challenge_id proposal in
+    let () = Conditions.check_proposals_data challenge_id payload proposal in
     let expiration_time = proposal.proposer.timestamp + storage.effective_period in
     let proposal = Storage.Op.update_proposal_state (proposal, storage.owners, storage.threshold, expiration_time) in
     let () = Conditions.ready_to_execute proposal.state in
@@ -115,10 +117,10 @@ let contract (action, storage : request) : result =
       | Default u -> default (u, storage)
       | Proof_of_event_challenge { challenge_id; payload; } ->
           create_proposal (challenge_id, payload, storage)
-      | Sign_proposal { challenge_id; proposal_id; agreement } ->
-          sign_proposal (challenge_id, proposal_id, agreement, storage)
-      | Resolve_proposal { challenge_id; proposal_id } ->
-          resolve_proposal (challenge_id, proposal_id, storage)
+      | Sign_proposal { challenge_id; payload; proposal_id; agreement } ->
+          sign_proposal (challenge_id, payload, proposal_id, agreement, storage)
+      | Resolve_proposal { challenge_id; payload; proposal_id } ->
+          resolve_proposal (challenge_id, payload, proposal_id, storage)
     in
     let () = Conditions.check_setting storage in
     (ops, storage)
