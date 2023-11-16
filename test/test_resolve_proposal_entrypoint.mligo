@@ -46,8 +46,8 @@ let case_resolve_proposal =
       let balance = Breath.Contract.balance_of multisig_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let archive = Util.unopt (Big_map.find_opt 0x01 storage.archives) "proposal 1 doesn't exist" in
-      let removed_proposal = Big_map.find_opt 0x01 storage.proposals in
+      let archive = Util.unopt (Big_map.find_opt 1n storage.archives) "proposal 1 doesn't exist" in
+      let removed_proposal = Big_map.find_opt 1n storage.proposals in
 
       Breath.Result.reduce [
         create_action1
@@ -95,8 +95,8 @@ let case_order_of_transactions =
       let balance = Breath.Contract.balance_of multisig_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let archive = Util.unopt (Big_map.find_opt 0x01 storage.archives) "proposal 1 doesn't exist" in
-      let removed_proposal = Big_map.find_opt 0x01 storage.proposals in
+      let archive = Util.unopt (Big_map.find_opt 1n storage.archives) "proposal 1 doesn't exist" in
+      let removed_proposal = Big_map.find_opt 1n storage.proposals in
 
       Breath.Result.reduce [
         create_action1
@@ -252,8 +252,8 @@ let case_execute_transaction_1_of_1 =
       let balance = Breath.Contract.balance_of multisig_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let proposal1 = Util.unopt (Big_map.find_opt 0x01 storage.archives) "proposal 1 doesn't exist" in
-      let proposal2 = Util.unopt (Big_map.find_opt 0x02 storage.archives) "proposal 2 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.archives) "proposal 1 doesn't exist" in
+      let proposal2 = Util.unopt (Big_map.find_opt 2n storage.archives) "proposal 2 doesn't exist" in
 
       Breath.Result.reduce [
         create_action1
@@ -290,7 +290,7 @@ let case_execute_transaction_1_of_1_batch =
       let balance = Breath.Contract.balance_of multisig_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let proposal1 = Util.unopt (Big_map.find_opt 0x01 storage.archives) "proposal 1 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.archives) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         create_action1
@@ -331,8 +331,8 @@ let case_execute_transaction_3_of_3 =
       let balance = Breath.Contract.balance_of multisig_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let proposal1 = Util.unopt (Big_map.find_opt 0x01 storage.archives) "proposal 1 doesn't exist" in
-      let proposal2 = Util.unopt (Big_map.find_opt 0x02 storage.archives) "proposal 2 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.archives) "proposal 1 doesn't exist" in
+      let proposal2 = Util.unopt (Big_map.find_opt 2n storage.archives) "proposal 2 doesn't exist" in
 
       Breath.Result.reduce [
         create_action1

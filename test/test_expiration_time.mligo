@@ -69,7 +69,7 @@ let case_resolve_proposal_passing_expiration_time =
       let exe_action1 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
 
       let storage = Breath.Contract.storage_of multisig_contract in
-      let proposal1 = Util.unopt (Big_map.find_opt 0x01 storage.archives) "proposal 1 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.archives) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         create_action1
@@ -99,7 +99,7 @@ let case_resolve_executed_proposal_passing_expiration_time =
       let exe_action2 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
 
       let storage = Breath.Contract.storage_of multisig_contract in
-      let proposal1 = Util.unopt (Big_map.find_opt 0x01 storage.archives) "proposal 1 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.archives) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         create_action1
@@ -130,7 +130,7 @@ let case_resolve_rejected_proposal_passing_expiration_time=
       let exe_action2 = Breath.Context.act_as bob (Helper.resolve_proposal multisig_contract 1n param1) in
 
       let storage = Breath.Contract.storage_of multisig_contract in
-      let proposal1 = Util.unopt (Big_map.find_opt 0x01 storage.archives) "proposal 1 doesn't exist" in
+      let proposal1 = Util.unopt (Big_map.find_opt 1n storage.archives) "proposal 1 doesn't exist" in
 
       Breath.Result.reduce [
         create_action1

@@ -25,8 +25,8 @@ type proposal_content = Proposal_content.Types.t
 
 let init_storage (owners, threshold: address set * nat) : storage_types =
 { proposal_counter = 0n;
-  proposals     = (Big_map.empty : (bytes, storage_types_proposal) big_map);
-  archives      = (Big_map.empty : (bytes, storage_types_proposal_state) big_map);
+  proposals     = (Big_map.empty : (nat, storage_types_proposal) big_map);
+  archives      = (Big_map.empty : (nat, storage_types_proposal_state) big_map);
   owners           = owners;
   threshold        = threshold;
   effective_period = 172800;
@@ -47,14 +47,14 @@ let create_proposal_with_amount (amount : tez) (contract : (parameter_types, sto
   Breath.Contract.transfer_with_entrypoint_to contract "proof_of_event_challenge" proposal amount
 
 let sign_proposal_with_amount (amount : tez) (contract : (parameter_types, storage_types) originated) (proposal_id : nat) (agreement : bool) (proposal_contents : (proposal_content) list) () =
-  let challenge_id = bytes proposal_id in
+  let challenge_id = 0x01 in
   let payload = Bytes.pack proposal_contents in
-  Breath.Contract.transfer_with_entrypoint_to contract "sign_proposal" { challenge_id; payload; agreement } amount
+  Breath.Contract.transfer_with_entrypoint_to contract "sign_proposal" { challenge_id; payload; proposal_id; agreement } amount
 
 let resolve_proposal_with_amount (amount : tez) (contract : (parameter_types, storage_types) originated) (proposal_id : nat) (proposal_contents: (proposal_content) list) () =
-  let challenge_id = bytes proposal_id in
+  let challenge_id = 0x01 in
   let payload = Bytes.pack proposal_contents in
-  Breath.Contract.transfer_with_entrypoint_to contract "resolve_proposal" {challenge_id; payload; } amount
+  Breath.Contract.transfer_with_entrypoint_to contract "resolve_proposal" {challenge_id; payload; proposal_id; } amount
 
 let create_proposal =
   create_proposal_with_amount 0tez
