@@ -71,12 +71,12 @@ let case_create_proposal =
       let balance = Breath.Contract.balance_of multisig_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let proposal1  = Util.unopt (Big_map.find_opt 0x01 storage.proposals) "proposal 1 doesn't exist" in
-      let proposal2  = Util.unopt (Big_map.find_opt 0x02 storage.proposals) "proposal 2 doesn't exist" in
-      let proposal3  = Util.unopt (Big_map.find_opt 0x03 storage.proposals) "proposal 3 doesn't exist" in
-      let proposal4  = Util.unopt (Big_map.find_opt 0x04 storage.proposals) "proposal 4 doesn't exist" in
-      let proposal5  = Util.unopt (Big_map.find_opt 0x05 storage.proposals) "proposal 5 doesn't exist" in
-      let proposal6  = Util.unopt (Big_map.find_opt 0x06 storage.proposals) "proposal 6 doesn't exist" in
+      let proposal1  = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
+      let proposal2  = Util.unopt (Big_map.find_opt 2n storage.proposals) "proposal 2 doesn't exist" in
+      let proposal3  = Util.unopt (Big_map.find_opt 3n storage.proposals) "proposal 3 doesn't exist" in
+      let proposal4  = Util.unopt (Big_map.find_opt 4n storage.proposals) "proposal 4 doesn't exist" in
+      let proposal5  = Util.unopt (Big_map.find_opt 5n storage.proposals) "proposal 5 doesn't exist" in
+      let proposal6  = Util.unopt (Big_map.find_opt 6n storage.proposals) "proposal 6 doesn't exist" in
 
       Breath.Result.reduce [
         action1
