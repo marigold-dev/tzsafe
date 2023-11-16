@@ -124,7 +124,11 @@ let case_emitted_exe_proposal =
           ; proposer = { actor = alice.address; timestamp = Tezos.get_now () }
           ; resolver = (Some {actor = bob.address; timestamp = Tezos.get_now ()})
           ; signatures = Map.literal [ (bob.address, true) ]
-          ; state = Executed}
+          ; state = Executed
+          ; sender_id        = 0x01
+          ; dapp_URL         = "testDapp"
+          ; request_payload  = 0x00
+          }
       ])
 
 let case_emitted_receiving_amount =

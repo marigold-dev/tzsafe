@@ -51,13 +51,13 @@ let default (_, s : unit * storage_types) : result =
  * Proposal creation
  *)
 
-let create_proposal (proposal_contents, storage : proposal_content list * storage_types) : result =
+let create_proposal (challenge_id, payload, storage : challenge_id * payload * storage_types) : result =
     let () = Conditions.only_owner storage in
     let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
-    let () = Conditions.not_empty_content proposal_contents in
-    let proposal = Storage.Op.create_proposal proposal_contents in
+    let proposal = Storage.Op.create_proposal (challenge_id, payload) in
+    let () = Conditions.not_empty_content proposal.contents in
     let storage = Storage.Op.register_proposal(proposal, storage) in
-    let packed_proposal_contents = Bytes.pack proposal_contents in
+    let packed_proposal_contents = Bytes.pack proposal.contents in
     let event = Tezos.emit "%create_proposal" ({ challenge_id = bytes storage.proposal_counter; payload = packed_proposal_contents } : Event.Types.create_proposal) in
     ([event], storage)
 
@@ -66,9 +66,8 @@ let create_proposal (proposal_contents, storage : proposal_content list * storag
  *)
 
 let sign_proposal
-  ( challenge_id, proposal_content, proposal_id, agreement, storage
+  ( challenge_id, proposal_id, agreement, storage
     : challenge_id
-      * payload
       * proposal_id
       * Parameter.Types.agreement
       * storage_types)
@@ -78,7 +77,7 @@ let sign_proposal
     let proposal = Storage.Op.retrieve_proposal (proposal_id, storage) in
     let () = Conditions.unsigned proposal in
     let () = Conditions.within_expiration_time proposal.proposer.timestamp storage.effective_period in
-    let () = Conditions.check_proposals_content proposal_content proposal.contents in
+    let () = Conditions.check_proposals_data challenge_id proposal in
     let owner = Tezos.get_sender () in
     let proposal = Storage.Op.update_signature (proposal, owner, agreement) in
     let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
@@ -90,16 +89,15 @@ let sign_proposal
  *)
 
 let resolve_proposal
-  ( challenge_id, proposal_content, proposal_id, storage
+  ( challenge_id, proposal_id, storage
       : challenge_id
-      * payload
       * proposal_id
       * storage_types)
   : result =
     let () = Conditions.only_owner storage in
     let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
     let proposal = Storage.Op.retrieve_proposal(proposal_id, storage) in
-    let () = Conditions.check_proposals_content proposal_content proposal.contents in
+    let () = Conditions.check_proposals_data challenge_id proposal in
     let expiration_time = proposal.proposer.timestamp + storage.effective_period in
     let proposal = Storage.Op.update_proposal_state (proposal, storage.owners, storage.threshold, expiration_time) in
     let () = Conditions.ready_to_execute proposal.state in
@@ -112,12 +110,12 @@ let contract (action, storage : request) : result =
     let ops, storage =
       match action with
       | Default u -> default (u, storage)
-      | Proof_of_event_challenge { proposal_contents } ->
-          create_proposal (proposal_contents, storage)
-      | Sign_proposal { challenge_id; payload; proposal_id; agreement } ->
-          sign_proposal (challenge_id, payload, proposal_id, agreement, storage)
-      | Resolve_proposal { challenge_id; payload; proposal_id } ->
-          resolve_proposal (challenge_id, payload, proposal_id, storage)
+      | Proof_of_event_challenge { challenge_id; payload; } ->
+          create_proposal (challenge_id, payload, storage)
+      | Sign_proposal { challenge_id; proposal_id; agreement } ->
+          sign_proposal (challenge_id, proposal_id, agreement, storage)
+      | Resolve_proposal { challenge_id; proposal_id } ->
+          resolve_proposal (challenge_id, proposal_id, storage)
     in
-    let _ = Conditions.check_setting storage in
+    let () = Conditions.check_setting storage in
     (ops, storage)

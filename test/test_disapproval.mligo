@@ -60,7 +60,10 @@ let case_sign_for_disapproval =
           contents         = [ Transfer {
             amount           = 10tez;
             target           = alice.address;
-          }]
+          }];
+          sender_id        = 0x01;
+          dapp_URL         = "testDapp";
+          request_payload  = 0x00;
         })
       ])
 
@@ -214,7 +217,10 @@ let case_not_closed_1_2 =
           contents         = [ Transfer {
             amount           = 10tez;
             target           = alice.address;
-          }]
+          }];
+          sender_id        = 0x01;
+          dapp_URL         = "testDapp";
+          request_payload  = 0x00;
         })
       ])
 

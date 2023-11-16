@@ -22,8 +22,8 @@
 #import "proposal_content.mligo" "Proposal_content"
 
 module Types = struct
-    type challenge_id = Parameter.Types.challenge_id
     type proposal_id = Parameter.Types.proposal_id
+    type payload = Parameter.Types.payload
     type proposal_content = Proposal_content.Types.t
     type effective_period = int
 
@@ -36,6 +36,14 @@ module Types = struct
 
     type proposal_state = Proposing | Executed | Rejected | Expired
 
+    type challenge_id =
+    [@layout:comb]
+    {
+       sender_id : bytes;
+       dapp_URL : string;
+       proposal_contents : proposal_content list;
+    }
+
     type proposal =
     [@layout:comb]
     {
@@ -43,7 +51,10 @@ module Types = struct
         signatures: (address, bool) map;
         proposer : actor;
         resolver : actor option;
-        contents : proposal_content list
+        contents : proposal_content list;
+        sender_id : bytes;
+        dapp_URL : string;
+        request_payload : payload;
     }
 
     type t =
@@ -61,8 +72,10 @@ end
 
 module Op = struct
     type proposal_content = Proposal_content.Types.t
-    type challenge_id = Parameter.Types.challenge_id
+    type byte_challenge_id = Parameter.Types.challenge_id
+    type data_challenge_id = Types.challenge_id
     type proposal_id = Parameter.Types.proposal_id
+    type payload = Parameter.Types.payload
     type agreement = Parameter.Types.agreement
     type proposal = Types.proposal
     type proposal_state = Types.proposal_state
@@ -70,7 +83,11 @@ module Op = struct
     type proposal_state = Types.proposal_state
     type types = Types.t
 
-    let create_proposal (contents: proposal_content list) : proposal =
+    let create_proposal
+        (challenge_id , payload : byte_challenge_id * payload) : proposal =
+        let data_opt = (Bytes.unpack challenge_id : data_challenge_id option) in
+        let {sender_id; dapp_URL; proposal_contents;} =
+           Option.unopt_with_error data_opt Errors.invalid_challenge_id in
         {
             state            = Proposing;
             signatures       = Map.empty;
@@ -80,9 +97,11 @@ module Op = struct
                 timestamp = Tezos.get_now ()
               };
             resolver         = None;
-            contents         = contents;
+            contents         = proposal_contents;
+            sender_id        = sender_id;
+            dapp_URL          = dapp_URL;
+            request_payload  = payload;
         }
-
 
     let register_proposal (proposal, storage: proposal * types) : types =
         let proposal_counter = storage.proposal_counter + 1n in

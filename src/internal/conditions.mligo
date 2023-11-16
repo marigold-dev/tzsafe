@@ -68,8 +68,13 @@ let check_setting (storage : storage_types) : unit =
     let () = assert_with_error (storage.effective_period > 0) Errors.invalid_effective_period in
     ()
 
-let check_proposals_content (from_input: bytes) (from_storage: proposal_content list) : unit =
-  let pack_from_storage = Bytes.pack from_storage in
+let check_proposals_data (from_input: bytes) (from_storage: storage_types_proposal) : unit =
+  let pack_from_storage = Bytes.pack
+        ({
+          sender_id = from_storage.sender_id;
+          dapp_URL = from_storage.dapp_URL;
+          proposal_contents = from_storage.contents;
+        } : Storage.Types.challenge_id ) in
   assert_with_error (from_input = pack_from_storage) Errors.not_the_same_content
 
 let within_expiration_time (created_timestamp: timestamp) (effective_period: effective_period) : unit =

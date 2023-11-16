@@ -93,7 +93,10 @@ let case_create_proposal =
           signatures       = Map.empty;
           proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
           resolver         = None;
-          contents         = param1
+          contents         = param1;
+          sender_id        = 0x01;
+          dapp_URL         = "testDapp";
+          request_payload  = 0x00;
         })
       ; Assert.is_proposal_equal "#2 proposal" proposal2
         ({
@@ -101,7 +104,10 @@ let case_create_proposal =
           signatures       = Map.empty;
           proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
           resolver         = None;
-          contents         = param2
+          contents         = param2;
+          sender_id        = 0x01;
+          dapp_URL         = "testDapp";
+          request_payload  = 0x00;
         })
       ; Assert.is_proposal_equal "#3 proposal" proposal3
         ({
@@ -109,7 +115,10 @@ let case_create_proposal =
           signatures       = Map.empty;
           proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
           resolver         = None;
-          contents         = param3
+          contents         = param3;
+          sender_id        = 0x01;
+          dapp_URL         = "testDapp";
+          request_payload  = 0x00;
         })
       ; Assert.is_proposal_equal "#4 proposal" proposal4
         ({
@@ -117,7 +126,10 @@ let case_create_proposal =
           signatures       = Map.empty;
           proposer         = { actor = alice.address; timestamp = Tezos.get_now () };
           resolver         = None;
-          contents         = param4
+          contents         = param4;
+          sender_id        = 0x01;
+          dapp_URL         = "testDapp";
+          request_payload  = 0x00;
         })
       ; Assert.is_proposal_equal "#5 proposal" proposal5
         ({
@@ -125,7 +137,10 @@ let case_create_proposal =
           signatures       = Map.empty;
           proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
           resolver         = None;
-          contents         = param5
+          contents         = param5;
+          sender_id        = 0x01;
+          dapp_URL         = "testDapp";
+          request_payload  = 0x00;
         })
       ; Assert.is_proposal_equal "#6 proposal" proposal6
         ({
@@ -133,7 +148,10 @@ let case_create_proposal =
           signatures       = Map.empty;
           proposer         = { actor = bob.address; timestamp = Tezos.get_now () };
           resolver         = None;
-          contents         = param6
+          contents         = param6;
+          sender_id        = 0x01;
+          dapp_URL         = "testDapp";
+          request_payload  = 0x00;
         })
       ])
 

@@ -73,7 +73,10 @@ let case_gathering_signatures =
           contents         = [ Transfer {
             amount           = 10tez;
             target           = alice.address;
-          }]
+          }];
+          sender_id        = 0x01;
+          dapp_URL         = "testDapp";
+          request_payload  = 0x00;
         })
       ; Assert.is_proposal_equal "#2 proposal" proposal2
         ({
@@ -84,7 +87,10 @@ let case_gathering_signatures =
           contents         = [ Transfer {
             target           = bob.address;
             amount           = 20tez;
-          }]
+          }];
+          sender_id        = 0x01;
+          dapp_URL         = "testDapp";
+          request_payload  = 0x00;
         })
       ])
 
