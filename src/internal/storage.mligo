@@ -23,6 +23,7 @@
 
 module Types = struct
     type challenge_id = Parameter.Types.challenge_id
+    type proposal_id = Parameter.Types.proposal_id
     type proposal_content = Proposal_content.Types.t
     type effective_period = int
 
@@ -49,8 +50,8 @@ module Types = struct
     [@layout:comb]
     {
         proposal_counter : nat;
-        proposals        : (challenge_id, proposal) big_map;
-        archives         : (challenge_id, proposal_state) big_map;
+        proposals        : (proposal_id, proposal) big_map;
+        archives         : (proposal_id, proposal_state) big_map;
         owners           : address set;
         threshold        : nat;
         effective_period : effective_period;
@@ -61,6 +62,7 @@ end
 module Op = struct
     type proposal_content = Proposal_content.Types.t
     type challenge_id = Parameter.Types.challenge_id
+    type proposal_id = Parameter.Types.proposal_id
     type agreement = Parameter.Types.agreement
     type proposal = Types.proposal
     type proposal_state = Types.proposal_state
@@ -84,14 +86,14 @@ module Op = struct
 
     let register_proposal (proposal, storage: proposal * types) : types =
         let proposal_counter = storage.proposal_counter + 1n in
-        let proposals = Big_map.add (bytes proposal_counter) proposal storage.proposals in
+        let proposals = Big_map.add proposal_counter proposal storage.proposals in
         {
             storage with
             proposals     = proposals;
             proposal_counter = proposal_counter
         }
 
-    let retrieve_proposal (proposal_number, storage : challenge_id * types) : proposal =
+    let retrieve_proposal (proposal_number, storage : proposal_id * types) : proposal =
         match Big_map.find_opt proposal_number storage.proposals with
         | Some proposal -> proposal
         | None ->
@@ -169,16 +171,16 @@ module Op = struct
           let number_of_owners = Set.cardinal owners in
           reject_proposal (proposal, disapprovals, abs(number_of_owners - threshold))
 
-    let update_proposal (challenge_id, proposal, storage: challenge_id * proposal * types) : types =
-        let proposals = Big_map.update challenge_id (Some proposal) storage.proposals in
+    let update_proposal (proposal_id , proposal, storage: proposal_id * proposal * types) : types =
+        let proposals = Big_map.update proposal_id (Some proposal) storage.proposals in
         {
             storage with
             proposals = proposals
         }
 
-    let archive_proposal (challenge_id, proposal_state, storage: challenge_id * proposal_state * types) : types =
-        let proposals = Big_map.remove challenge_id storage.proposals in
-        let archives = Big_map.add challenge_id proposal_state storage.archives in
+    let archive_proposal (proposal_id, proposal_state, storage: proposal_id * proposal_state * types) : types =
+        let proposals = Big_map.remove proposal_id storage.proposals in
+        let archives = Big_map.add proposal_id proposal_state storage.archives in
         {
             storage with
             proposals = proposals;
