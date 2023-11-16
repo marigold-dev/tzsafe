@@ -21,5 +21,14 @@
 type result = Lib.result
 type request =  Lib.request
 
+type data_challenge_id = Lib.Storage.Types.challenge_id
+type bytes_challenge_id = Lib.Parameter.Types.challenge_id
+type storage = Lib.storage_types
+
 let main (request : request) : result =
   Lib.contract request
+
+[@view]
+let generate_challenge_id ((challenge_id, _storage) : (data_challenge_id * storage)) : bytes_challenge_id =
+   let pack_data = Bytes.pack challenge_id in
+   pack_data

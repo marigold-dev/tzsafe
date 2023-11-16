@@ -20,16 +20,16 @@
 #import "./internal/storage.mligo" "Storage"
 #import "./internal/contract.mligo" "Contract"
 
-(* type 'a parameter_types  *)
+(* type parameter_types  *)
 type parameter_types = Parameter.Types.t
 
-(* type 'a storage_types *)
+(* type storage_types *)
 type storage_types = Storage.Types.t
 
-(* type ['a request] is an alias of ['a parameter_types * 'a storage_types]  *)
+(* type [request] is an alias of [parameter_types * storage_types]  *)
 type request = Contract.request
 
-(* type ['a request] is an alias of [operation list * 'a storage_types]  *)
+(* type [ request] is an alias of [operation list * storage_types]  *)
 type result = Contract.result
 
 let contract (request : request) : result =
