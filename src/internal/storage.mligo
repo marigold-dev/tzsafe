@@ -22,7 +22,6 @@
 #import "proposal_content.mligo" "Proposal_content"
 
 module Types = struct
-    //type challenge_id = Parameter.Types.challenge_id
     type proposal_id = Parameter.Types.proposal_id
     type proposal_content = Proposal_content.Types.t
     type effective_period = int
@@ -61,7 +60,6 @@ end
 
 module Op = struct
     type proposal_content = Proposal_content.Types.t
-    //type challenge_id = Parameter.Types.challenge_id
     type proposal_id = Parameter.Types.proposal_id
     type agreement = Parameter.Types.agreement
     type proposal = Types.proposal
@@ -82,7 +80,6 @@ module Op = struct
             resolver         = None;
             contents         = contents;
         }
-
 
     let register_proposal (proposal, storage: proposal * types) : types =
         let proposal_counter = storage.proposal_counter + 1n in

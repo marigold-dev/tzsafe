@@ -44,17 +44,13 @@ let originate (level: Breath.Logger.level) (main : request -> result) (init_stor
     amount
 
 let create_proposal_with_amount (amount : tez) (contract : (parameter_types, storage_types) originated) (proposal : (proposal_content) list) () =
-  Breath.Contract.transfer_with_entrypoint_to contract "proof_of_event_challenge" proposal amount
+  Breath.Contract.transfer_with_entrypoint_to contract "create_proposal" proposal amount
 
 let sign_proposal_with_amount (amount : tez) (contract : (parameter_types, storage_types) originated) (proposal_id : nat) (agreement : bool) (proposal_contents : (proposal_content) list) () =
-  let challenge_id = 0x01 in
-  let payload = Bytes.pack proposal_contents in
-  Breath.Contract.transfer_with_entrypoint_to contract "sign_proposal" { challenge_id; payload; proposal_id; agreement } amount
+  Breath.Contract.transfer_with_entrypoint_to contract "sign_proposal" { proposal_id; proposal_contents; agreement } amount
 
 let resolve_proposal_with_amount (amount : tez) (contract : (parameter_types, storage_types) originated) (proposal_id : nat) (proposal_contents: (proposal_content) list) () =
-  let challenge_id = 0x01 in
-  let payload = Bytes.pack proposal_contents in
-  Breath.Contract.transfer_with_entrypoint_to contract "resolve_proposal" {challenge_id; payload; proposal_id; } amount
+  Breath.Contract.transfer_with_entrypoint_to contract "resolve_proposal" { proposal_id; proposal_contents;} amount
 
 let create_proposal =
   create_proposal_with_amount 0tez

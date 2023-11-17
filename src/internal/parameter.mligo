@@ -29,5 +29,4 @@ module Types = struct
     | Create_proposal of { proposal_contents: proposal_content list }
     | Sign_proposal of { proposal_id: proposal_id; proposal_contents: proposal_content list; agreement: agreement }
     | Resolve_proposal of { proposal_id: proposal_id; proposal_contents: proposal_content list }
-    //| Proof_of_event_challenge of { proposal_contents: proposal_content list }
 end
