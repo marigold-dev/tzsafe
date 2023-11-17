@@ -25,7 +25,6 @@
 #import "event.mligo" "Event"
 
 type storage_types = Storage.Types.t
-type storage_types_challenge_id = Storage.Types.challenge_id
 type storage_types_proposal_id = Storage.Types.proposal_id
 type storage_types_proposal = Storage.Types.proposal
 type storage_types_proposal_state = Storage.Types.proposal_state
