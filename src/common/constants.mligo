@@ -16,4 +16,5 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
+[@inline]
 let no_operation : operation list = []

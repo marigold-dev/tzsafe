@@ -101,7 +101,8 @@ let resolve_proposal
     let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
     let ops, storage = Execution.perform_operations proposal_id proposal storage in
     let event = Tezos.emit "%resolve_proposal" ({ proposal_id = proposal_id ; proposal_state = proposal.state } : Event.Types.resolve_proposal) in
-    (event::ops, storage)
+    let archive = Tezos.emit "%archive_proposal" ({ proposal_id = proposal_id ; proposal = Bytes.pack proposal } : Event.Types.archive_proposal) in
+    (event::archive::ops, storage)
 
 let contract (action, storage : request) : result =
     let ops, storage =
