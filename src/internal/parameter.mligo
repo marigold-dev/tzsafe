@@ -23,11 +23,15 @@ module Types = struct
     type proposal_id = nat
     type agreement = bool
     type expiration_time = timestamp
+    type challenge_id = bytes
+    type payload = bytes
 
     type t =
     | Default of unit
     | Create_proposal of { proposal_contents: proposal_content list }
     | Sign_proposal of { proposal_id: proposal_id; proposal_contents: proposal_content list; agreement: agreement }
     | Resolve_proposal of { proposal_id: proposal_id; proposal_contents: proposal_content list }
-    //| Proof_of_event_challenge of { proposal_contents: proposal_content list }
+    | Proof_of_event_challenge of { challenge_id: challenge_id; payload: payload }
+    | Sign_proof_of_event_challenge of { challenge_id: challenge_id; payload: payload; proposal_id: proposal_id; agreement: agreement }
+    | Resolve_proof_of_event_challeng of { challenge_id: challenge_id; payload: payload; proposal_id: proposal_id;}
 end

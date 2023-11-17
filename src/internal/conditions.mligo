@@ -56,6 +56,7 @@ let check_proposal (content: proposal_content) : unit =
         assert_with_error (p > 0) Errors.invalid_effective_period
     | Add_or_update_metadata _ -> ()
     | Remove_metadata _ -> ()
+    | Proof_of_event _ -> ()
 
 let not_empty_content (proposals_content: proposal_content list) : unit =
     let () = assert_with_error ((List.length proposals_content) > 0n) Errors.no_proposal in

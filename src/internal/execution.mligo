@@ -46,6 +46,9 @@ let send (content : proposal_content) (storage : storage_types)
     | Adjust_effective_period i -> ([], Storage.Op.adjust_effective_period i storage)
     | Add_or_update_metadata { key; value } -> ([], Storage.Op.update_metadata (key, (Some value), storage))
     | Remove_metadata { key } -> ([], Storage.Op.update_metadata (key, None, storage))
+    | Proof_of_event { challenge_id; payload; } ->
+        let event = Tezos.emit "%proof_of_event" ({ challenge_id; payload } : Event.Types.proof_of_event) in
+        ([event], storage)
 
 let perform_operations
   (proposal_id: storage_types_proposal_id)

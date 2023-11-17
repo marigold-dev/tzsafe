@@ -28,6 +28,8 @@
 
 type parameter_types = Parameter.Types.t
 type proposal_id = Parameter.Types.proposal_id
+type challenge_id = Parameter.Types.challenge_id
+type payload = Parameter.Types.payload
 type storage_types = Storage.Types.t
 type storage_types_proposal = Storage.Types.proposal
 type storage_types_proposal_state = Storage.Types.proposal_state
@@ -101,7 +103,18 @@ let resolve_proposal
     let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
     let ops, storage = Execution.perform_operations proposal_id proposal storage in
     let event = Tezos.emit "%resolve_proposal" ({ proposal_id = proposal_id ; proposal_state = proposal.state } : Event.Types.resolve_proposal) in
-    (event::ops, storage)
+    let archive = Tezos.emit "%archiveh_proposal" ({ proposal_id = proposal_id ; proposal = Bytes.pack proposal } : Event.Types.archive_proposal) in
+    (event::archive::ops, storage)
+
+let create_poe_proposal (challenge_id, payload, storage) =
+  create_proposal([Proof_of_event {challenge_id; payload}], storage)
+
+let sign_poe_proposal (challenge_id, payload, proposal_id, agreement, storage) =
+  sign_proposal(proposal_id, [Proof_of_event {challenge_id; payload}], agreement, storage)
+
+let resolve_poe_proposal (challenge_id, payload, proposal_id, storage
+  : challenge_id * payload * proposal_id * storage_types) : result =
+  resolve_proposal(proposal_id, [Proof_of_event {challenge_id; payload}], storage)
 
 let contract (action, storage : request) : result =
     let ops, storage =
@@ -113,6 +126,12 @@ let contract (action, storage : request) : result =
           sign_proposal (proposal_id, proposal_contents, agreement, storage)
       | Resolve_proposal { proposal_id; proposal_contents } ->
           resolve_proposal (proposal_id, proposal_contents, storage)
+      | Proof_of_event_challenge { challenge_id; payload; } ->
+          create_poe_proposal (challenge_id, payload, storage)
+      | Sign_proof_of_event_challenge { challenge_id; payload; proposal_id; agreement } ->
+          sign_poe_proposal (challenge_id, payload, proposal_id, agreement, storage)
+      | Resolve_proof_of_event_challeng { challenge_id; payload; proposal_id; } ->
+          resolve_poe_proposal (challenge_id, payload, proposal_id, storage)
     in
     let () = Conditions.check_setting storage in
     (ops, storage)

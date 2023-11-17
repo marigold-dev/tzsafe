@@ -61,8 +61,9 @@ end
 
 module Op = struct
     type proposal_content = Proposal_content.Types.t
-    //type challenge_id = Parameter.Types.challenge_id
     type proposal_id = Parameter.Types.proposal_id
+    type challenge_id = Parameter.Types.challenge_id
+    type payload = Parameter.Types.payload
     type agreement = Parameter.Types.agreement
     type proposal = Types.proposal
     type proposal_state = Types.proposal_state
@@ -81,6 +82,19 @@ module Op = struct
               };
             resolver         = None;
             contents         = contents;
+        }
+
+    let create_poe_proposal (challenge_id, payload : challenge_id * payload) : proposal =
+        {
+            state            = Proposing;
+            signatures       = Map.empty;
+            proposer         =
+              {
+                actor = Tezos.get_sender ();
+                timestamp = Tezos.get_now ()
+              };
+            resolver         = None;
+            contents         = [ Proof_of_event { challenge_id; payload } ];
         }
 
 
