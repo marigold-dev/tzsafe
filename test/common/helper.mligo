@@ -43,6 +43,9 @@ let originate (level: Breath.Logger.level) (main : request -> result) (init_stor
     init_storage
     amount
 
+let proof_of_event_challenge (amount: tez) (contract : (parameter_types, storage_types) originated) (payload : payload) () =
+  Breath.Contract.transfer_with_entrypoint_to contract "proof_of_event_challenge" payload amount
+
 let create_proposal_with_amount (amount : tez) (contract : (parameter_types, storage_types) originated) (proposal : (proposal_content) list) () =
   Breath.Contract.transfer_with_entrypoint_to contract "create_proposal" proposal amount
 
