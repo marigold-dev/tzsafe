@@ -33,4 +33,5 @@ module Types = struct
     | Adjust_effective_period of int
     | Add_or_update_metadata of { key: string; value: bytes; }
     | Remove_metadata of { key: string }
+    | Proof_of_event of { payload: bytes}
 end

@@ -28,6 +28,7 @@
 
 type parameter_types = Parameter.Types.t
 type proposal_id = Parameter.Types.proposal_id
+type payload = Parameter.Types.payload
 type storage_types = Storage.Types.t
 type storage_types_proposal = Storage.Types.proposal
 type storage_types_proposal_state = Storage.Types.proposal_state
@@ -104,6 +105,9 @@ let resolve_proposal
     let archive = Tezos.emit "%archive_proposal" ({ proposal_id ; proposal = Bytes.pack proposal }: Event.Types.archive_proposal ) in
     (event::archive::ops, storage)
 
+let proof_of_event_challenge (payload, storage : payload * storage_types) : result =
+  create_proposal ([Proof_of_event {payload}], storage)
+
 let contract (action, storage : request) : result =
     let ops, storage =
       match action with
@@ -114,6 +118,8 @@ let contract (action, storage : request) : result =
           sign_proposal (proposal_id, proposal_contents, agreement, storage)
       | Resolve_proposal { proposal_id; proposal_contents } ->
           resolve_proposal (proposal_id, proposal_contents, storage)
+      | Proof_of_event_challenge { payload } ->
+          proof_of_event_challenge (payload, storage)
     in
     let () = Conditions.check_setting storage in
     (ops, storage)

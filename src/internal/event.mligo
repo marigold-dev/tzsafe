@@ -24,10 +24,12 @@ module Types = struct
   type proposal_id = Parameter.Types.proposal_id
   type agreement = Parameter.Types.agreement
   type proposal_state = Storage.Types.proposal_state
+  type payload = Parameter.Types.payload
 
   type create_proposal = { proposal_id: proposal_id;}
   type sign_proposal = { proposal_id: proposal_id; signer: address; agreement: agreement}
   type resolve_proposal = { proposal_id: proposal_id; proposal_state: proposal_state}
   type archive_proposal = { proposal_id: proposal_id; proposal: bytes }
   type receiving_tez = { from :address ; amount : tez}
+  type proof_of_event = { payload: payload}
 end

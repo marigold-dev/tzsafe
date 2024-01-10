@@ -30,6 +30,7 @@
 #import "./test_disapproval.mligo" "Disapproval"
 #import "./test_expiration_time.mligo" "Exp_date"
 #import "./test_update_metadata.mligo" "Update_metadata"
+#import "./test_tzip27.mligo" "Tzip27"
 
 let () =
   Breath.Model.run_suites Void
@@ -45,4 +46,5 @@ let () =
   ; Disapproval.test_suite
   ; Exp_date.test_suite
   ; Update_metadata.test_suite
+  ; Tzip27.test_suite
   ]
