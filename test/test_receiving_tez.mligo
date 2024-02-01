@@ -12,10 +12,10 @@ let case_receive_tez =
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig = Helper.originate level App.main init_storage 0tez in
+      let multisig = Helper.originate level init_storage 0tez in
       let contract = Mock.originate_transfer_only_contract level in
 
-      let action = Breath.Context.act_as carol (fun (_u:unit) -> (Breath.Contract.transfer_to contract multisig.originated_address 0tez)) in
+      let action = Breath.Context.act_as carol (fun (_u:unit) -> (Breath.Contract.transfer_with_entrypoint_to contract "add" multisig.originated_address 0tez)) in
 
       let balance = Breath.Contract.balance_of multisig in
 
@@ -32,10 +32,10 @@ let case_invalidated_setting =
       let (_, (alice, _bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address] in
       let init_storage = Helper.init_storage (owners, 0n) in
-      let multisig = Helper.originate level App.main init_storage 0tez in
+      let multisig = Helper.originate level init_storage 0tez in
       let contract = Mock.originate_transfer_only_contract level in
 
-      let action = Breath.Context.act_as alice (fun (_u:unit) -> (Breath.Contract.transfer_to contract multisig.originated_address 0tez)) in
+      let action = Breath.Context.act_as alice (fun (_u:unit) -> (Breath.Contract.transfer_with_entrypoint_to contract "add" multisig.originated_address 0tez)) in
 
       Breath.Result.reduce [
         Breath.Expect.fail_with_message "Threshold must be greater than 1" action

@@ -32,7 +32,7 @@ let case_invalidated_threshold =
       let (_, (alice, _bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address] in
       let init_storage = Helper.init_storage (owners, 0n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
       let param = ([] : proposal_content list) in
 
       let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
@@ -50,7 +50,7 @@ let case_number_of_owner_less_than_threshold =
       let (_, (alice, _bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address] in
       let init_storage = Helper.init_storage (owners, 2n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
       let param = ([] : proposal_content list) in
 
       let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in

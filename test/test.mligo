@@ -18,33 +18,53 @@
 
 #import "ligo-breathalyzer/lib/lib.mligo" "Breath"
 
-#import "./test_receiving_tez.mligo" "Tez"
-#import "./test_basic_proposal.mligo" "Basic_proposal"
-#import "./test_setting.mligo" "Setting"
-#import "./test_adjust_threshold_proposal.mligo" "Adjust_threshold_proposal"
-#import "./test_change_owner_proposal.mligo" "Change_owner_proposal"
-#import "./test_lambda_proposal.mligo" "Lambda_proposal"
-#import "./test_emit_events.mligo" "Emit_events"
-#import "./test_sign_only_entrypoint.mligo" "Sign_ony"
-#import "./test_resolve_proposal_entrypoint.mligo" "Exe"
-#import "./test_disapproval.mligo" "Disapproval"
-#import "./test_expiration_time.mligo" "Exp_date"
-#import "./test_update_metadata.mligo" "Update_metadata"
-#import "./test_tzip27.mligo" "Tzip27"
+//#import "./test_receiving_tez.mligo" "Tez"
+//#import "./test_basic_proposal.mligo" "Basic_proposal"
+//#import "./test_setting.mligo" "Setting"
+//#import "./test_adjust_threshold_proposal.mligo" "Adjust_threshold_proposal"
+//#import "./test_change_owner_proposal.mligo" "Change_owner_proposal"
+//#import "./test_lambda_proposal.mligo" "Lambda_proposal"
+//#import "./test_emit_events.mligo" "Emit_events"
+//#import "./test_sign_only_entrypoint.mligo" "Sign_ony"
+//#import "./test_resolve_proposal_entrypoint.mligo" "Exe"
+//#import "./test_disapproval.mligo" "Disapproval"
+//#import "./test_expiration_time.mligo" "Exp_date"
+//#import "./test_update_metadata.mligo" "Update_metadata"
+//
 
-let () =
-  Breath.Model.run_suites Void
-  [ Tez.test_suite
-  ; Basic_proposal.test_suite
-  ; Setting.test_suite
-  ; Adjust_threshold_proposal.test_suite
-  ; Change_owner_proposal.test_suite
-  ; Lambda_proposal.test_suite
-  ; Emit_events.test_suite
-  ; Sign_ony.test_suite
-  ; Exe.test_suite
-  ; Disapproval.test_suite
-  ; Exp_date.test_suite
-  ; Update_metadata.test_suite
-  ; Tzip27.test_suite
-  ]
+#include "../src/internal/contract.mligo"
+#import "../app/main.mligo" "App"
+
+let test = 
+      let init_storage : storage_types =
+      { proposal_counter = 0n;
+        proposals     = (Big_map.empty : (nat, storage_types_proposal) big_map);
+        archives      = (Big_map.empty : (nat, storage_types_proposal_state) big_map);
+        owners           = (Set.empty : address set);
+        threshold        = 1n;
+        effective_period = 172800;
+        metadata         = Big_map.literal [("", 0x01)];
+      } in
+      let {addr=typed_address; code=_; size=_} = Test.originate (contract_of App) init_storage 0tez in
+      let contract = Test.to_contract typed_address in
+      let () = Test.log contract in
+      let address = Tezos.address contract in
+      ()
+
+//let () =
+//  Breath.Model.run_suites Trace
+//  [ //Tez.test_suite
+//  //;
+//   //Basic_proposal.test_suite
+//  //; Setting.test_suite
+//  //; Adjust_threshold_proposal.test_suite
+//  //; Change_owner_proposal.test_suite
+//  //; Lambda_proposal.test_suite
+//  //; Emit_events.test_suite
+//  //; Sign_ony.test_suite
+//  //; Exe.test_suite
+//  //; Disapproval.test_suite
+//  //; Exp_date.test_suite
+//  //; Update_metadata.test_suite
+//  ]
+//

@@ -21,14 +21,19 @@
 
 (* ------------------------ *)
 (* contract 1 *)
-let transfer_only_contract (addr, storage: address * unit) : operation list * unit =
+module Transfer_only_contract=
+struct
+
+[@entry]
+let transfer_only_contract (addr: address) (storage : unit) : operation list * unit =
   let contr = Tezos.get_contract_with_error addr "contract doesn't exist" in
   [Tezos.transaction () 10tez contr], storage
+end
 
 let originate_transfer_only_contract (level: Breath.Logger.level) =
   Breath.Contract.originate
     level
     "transfer only contract"
-    transfer_only_contract
+    (contract_of Transfer_only_contract)
     ()
     100tez
