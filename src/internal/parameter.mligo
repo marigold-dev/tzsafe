@@ -25,10 +25,15 @@ module Types = struct
     type expiration_time = timestamp
     type payload = bytes
 
+    type create_proposal = { proposal_contents: proposal_content list }
+    type sign_proposal = { proposal_id: proposal_id; proposal_contents: proposal_content list; agreement: agreement } 
+    type resolve_proposal = { proposal_id: proposal_id; proposal_contents: proposal_content list } 
+
     type t =
+    [@layout:comb]
     | Default of unit
     | Create_proposal of { proposal_contents: proposal_content list }
-    | Sign_proposal of { proposal_id: proposal_id; proposal_contents: proposal_content list; agreement: agreement }
+    | Sign_proposal of sign_proposal
     | Resolve_proposal of { proposal_id: proposal_id; proposal_contents: proposal_content list }
     | Proof_of_event_challenge of { payload: payload }
 end

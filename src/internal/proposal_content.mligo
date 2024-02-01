@@ -25,6 +25,7 @@ module Types = struct
     }
 
     type t =
+    [@layout:comb]
     | Transfer of transaction
     | Execute_lambda of { metadata: bytes option; lambda: (unit -> operation list)}
     | Adjust_threshold of nat

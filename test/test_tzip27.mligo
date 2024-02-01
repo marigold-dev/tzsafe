@@ -35,7 +35,7 @@ let case_emit_poe =
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
  
       let payload = 0x01 in
       let param = ([Proof_of_event {payload}] : proposal_content list) in
@@ -65,7 +65,7 @@ let case_process_poe_challenge_with_non_zero_amount =
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
  
       let payload = 0x01 in
 

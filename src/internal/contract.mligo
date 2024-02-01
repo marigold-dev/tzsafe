@@ -35,7 +35,7 @@ type storage_types_proposal_state = Storage.Types.proposal_state
 type effective_period = Storage.Types.effective_period
 type proposal_content = Proposal_content.Types.t
 
-type request = parameter_types * storage_types
+type request = parameter_types -> storage_types
 type result = operation list * storage_types
 
 
@@ -108,7 +108,7 @@ let resolve_proposal
 let proof_of_event_challenge (payload, storage : payload * storage_types) : result =
   create_proposal ([Proof_of_event {payload}], storage)
 
-let contract (action, storage : request) : result =
+let contract (action : parameter_types) (storage : storage_types) : result =
     let ops, storage =
       match action with
       | Default u -> default (u, storage)

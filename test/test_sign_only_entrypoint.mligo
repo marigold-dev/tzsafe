@@ -34,7 +34,7 @@ let case_gathering_signatures =
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level App.main init_storage 10tez in
+      let multisig_contract = Helper.originate level init_storage 10tez in
       let param = ([] : proposal_content list) in
 
       (* create proposal 1 *)
@@ -96,7 +96,7 @@ let case_fail_to_sign_proposal_with_nonzero_amount =
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 2n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
       let param = ([] : proposal_content list) in
 
       let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
@@ -116,7 +116,7 @@ let case_fail_double_sign =
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 2n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
       let param = ([] : proposal_content list) in
 
       let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
@@ -138,7 +138,7 @@ let case_unauthorized_user_fail_to_sign =
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 2n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
       let param = ([] : proposal_content list) in
 
       let param1 = (Transfer { target = alice.address;  amount = 10tez;} :: param) in
@@ -158,7 +158,7 @@ let case_sign_nonexisted_proposal =
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 2n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
       let param = ([] : proposal_content list) in
 
       let param1 = (Transfer { target = alice.address;  amount = 10tez;} :: param) in
@@ -178,7 +178,7 @@ let case_no_owner =
       let (_, (alice, _bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [] in
       let init_storage = Helper.init_storage (owners, 2n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
       let param = ([] : proposal_content list) in
 
       let param1 = (Transfer { target = alice.address;  amount = 10tez;} :: param) in
@@ -196,7 +196,7 @@ let case_fail_to_sign_after_proposal_is_resolved =
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level App.main init_storage 10tez in
+      let multisig_contract = Helper.originate level init_storage 10tez in
       let param = ([] : proposal_content list) in
 
       let param = (Transfer { target = alice.address;  amount = 10tez;} :: param) in
@@ -220,7 +220,7 @@ let case_wrong_content_bytes =
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level App.main init_storage 10tez in
+      let multisig_contract = Helper.originate level init_storage 10tez in
       let param = ([] : proposal_content list) in
 
       (* create proposal 1 *)

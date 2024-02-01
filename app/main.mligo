@@ -19,7 +19,9 @@
 #import "../src/lib.mligo" "Lib"
 
 type result = Lib.result
-type request =  Lib.request
+type parameter = Lib.parameter_types
+type storage = Lib.storage_types 
 
-let main (request : request) : result =
-  Lib.contract request
+[@entry]
+let contract (parameter: parameter) (storage : storage) : result =
+  Lib.contract parameter storage

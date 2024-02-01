@@ -27,8 +27,11 @@
 type proposal_content = Proposal_content.Types.t
 
 (* contract *)
-let add_main (n,storage : nat * nat) : operation list * nat =
-  [], n + storage
+module Add = struct
+[@entry]
+let default (_ : unit) (storage : nat) : operation list * nat =
+  [], 10n + storage
+end
 
 let case_execute_lambda_proposal =
   Breath.Model.case
@@ -38,8 +41,8 @@ let case_execute_lambda_proposal =
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
-      let add_contract = Breath.Contract.originate level "add_contr" add_main 1n 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
+      let add_contract = Breath.Contract.originate level "add_contr" (contract_of Add) 1n 0tez in
       let add_contract_address = add_contract.originated_address in
 
       let param = ([] : proposal_content list) in
@@ -47,7 +50,7 @@ let case_execute_lambda_proposal =
       (* lambda *)
       let call_add_contract (_ : unit) : operation list =
         let add_contr = Tezos.get_contract_with_error add_contract_address "add contract doesn't exist" in
-           [ Tezos.transaction 10n 0tez add_contr ]
+           [ Tezos.transaction () 0tez add_contr ]
       in
 
       (* create proposal *)

@@ -19,9 +19,13 @@
 #import "ligo-breathalyzer/lib/lib.mligo" "Breath"
 #include "../../src/internal/contract.mligo"
 #import "../../src/internal/proposal_content.mligo" "Proposal_content"
+#import "../../src/internal/parameter.mligo" "Param"
 #import "./util.mligo" "Util"
+#import "../../app/main.mligo" "App"
 
 type proposal_content = Proposal_content.Types.t
+type sign_proposal = Param.Types.sign_proposal
+type resolve_proposal = Param.Types.resolve_proposal
 
 let init_storage (owners, threshold: address set * nat) : storage_types =
 { proposal_counter = 0n;
@@ -35,25 +39,27 @@ let init_storage (owners, threshold: address set * nat) : storage_types =
 
 type originated = Breath.Contract.originated
 
-let originate (level: Breath.Logger.level) (main : request -> result) (init_storage : storage_types ) (amount : tez) =
+let originate (level: Breath.Logger.level) (init_storage : storage_types) (amount : tez) : (App parameter_of, storage_types) originated=
   Breath.Contract.originate
     level
     "multisig"
-    main
+    (contract_of App)
     init_storage
     amount
 
-let proof_of_event_challenge (amount: tez) (contract : (parameter_types, storage_types) originated) (payload : payload) () =
+let proof_of_event_challenge (amount: tez) (contract : (App parameter_of, storage_types) originated) (payload : payload) () =
   Breath.Contract.transfer_with_entrypoint_to contract "proof_of_event_challenge" payload amount
 
-let create_proposal_with_amount (amount : tez) (contract : (parameter_types, storage_types) originated) (proposal : (proposal_content) list) () =
+let create_proposal_with_amount (amount : tez) (contract : (App parameter_of, storage_types) originated) (proposal : (proposal_content) list) () =
   Breath.Contract.transfer_with_entrypoint_to contract "create_proposal" proposal amount
 
-let sign_proposal_with_amount (amount : tez) (contract : (parameter_types, storage_types) originated) (proposal_id : nat) (agreement : bool) (proposal_contents : (proposal_content) list) () =
-  Breath.Contract.transfer_with_entrypoint_to contract "sign_proposal" { proposal_id; proposal_contents; agreement } amount
+let sign_proposal_with_amount (amount : tez) (contract : (App parameter_of, storage_types) originated) (proposal_id : nat) (agreement : bool) (proposal_contents : (proposal_content) list) () =
+  let p : sign_proposal = { proposal_id; proposal_contents; agreement } in
+  Breath.Contract.transfer_with_entrypoint_to contract "sign_proposal" p amount
 
-let resolve_proposal_with_amount (amount : tez) (contract : (parameter_types, storage_types) originated) (proposal_id : nat) (proposal_contents: (proposal_content) list) () =
-  Breath.Contract.transfer_with_entrypoint_to contract "resolve_proposal" { proposal_id; proposal_contents;} amount
+let resolve_proposal_with_amount (amount : tez) (contract : (App parameter_of, storage_types) originated) (proposal_id : nat) (proposal_contents: (proposal_content) list) () =
+  let p : resolve_proposal = { proposal_id; proposal_contents;} in
+  Breath.Contract.transfer_with_entrypoint_to contract "resolve_proposal" p amount
 
 let create_proposal =
   create_proposal_with_amount 0tez

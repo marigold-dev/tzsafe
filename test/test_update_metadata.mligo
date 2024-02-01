@@ -34,7 +34,7 @@ let case_update_metadata =
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
 
       let param = ([] : proposal_content list) in
 
@@ -60,7 +60,7 @@ let case_add_metadata =
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
 
       let param = ([] : proposal_content list) in
 
@@ -87,7 +87,7 @@ let case_remove_metadata =
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
 
       let param = ([] : proposal_content list) in
 

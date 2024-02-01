@@ -20,11 +20,13 @@
 #import "./common/helper.mligo" "Helper"
 #import "./common/assert.mligo" "Assert"
 #import "./common/mock_contract.mligo" "Mock_contract"
-#import "./common/util.mligo" "Util"
 #import "../src/internal/proposal_content.mligo" "Proposal_content"
 #import "../app/main.mligo" "App"
+#include "../src/internal/contract.mligo"
+#include "./common/util.mligo"
 
 type proposal_content = Proposal_content.Types.t
+
 
 let case_create_proposal =
   Breath.Model.case
@@ -34,7 +36,7 @@ let case_create_proposal =
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 2n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
       let param = ([] : proposal_content list) in
 
       (* create proposal 1 *)
@@ -71,12 +73,12 @@ let case_create_proposal =
       let balance = Breath.Contract.balance_of multisig_contract in
       let storage = Breath.Contract.storage_of multisig_contract in
 
-      let proposal1  = Util.unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
-      let proposal2  = Util.unopt (Big_map.find_opt 2n storage.proposals) "proposal 2 doesn't exist" in
-      let proposal3  = Util.unopt (Big_map.find_opt 3n storage.proposals) "proposal 3 doesn't exist" in
-      let proposal4  = Util.unopt (Big_map.find_opt 4n storage.proposals) "proposal 4 doesn't exist" in
-      let proposal5  = Util.unopt (Big_map.find_opt 5n storage.proposals) "proposal 5 doesn't exist" in
-      let proposal6  = Util.unopt (Big_map.find_opt 6n storage.proposals) "proposal 6 doesn't exist" in
+      let proposal1  = unopt (Big_map.find_opt 1n storage.proposals) "proposal 1 doesn't exist" in
+      let proposal2  = unopt (Big_map.find_opt 2n storage.proposals) "proposal 2 doesn't exist" in
+      let proposal3  = unopt (Big_map.find_opt 3n storage.proposals) "proposal 3 doesn't exist" in
+      let proposal4  = unopt (Big_map.find_opt 4n storage.proposals) "proposal 4 doesn't exist" in
+      let proposal5  = unopt (Big_map.find_opt 5n storage.proposals) "proposal 5 doesn't exist" in
+      let proposal6  = unopt (Big_map.find_opt 6n storage.proposals) "proposal 6 doesn't exist" in
 
       Breath.Result.reduce [
         action1
@@ -145,7 +147,7 @@ let case_fail_to_create_empty_proposal =
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 2n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
       let param = ([] : proposal_content list) in
 
       let action = Breath.Context.act_as alice (Helper.create_proposal multisig_contract param) in
@@ -162,7 +164,7 @@ let case_fail_to_create_transfer_0_amount_proposal =
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 2n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
       let param = ([] : proposal_content list) in
       let param = (Transfer { target = alice.address; amount = 0tez;} :: param) in
 
@@ -180,7 +182,7 @@ let case_fail_to_create_proposal_with_empty_owner_adjustment =
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 2n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
       let param = ([] : proposal_content list) in
 
       let param1 = Remove_owners (Set.literal []) :: param in
@@ -202,7 +204,7 @@ let case_unauthorized_user_fail_to_create_proposal =
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 2n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
 
       (* create proposal 1 *)
       let param1 = [Transfer { target = alice.address; amount = 0tez;}] in
@@ -225,7 +227,7 @@ let case_fail_to_create_proposal_with_nonzero_amount =
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 2n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
 
       (* create proposal 1 *)
       let param1 = [Transfer { target = alice.address; amount = 0tez;}] in

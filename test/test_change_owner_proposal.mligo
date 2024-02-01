@@ -34,7 +34,7 @@ let case_execute_add_owner_proposal =
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
 
       let param = ([] : proposal_content list) in
 
@@ -62,7 +62,7 @@ let case_execute_add_existed_owner_proposal =
       let (_, (alice, _bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
 
       let param = ([] : proposal_content list) in
 
@@ -90,7 +90,7 @@ let case_execute_remove_owner_proposal =
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
 
       let param = ([] : proposal_content list) in
 
@@ -118,7 +118,7 @@ let case_execute_remove_nonexisted_owner_proposal =
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address;] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
 
       let param = ([] : proposal_content list) in
 
@@ -146,7 +146,7 @@ let case_resolve_transfer_proposal_after_owner_changed =
       let (_, (alice, bob, _)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level App.main init_storage 100tez in
+      let multisig_contract = Helper.originate level init_storage 100tez in
 
       let param = ([] : proposal_content list) in
 

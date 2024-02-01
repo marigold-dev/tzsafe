@@ -34,7 +34,7 @@ let case_sign_for_disapproval =
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level App.main init_storage 100tez in
+      let multisig_contract = Helper.originate level init_storage 100tez in
       let param = ([] : proposal_content list) in
 
       let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
@@ -72,7 +72,7 @@ let case_fail_double_sign =
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 2n) in
-      let multisig_contract = Helper.originate level App.main init_storage 0tez in
+      let multisig_contract = Helper.originate level init_storage 0tez in
       let param = ([] : proposal_content list) in
 
       let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
@@ -94,7 +94,7 @@ let case_close_proposal_1_1 =
       let (_, (_alice, bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [bob.address;] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level App.main init_storage 100tez in
+      let multisig_contract = Helper.originate level init_storage 100tez in
       let param = ([] : proposal_content list) in
 
       let param1 = (Transfer { target = bob.address; amount = 10tez;} :: param) in
@@ -124,7 +124,7 @@ let case_close_proposal_2_2 =
       let (_, (alice, bob, _carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address;] in
       let init_storage = Helper.init_storage (owners, 2n) in
-      let multisig_contract = Helper.originate level App.main init_storage 100tez in
+      let multisig_contract = Helper.originate level init_storage 100tez in
       let param = ([] : proposal_content list) in
 
       let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
@@ -154,7 +154,7 @@ let case_close_proposal_2_3 =
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage (owners, 2n) in
-      let multisig_contract = Helper.originate level App.main init_storage 100tez in
+      let multisig_contract = Helper.originate level init_storage 100tez in
       let param = ([] : proposal_content list) in
 
       let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in
@@ -186,7 +186,7 @@ let case_not_closed_1_2 =
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage (owners, 1n) in
-      let multisig_contract = Helper.originate level App.main init_storage 100tez in
+      let multisig_contract = Helper.originate level init_storage 100tez in
       let param = ([] : proposal_content list) in
 
       let param1 = (Transfer { target = alice.address; amount = 10tez;} :: param) in

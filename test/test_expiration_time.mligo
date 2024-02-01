@@ -35,7 +35,7 @@ let case_sign_proposal_passing_expiration_time =
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage (owners, 1n) in
       let init_storage = { init_storage with effective_period = 1_800 } in
-      let multisig_contract = Helper.originate level App.main init_storage 100tez in
+      let multisig_contract = Helper.originate level init_storage 100tez in
       let param = ([] : proposal_content list) in
 
       (* create proposal 1 *)
@@ -58,7 +58,7 @@ let case_resolve_proposal_passing_expiration_time =
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage (owners, 1n) in
       let init_storage = { init_storage with effective_period = 1_800 } in
-      let multisig_contract = Helper.originate level App.main init_storage 100tez in
+      let multisig_contract = Helper.originate level init_storage 100tez in
       let param = ([] : proposal_content list) in
 
       (* create proposal 1 *)
@@ -87,7 +87,7 @@ let case_resolve_executed_proposal_passing_expiration_time =
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage (owners, 1n) in
       let init_storage = { init_storage with effective_period = 1_800 } in
-      let multisig_contract = Helper.originate level App.main init_storage 100tez in
+      let multisig_contract = Helper.originate level init_storage 100tez in
       let param = ([] : proposal_content list) in
 
       (* create proposal 1 *)
@@ -118,7 +118,7 @@ let case_resolve_rejected_proposal_passing_expiration_time=
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage (owners, 3n) in
       let init_storage = { init_storage with effective_period = 1_800 } in
-      let multisig_contract = Helper.originate level App.main init_storage 100tez in
+      let multisig_contract = Helper.originate level init_storage 100tez in
       let param = ([] : proposal_content list) in
 
       (* create proposal 1 *)
@@ -149,7 +149,7 @@ let case_adjust_effective_time =
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage (owners, 1n) in
       let init_storage = { init_storage with effective_period = 1_800 } in
-      let multisig_contract = Helper.originate level App.main init_storage 100tez in
+      let multisig_contract = Helper.originate level init_storage 100tez in
       let param = ([] : proposal_content list) in
 
       (* create proposal 1 *)
@@ -176,7 +176,7 @@ let case_adjust_effective_time_with_invalid_value =
       let owners : address set = Set.literal [alice.address; bob.address; carol.address] in
       let init_storage = Helper.init_storage (owners, 1n) in
       let init_storage = { init_storage with effective_period = 1_800 } in
-      let multisig_contract = Helper.originate level App.main init_storage 100tez in
+      let multisig_contract = Helper.originate level init_storage 100tez in
       let param = ([] : proposal_content list) in
 
       (* create proposal 1 *)
