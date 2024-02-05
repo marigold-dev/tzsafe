@@ -11,7 +11,7 @@ BUILD_VERSION ?= $(shell git describe --always)
 
 # The path of directory
 BUILD_DIRECTORY:=_build
-APP_DIRECTORY:=app
+APP_DIRECTORY:=src
 TEST_DIRECTORY:=test
 BUILT_APP_DIRECTORY:=$(BUILD_DIRECTORY)/$(APP_DIRECTORY)
 
@@ -42,8 +42,8 @@ build-metadata:
 
 build-contract: check-ligo-version
 	mkdir -p $(BUILT_APP_DIRECTORY)
-	#$(LIGO_BUILD) $(APP_DIRECTORY)/main.mligo > $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME).tez
-	$(LIGO_BUILD) src/fa2.mligo > $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_NFT.tez
+	$(LIGO_BUILD) $(APP_DIRECTORY)/wallet.mligo > $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_WALLET.tez
+	$(LIGO_BUILD) $(APP_DIRECTORY)/fa2.mligo > $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_NFT.tez
 
 test:
 	$(LIGO_TEST) $(TEST_DIRECTORY)/test.mligo
@@ -72,7 +72,10 @@ gen-wallet:
 
 deploy:
 	$(eval SIGNER := $(shell TEZOS_CLIENT_UNSAFE_DISABLE_DISCLAIMER=yes ./_build/octez-client --endpoint https://ghostnet.tezos.marigold.dev show address wallet_address | grep Hash | awk '{print $$2}'))
-	#$(BUILD_DIRECTORY)/octez-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME) transferring 2 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME).tez --init '(Pair 0 {} {} {"$(SIGNER)"; "tz1inzFwAjE4oWXMabJFZdPHoDQN5S4XB3wH"} 1 604800 {})' --burn-cap 3 -f
+
+	echo deploy wallet	$(BUILD_DIRECTORY)/octez-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME)_WALLET transferring 0.000001 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_WALLET.tez --init '(Pair 0 {} {} {"$(SIGNER)"; "tz1inzFwAjE4oWXMabJFZdPHoDQN5S4XB3wH"} 1 604800 {})' --burn-cap 3 -f
+
+	echo deploy NFT
 	$(BUILD_DIRECTORY)/octez-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME)_NFT transferring 0 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_NFT.tez --init '(Pair {} {} {} {} "$(SIGNER)" {} {} {})' --burn-cap 3 -f
 
 get-tezos-binary:

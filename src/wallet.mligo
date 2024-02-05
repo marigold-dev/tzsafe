@@ -16,9 +16,9 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-#import "./internal/parameter.mligo" "Parameter"
-#import "./internal/storage.mligo" "Storage"
-#import "./internal/contract.mligo" "Contract"
+#import "./wallet/parameter.mligo" "Parameter"
+#import "./wallet/storage.mligo" "Storage"
+#import "./wallet/contract.mligo" "Contract"
 
 (* type 'a parameter_types  *)
 type parameter_types = Parameter.Types.t
@@ -32,5 +32,6 @@ type request = Contract.request
 (* type ['a request] is an alias of [operation list * 'a storage_types]  *)
 type result = Contract.result
 
+[@entry]
 let contract (parameter: parameter_types) (storage : storage_types)  : result =
   Contract.contract parameter storage
