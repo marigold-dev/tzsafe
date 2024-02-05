@@ -41,26 +41,27 @@ let amount_must_be_zero_tez (amount : tez) : unit =
 //let ready_to_execute (state : storage_types_proposal_state) : unit =
 //    assert_with_error (not (state = (Proposing : storage_types_proposal_state))) Errors.no_enough_signature_to_resolve
 //
-//let check_proposal (content: proposal_content) : unit =
-//    match content with
-//    | Transfer t ->
-//        assert_with_error (not (t.amount = 0tez)) Errors.amount_is_zero
-//    | Execute_lambda _ -> ()
-//    | Adjust_threshold t ->
-//        assert_with_error (t > 0n) Errors.invalidated_threshold
-//    | Add_owners s ->
-//        assert_with_error (Set.cardinal s > 0n) Errors.no_owners
-//    | Remove_owners s ->
-//        assert_with_error (Set.cardinal s > 0n) Errors.no_owners
-//    | Adjust_effective_period p ->
-//        assert_with_error (p > 0) Errors.invalid_effective_period
-//    | Add_or_update_metadata _ -> ()
-//    | Remove_metadata _ -> ()
-//    | Proof_of_event _ -> ()
-//
-//let not_empty_content (proposals_content: proposal_content list) : unit =
-//    let () = assert_with_error ((List.length proposals_content) > 0n) Errors.no_proposal in
-//    List.iter check_proposal proposals_content
+let check_proposal (content: proposal_content) : unit =
+    match content with
+    | Transfer t ->
+        assert_with_error (not (t.amount = 0tez)) Errors.amount_is_zero
+    | Execute_lambda _ -> ()
+    | Adjust_quorum q ->
+        assert_with_error (q > 0n) Errors.invalid_quorum
+    | Adjust_supermajority s ->
+        assert_with_error (s > 0n) Errors.invalid_supermajority
+    | Adjust_voting_duration v ->
+        assert_with_error (v > 0) Errors.invalid_voting_period
+    | Adjust_execution_duration e ->
+        assert_with_error (e > 0) Errors.invalid_execution_period
+    | Adjust_nft _ -> ()
+    | Add_or_update_metadata _ -> ()
+    | Remove_metadata _ -> ()
+    | Proof_of_event _ -> ()
+
+let not_empty_content (proposals_content: proposal_content list) : unit =
+    let () = assert_with_error ((List.length proposals_content) > 0n) Errors.no_proposal in
+    List.iter check_proposal proposals_content
 
 //let check_setting (storage : storage_types) : unit =
 //    let () = assert_with_error (Set.cardinal storage.owners > 0n) Errors.no_owner  in

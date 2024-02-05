@@ -51,14 +51,19 @@ let default (_, s : unit * storage_types) : result =
  *)
 
 let create_proposal (proposal_contents, storage : proposal_content list * storage_types) : result =
-    //let () = Conditions.only_owner storage in
-    //let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
-    //let () = Conditions.not_empty_content proposal_contents in
-    //let proposal = Storage.Op.create_proposal proposal_contents in
-    //let storage = Storage.Op.register_proposal(proposal, storage) in
-    //let event = Tezos.emit "%create_proposal" ({ proposal_id = storage.proposal_counter } : Event.Types.create_proposal) in
-    //([event], storage)
-    ([],storage)
+    let (addr, token_id) = storage.nft in
+    let () = assert_some (Tezos.call_view "get_balance" (Tezos.get_sender(), token_id) addr : nat option) in
+    let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
+    let () = Conditions.not_empty_content proposal_contents in
+    let proposal = Storage.Op.create_proposal proposal_contents in
+    let storage = Storage.Op.register_proposal(proposal, storage) in
+    let proposal_id = storage.proposal_counter in
+    let event = Tezos.emit "%create_proposal" ({ proposal_id } : Event.Types.create_proposal) in
+    // Not implement yet
+    let contr_opt = Tezos.get_entrypoint_opt "%active_lock" addr in
+    let contr = Option.unopt contr_opt in
+    let op = Tezos.transaction proposal_id 0tez contr in
+    ([event; op], storage)
 
 (**
  * Proposal Signing
