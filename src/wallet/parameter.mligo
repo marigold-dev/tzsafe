@@ -25,10 +25,14 @@ module Types = struct
     type expiration_time = timestamp
     type payload = bytes
 
+    type voting_option =
+    | Customize of {voting_option: bytes}  
+    | Abstention
+
     type t =
     | Default of unit
     | Create_proposal of { proposal_contents: proposal_content list }
-    | Sign_proposal of { proposal_id: proposal_id; proposal_contents: proposal_content list; agreement: agreement }
+    | Sign_proposal of { proposal_id: proposal_id; proposal_contents: proposal_content list; voting: (voting_option * nat) }
     | Resolve_proposal of { proposal_id: proposal_id; proposal_contents: proposal_content list }
     | Proof_of_event_challenge of { payload: payload }
 end

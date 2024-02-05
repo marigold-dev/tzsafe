@@ -23,8 +23,12 @@
 
 module Types = struct
     type proposal_id = Parameter.Types.proposal_id
+    type voting_option = Parameter.Types.voting_option
     type proposal_content = Proposal_content.Types.t
-    type effective_period = int
+    type voting_duration = int
+    type execution_duration = int
+    type supermajority = nat
+    type quorum = nat
 
     type actor =
     [@layout:comb]
@@ -39,7 +43,7 @@ module Types = struct
     [@layout:comb]
     {
         state: proposal_state;
-        signatures: (address, bool) map;
+        votes: (voting_option, nat) map;
         proposer : actor;
         resolver : actor option;
         contents : proposal_content list
@@ -48,13 +52,16 @@ module Types = struct
     type t =
     [@layout:comb]
     {
-        proposal_counter : nat;
-        proposals        : (proposal_id, proposal) big_map;
-        archives         : (proposal_id, proposal_state) big_map;
-        owners           : address set;
-        threshold        : nat;
-        effective_period : effective_period;
-        metadata         : (string, bytes) big_map;
+        proposal_counter   : nat;
+        proposals          : (proposal_id, proposal) big_map;
+        archives           : (proposal_id, proposal_state) big_map;
+        voting_history     : ((proposal_id * address), voting_option * nat) big_map;
+        nft                : (address * nat);
+        supermajority      : supermajority;
+        quorum             : quorum;
+        voting_duration    : voting_duration;
+        execution_duration : execution_duration;
+        metadata           : (string, bytes) big_map;
     }
 end
 
@@ -64,14 +71,15 @@ module Op = struct
     type agreement = Parameter.Types.agreement
     type proposal = Types.proposal
     type proposal_state = Types.proposal_state
-    type effective_period = Types.effective_period
+    type voting_duration = Types.voting_duration
+    type execution_duration = Types.execution_duration
     type proposal_state = Types.proposal_state
     type types = Types.t
 
     let create_proposal (contents: proposal_content list) : proposal =
         {
             state            = Proposing;
-            signatures       = Map.empty;
+            votes            = Map.empty;
             proposer         =
               {
                 actor = Tezos.get_sender ();
@@ -100,73 +108,73 @@ module Op = struct
             | None -> failwith Errors.no_proposal_exist
           end
 
-    let update_signature (proposal, owner, agreement: proposal * address * agreement) : proposal =
-        {
-            proposal with
-            signatures = Map.update owner (Some agreement) proposal.signatures;
-        }
+    //let update_signature (proposal, (owner, voting) : proposal * (address * agreement)) : proposal =
+    //    {
+    //        proposal with
+    //        signatures = Map.update owner (Some agreement) proposal.signatures;
+    //    }
 
-    let ready_execution (proposal, approvals, threshold : proposal * nat * nat) : proposal =
-        let is_executed = approvals >= threshold && proposal.state = (Proposing : proposal_state) in
-        if is_executed
-        then
-          {
-              proposal with
-              state    = Executed;
-              resolver =
-                Some {
-                  actor = Tezos.get_sender ();
-                  timestamp = Tezos.get_now ()
-                };
-          }
-        else proposal
+    //let ready_execution (proposal, approvals, threshold : proposal * nat * nat) : proposal =
+    //    let is_executed = approvals >= threshold && proposal.state = (Proposing : proposal_state) in
+    //    if is_executed
+    //    then
+    //      {
+    //          proposal with
+    //          state    = Executed;
+    //          resolver =
+    //            Some {
+    //              actor = Tezos.get_sender ();
+    //              timestamp = Tezos.get_now ()
+    //            };
+    //      }
+    //    else proposal
 
-    let reject_proposal (proposal, disapprovals, threshold : proposal * nat * nat) : proposal =
-        let is_closed = disapprovals > threshold && proposal.state = (Proposing : proposal_state) in
-        if is_closed
-        then
-          {
-              proposal with
-              state    = Rejected;
-              resolver =
-                Some {
-                  actor = Tezos.get_sender ();
-                  timestamp = Tezos.get_now ()
-                };
-          }
-        else proposal
+    //let reject_proposal (proposal, disapprovals, threshold : proposal * nat * nat) : proposal =
+    //    let is_closed = disapprovals > threshold && proposal.state = (Proposing : proposal_state) in
+    //    if is_closed
+    //    then
+    //      {
+    //          proposal with
+    //          state    = Rejected;
+    //          resolver =
+    //            Some {
+    //              actor = Tezos.get_sender ();
+    //              timestamp = Tezos.get_now ()
+    //            };
+    //      }
+    //    else proposal
 
-    let expire_proposal (proposal, expiration_time : proposal * timestamp) : proposal =
-      if expiration_time < Tezos.get_now () then
-          {
-              proposal with
-              state    = Expired;
-              resolver =
-                Some {
-                  actor = Tezos.get_sender ();
-                  timestamp = Tezos.get_now ()
-                };
-          }
-      else proposal
+    //let expire_proposal (proposal, expiration_time : proposal * timestamp) : proposal =
+    //  if expiration_time < Tezos.get_now () then
+    //      {
+    //          proposal with
+    //          state    = Expired;
+    //          resolver =
+    //            Some {
+    //              actor = Tezos.get_sender ();
+    //              timestamp = Tezos.get_now ()
+    //            };
+    //      }
+    //  else proposal
 
-    let remove_invalid_signature (owners : address set) (proposal : proposal) : proposal =
-      let aux ((acc, k): ((address, bool) map * address)) =
-        match Map.find_opt k proposal.signatures with
-        | None -> acc
-        | Some v -> Map.add k v acc in
-      { proposal with signatures = Set.fold aux owners Map.empty }
+    //let remove_invalid_signature (owners : address set) (proposal : proposal) : proposal =
+    //  let aux ((acc, k): ((address, bool) map * address)) =
+    //    match Map.find_opt k proposal.signatures with
+    //    | None -> acc
+    //    | Some v -> Map.add k v acc in
+    //  { proposal with signatures = Set.fold aux owners Map.empty }
 
-    let update_proposal_state (proposal, owners , threshold, expiration_time : proposal * address set * nat * timestamp) : proposal =
-        let proposal = expire_proposal (proposal, expiration_time) in
-        if proposal.state = (Expired : proposal_state) then proposal
-        else
-          let proposal = remove_invalid_signature owners proposal in
-          let statistic ((t_acc,f_acc), (_, v) : (nat * nat) * (address * bool)) : (nat * nat) =
-            if v then (t_acc + 1n, f_acc) else (t_acc, f_acc + 1n) in
-          let (approvals, disapprovals) = Map.fold statistic proposal.signatures (0n, 0n) in
-          let proposal = ready_execution (proposal, approvals, threshold) in
-          let number_of_owners = Set.cardinal owners in
-          reject_proposal (proposal, disapprovals, abs(number_of_owners - threshold))
+    //let update_proposal_state (proposal, owners , threshold, expiration_time : proposal * address set * nat * timestamp) : proposal =
+    //    let proposal = expire_proposal (proposal, expiration_time) in
+    //    if proposal.state = (Expired : proposal_state) then proposal
+    //    else
+    //      let proposal = remove_invalid_signature owners proposal in
+    //      let statistic ((t_acc,f_acc), (_, v) : (nat * nat) * (address * bool)) : (nat * nat) =
+    //        if v then (t_acc + 1n, f_acc) else (t_acc, f_acc + 1n) in
+    //      let (approvals, disapprovals) = Map.fold statistic proposal.signatures (0n, 0n) in
+    //      let proposal = ready_execution (proposal, approvals, threshold) in
+    //      let number_of_owners = Set.cardinal owners in
+    //      reject_proposal (proposal, disapprovals, abs(number_of_owners - threshold))
 
     let update_proposal (proposal_id , proposal, storage: proposal_id * proposal * types) : types =
         let proposals = Big_map.update proposal_id (Some proposal) storage.proposals in
@@ -191,17 +199,15 @@ module Op = struct
             metadata = metadata
         }
 
-    let adjust_threshold (threshold : nat) (storage : types) : types =
-      { storage with threshold = threshold }
+    let adjust_quorum (quorum : nat) (storage : types) : types =
+      { storage with quorum = quorum }
 
-    let adjust_effective_period (effective_period: int) (storage : types) : types =
-      { storage with effective_period = effective_period }
+    let adjust_supermajority (supermajority : nat) (storage : types) : types =
+      { storage with supermajority = supermajority }
 
-    let add_owners (owners: address set) (storage : types) : types =
-      let add (set, s : address set * address) : address set = Set.add s set in
-      { storage with owners = Set.fold add owners storage.owners }
+    let adjust_voting_duration (voting_duration: int) (storage : types) : types =
+      { storage with voting_duration = voting_duration }
 
-    let remove_owners (owners: address set) (storage : types) : types =
-      let remove (set, s : address set * address) : address set = Set.remove s set in
-      { storage with owners = Set.fold remove owners storage.owners }
+    let adjust_execution_duration (execution_duration: int) (storage : types) : types =
+      { storage with execution_duration = execution_duration }
 end

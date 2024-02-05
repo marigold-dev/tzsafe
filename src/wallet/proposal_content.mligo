@@ -27,10 +27,11 @@ module Types = struct
     type t =
     | Transfer of transaction
     | Execute_lambda of { metadata: bytes option; lambda: (unit -> operation list)}
-    | Adjust_threshold of nat
-    | Add_owners of address set
-    | Remove_owners of address set
-    | Adjust_effective_period of int
+    | Adjust_quorum of nat
+    | Adjust_supermajority of nat
+    | Adjust_voting_duration of int
+    | Adjust_execution_duration of int
+    | Adjust_nft of (address * nat)
     | Add_or_update_metadata of { key: string; value: bytes; }
     | Remove_metadata of { key: string }
     | Proof_of_event of { payload: bytes}
