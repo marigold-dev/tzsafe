@@ -24,6 +24,7 @@
 module Types = struct
     type proposal_id = Parameter.Types.proposal_id
     type voting_option = Parameter.Types.voting_option
+    type votes = Parameter.Types.votes
     type proposal_content = Proposal_content.Types.t
     type voting_duration = int
     type execution_duration = int
@@ -55,7 +56,7 @@ module Types = struct
         proposal_counter   : nat;
         proposals          : (proposal_id, proposal) big_map;
         archives           : (proposal_id, proposal_state) big_map;
-        voting_history     : ((proposal_id * address), voting_option * nat) big_map;
+        voting_history     : ((proposal_id * address), votes) big_map;
         nft                : (address * nat);
         supermajority      : supermajority;
         quorum             : quorum;
@@ -68,6 +69,8 @@ end
 module Op = struct
     type proposal_content = Proposal_content.Types.t
     type proposal_id = Parameter.Types.proposal_id
+    type votes = Parameter.Types.votes
+    type voting_options = Parameter.Types.voting_options
     type agreement = Parameter.Types.agreement
     type proposal = Types.proposal
     type proposal_state = Types.proposal_state
@@ -76,10 +79,12 @@ module Op = struct
     type proposal_state = Types.proposal_state
     type types = Types.t
 
-    let create_proposal (contents: proposal_content list) : proposal =
+    let create_proposal (contents, voting_options: proposal_content list * voting_options) : proposal =
+        let aux (acc, v) = Map.add v 0n acc in
+        let new_votes = Set.fold aux voting_options Map.empty in
         {
             state            = Proposing;
-            votes            = Map.empty;
+            votes            = new_votes;
             proposer         =
               {
                 actor = Tezos.get_sender ();
@@ -108,11 +113,21 @@ module Op = struct
             | None -> failwith Errors.no_proposal_exist
           end
 
-    //let update_signature (proposal, (owner, voting) : proposal * (address * agreement)) : proposal =
-    //    {
-    //        proposal with
-    //        signatures = Map.update owner (Some agreement) proposal.signatures;
-    //    }
+    [@inline]
+    let adjust_votes (proposal, {vote; quantity}, is_increased: proposal * votes * bool) : proposal =
+        let update_votes =
+          match Map.find_opt vote proposal.votes with
+          | Some a ->
+             if is_increased then
+                Map.update vote (Some (a + quantity)) proposal.votes
+             else
+                Map.update vote (Some (abs(a - quantity))) proposal.votes
+          | None -> failwith "Not an option"
+        in
+        {
+            proposal with
+            votes = update_votes;
+        }
 
     //let ready_execution (proposal, approvals, threshold : proposal * nat * nat) : proposal =
     //    let is_executed = approvals >= threshold && proposal.state = (Proposing : proposal_state) in

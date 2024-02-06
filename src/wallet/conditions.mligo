@@ -32,12 +32,11 @@ type proposal_content = Proposal_content.Types.t
 //let only_owner (storage : storage_types) : unit =
 //    assert_with_error (Set.mem (Tezos.get_sender ()) storage.owners) Errors.only_owner
 
+// removing inline compiler will cause compiler error
+[@inline]
 let amount_must_be_zero_tez (amount : tez) : unit =
     assert_with_error (amount = 0tez) Errors.amount_must_be_zero_tez
 
-//let unsigned (proposal : storage_types_proposal) : unit =
-//    assert_with_error (not Map.mem (Tezos.get_sender ()) proposal.signatures) Errors.has_already_signed
-//
 //let ready_to_execute (state : storage_types_proposal_state) : unit =
 //    assert_with_error (not (state = (Proposing : storage_types_proposal_state))) Errors.no_enough_signature_to_resolve
 //
@@ -75,5 +74,5 @@ let check_proposals_content (from_input: proposal_content list) (from_storage: p
   let pack_from_storage = Bytes.pack from_storage in
   assert_with_error (pack_from_input = pack_from_storage) Errors.not_the_same_content
 
-//let within_expiration_time (created_timestamp: timestamp) (effective_period: effective_period) : unit =
-//  assert_with_error (created_timestamp + effective_period > Tezos.get_now ()) Errors.pass_expiration_time
+let within_voting_time (created_timestamp: timestamp) (voting_duration: int) : unit =
+  assert_with_error (created_timestamp + voting_duration > Tezos.get_now ()) Errors.pass_voting_time

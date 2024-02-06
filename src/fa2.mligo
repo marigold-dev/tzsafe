@@ -1,6 +1,7 @@
 #import "@ligo/fa/lib/main.mligo" "FA2"
 #import "./fa2/storage.mligo" "Storage"
 #import "./fa2/total_supply.mligo" "Total_supply"
+#import "./fa2/lock.mligo" "Lock"
 
 module NFT = FA2.MultiAssetExtendable
 
@@ -50,6 +51,18 @@ let balance_of (b: NFT.TZIP12.balance_of) (s: storage) : ret =
 let update_operators (u: NFT.TZIP12.update_operators) (s: storage) : ret =
   NFT.update_operators  u s
 
+[@entry]
+let lock ((key, owner, token_id), amount : Lock.lock_id * nat) (s: storage) : ret = 
+  let new_lock = Lock.lock s.extension.lock key token_id owner amount in
+  let s = Storage.set_lock s new_lock in
+  [], s
+
+[@entry]
+let unlock ((key, owner, token_id), amount : Lock.lock_id * nat) (s: storage) : ret = 
+  let new_lock = Lock.unlock s.extension.lock key token_id owner amount in
+  let s = Storage.set_lock s new_lock in
+  [], s
+
 [@view]
 let get_balance (p : (address * nat)) (s : storage) : nat =
   NFT.get_balance p s
@@ -57,3 +70,7 @@ let get_balance (p : (address * nat)) (s : storage) : nat =
 [@view]
 let total_supply (token_id : nat) (s : storage) : nat =
   Total_supply.get_supply s.extension.total_supply token_id
+
+[@view]
+let get_lock (key, owner, token_id: Lock.lock_id) (s : storage) : nat =
+  Lock.get_amount s.extension.lock key token_id owner

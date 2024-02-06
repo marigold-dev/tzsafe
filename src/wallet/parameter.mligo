@@ -29,10 +29,18 @@ module Types = struct
     | Customize of {voting_option: bytes}  
     | Abstention
 
+    type votes =
+    {
+        vote: voting_option;
+        quantity : nat;
+    }
+
+    type voting_options = voting_option set
+
     type t =
     | Default of unit
-    | Create_proposal of { proposal_contents: proposal_content list }
-    | Sign_proposal of { proposal_id: proposal_id; proposal_contents: proposal_content list; voting: (voting_option * nat) }
+    | Create_proposal of { proposal_contents: proposal_content list; voting_options : voting_options }
+    | Sign_proposal of { proposal_id: proposal_id; proposal_contents: proposal_content list; votes: votes }
     | Resolve_proposal of { proposal_id: proposal_id; proposal_contents: proposal_content list }
     | Proof_of_event_challenge of { payload: payload }
 end

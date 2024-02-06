@@ -18,8 +18,8 @@ type t = extension NFT.storage
 let set_extension (s : t) (ext : extension) =
     { s with extension = ext }
 
-let set_total_supply (s: t) (ts : TS.t) =
+let set_total_supply (s: t) (ts : TS.t) : t =
    set_extension s { s.extension with total_supply = ts }
 
-let set_lock (s:t) (lock : Lock.t) =
+let set_lock (s:t) (lock : Lock.t) : t =
    set_extension s { s.extension with lock = lock }

@@ -17,6 +17,7 @@
    SOFTWARE. *)
 
 let only_owner = "Only the contract owners can perform this operation"
+[@inline]
 let amount_must_be_zero_tez = "You must not send tez to the smart contract"
 let no_proposal_exist = "No proposal exists for this counter"
 let has_already_signed = "You have already signed this proposal"
@@ -29,7 +30,7 @@ let no_proposal = "There is no content in proposal"
 let no_owners = "No owner to be added or removed"
 let amount_is_zero = "Amount should be greater than zero"
 let not_the_same_content = "The proposal content doesn't match"
-let pass_expiration_time = "The proposal has passed its expiration time"
+let pass_voting_time = "The proposal has passed its voting time"
 let invalid_quorum = "The quorum must be >= 1"
 let invalid_supermajority = "The supermajority must be >= 1"
 let invalid_voting_period = "The voting period must be >= 1"

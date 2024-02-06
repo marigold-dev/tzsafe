@@ -33,7 +33,8 @@ type storage_types = Storage.Types.t
 type storage_types_proposal = Storage.Types.proposal
 type storage_types_proposal_state = Storage.Types.proposal_state
 type proposal_content = Proposal_content.Types.t
-type voting_option = Parameter.Types.voting_option
+type votes = Parameter.Types.votes
+type voting_options = Parameter.Types.voting_options
 
 type request = parameter_types -> storage_types
 type result = operation list * storage_types
@@ -50,12 +51,12 @@ let default (_, s : unit * storage_types) : result =
  * Proposal creation
  *)
 
-let create_proposal (proposal_contents, storage : proposal_content list * storage_types) : result =
+let create_proposal (proposal_contents, voting_options, storage : proposal_content list * voting_options * storage_types) : result =
     let (addr, token_id) = storage.nft in
     let () = assert_some (Tezos.call_view "get_balance" (Tezos.get_sender(), token_id) addr : nat option) in
     let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
     let () = Conditions.not_empty_content proposal_contents in
-    let proposal = Storage.Op.create_proposal proposal_contents in
+    let proposal = Storage.Op.create_proposal (proposal_contents, voting_options) in
     let storage = Storage.Op.register_proposal(proposal, storage) in
     let proposal_id = storage.proposal_counter in
     let event = Tezos.emit "%create_proposal" ({ proposal_id } : Event.Types.create_proposal) in
@@ -70,24 +71,43 @@ let create_proposal (proposal_contents, storage : proposal_content list * storag
  *)
 
 let sign_proposal
-  ( proposal_id, proposal_contents, voting, storage
+  ( proposal_id, proposal_contents, votes, storage
       : proposal_id
       * proposal_content list
-      * (voting_option * nat) 
+      * votes
       * storage_types)
   : result =
-    //let () = Conditions.only_owner storage in
-    //let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
-    //let proposal = Storage.Op.retrieve_proposal (proposal_id, storage) in
-    //let () = Conditions.unsigned proposal in
-    //let () = Conditions.within_expiration_time proposal.proposer.timestamp storage.effective_period in
-    //let () = Conditions.check_proposals_content proposal_contents proposal.contents in
-    //let owner = Tezos.get_sender () in
-    //let proposal = Storage.Op.update_signature (proposal, owner, agreement) in
-    //let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
-    //let event = Tezos.emit "%sign_proposal" ({proposal_id; signer = owner; agreement } : Event.Types.sign_proposal) in
-    //([event], storage)
-    ([],storage)
+    let (addr, token_id) = storage.nft in
+    let owner = Tezos.get_sender () in
+    let () = assert_some (Tezos.call_view "get_balance" (owner, token_id) addr : nat option) in
+    let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
+    let proposal = Storage.Op.retrieve_proposal (proposal_id, storage) in
+    let () = Conditions.within_voting_time proposal.proposer.timestamp storage.voting_duration in
+    let () = Conditions.check_proposals_content proposal_contents proposal.contents in
+
+    let lock = Option.unopt (Tezos.call_view "get_lock" (proposal_id, token_id, owner) addr : nat option) in
+    let ops, proposal =
+    if lock = 0n then
+        begin
+        let contr_opt = Tezos.get_entrypoint_opt "%lock" addr in
+        let contr = Option.unopt contr_opt in
+        let op = Tezos.transaction (proposal_id, token_id, owner) 0tez contr in
+        [op], Storage.Op.adjust_votes (proposal,votes,true)
+        end
+    else 
+       begin
+       let contr_opt = Tezos.get_entrypoint_opt "%unlock" addr in
+       let contr = Option.unopt contr_opt in
+       let op1 = Tezos.transaction (proposal_id, token_id, owner) 0tez contr in
+       let contr_opt = Tezos.get_entrypoint_opt "%lock" addr in
+       let contr = Option.unopt contr_opt in
+       let op2 = Tezos.transaction (proposal_id, token_id, owner) 0tez contr in
+       [op1; op2], Storage.Op.adjust_votes (proposal, votes, true)
+       end
+    in
+    let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
+    let event = Tezos.emit "%sign_proposal" ({proposal_id; signer = owner} : Event.Types.sign_proposal) in
+    (event::ops, storage)
 
 (**
  * Proposal Execution
@@ -121,10 +141,10 @@ let contract (action : parameter_types) (storage : storage_types) : result =
     let ops, storage =
       match action with
       | Default u -> default (u, storage)
-      | Create_proposal { proposal_contents } ->
-          create_proposal (proposal_contents, storage)
-      | Sign_proposal { proposal_id; proposal_contents; voting } ->
-          sign_proposal (proposal_id, proposal_contents, voting, storage)
+      | Create_proposal { proposal_contents; voting_options } ->
+          create_proposal (proposal_contents, voting_options, storage)
+      | Sign_proposal { proposal_id; proposal_contents; votes } ->
+          sign_proposal (proposal_id, proposal_contents, votes, storage)
       | Resolve_proposal { proposal_id; proposal_contents } ->
           resolve_proposal (proposal_id, proposal_contents, storage)
       | Proof_of_event_challenge { payload } ->
