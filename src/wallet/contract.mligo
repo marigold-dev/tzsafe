@@ -86,24 +86,23 @@ let sign_proposal
     let () = Conditions.check_proposals_content proposal_contents proposal.contents in
 
     let lock = Option.unopt (Tezos.call_view "get_lock" (proposal_id, token_id, owner) addr : nat option) in
+    let {vote; quantity} = votes in
     let ops, proposal =
-    if lock = 0n then
-        begin
-        let contr_opt = Tezos.get_entrypoint_opt "%lock" addr in
-        let contr = Option.unopt contr_opt in
-        let op = Tezos.transaction (proposal_id, token_id, owner) 0tez contr in
-        [op], Storage.Op.adjust_votes (proposal,votes,true)
-        end
-    else 
-       begin
-       let contr_opt = Tezos.get_entrypoint_opt "%unlock" addr in
-       let contr = Option.unopt contr_opt in
-       let op1 = Tezos.transaction (proposal_id, token_id, owner) 0tez contr in
-       let contr_opt = Tezos.get_entrypoint_opt "%lock" addr in
-       let contr = Option.unopt contr_opt in
-       let op2 = Tezos.transaction (proposal_id, token_id, owner) 0tez contr in
-       [op1; op2], Storage.Op.adjust_votes (proposal, votes, true)
-       end
+        if Storage.Op.is_voting_history (proposal_id, addr, storage) then
+            let {vote = _; quantity = history} = Storage.Op.get_voting_history (proposal_id, addr, storage) in
+            let contr_opt = Tezos.get_entrypoint_opt "%unlock" addr in
+            let contr = Option.unopt contr_opt in
+            let op1 = Tezos.transaction ((proposal_id, token_id, owner), history) 0tez contr in
+            let contr_opt = Tezos.get_entrypoint_opt "%lock" addr in
+            let contr = Option.unopt contr_opt in
+            let op2 = Tezos.transaction ((proposal_id, token_id, owner), quantity ) 0tez contr in
+            [op1; op2], Storage.Op.adjust_votes (proposal, votes, true)
+        else 
+            let contr_opt = Tezos.get_entrypoint_opt "%lock" addr in
+            let contr = Option.unopt contr_opt in
+            let op = Tezos.transaction (proposal_id, token_id, owner) 0tez contr in
+            let storage =  Storage.Op.adjust_votes (proposal,votes,true) in
+            [op], storage
     in
     let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
     let event = Tezos.emit "%sign_proposal" ({proposal_id; signer = owner} : Event.Types.sign_proposal) in

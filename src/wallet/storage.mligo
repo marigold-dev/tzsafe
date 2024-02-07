@@ -71,6 +71,7 @@ module Op = struct
     type proposal_id = Parameter.Types.proposal_id
     type votes = Parameter.Types.votes
     type voting_options = Parameter.Types.voting_options
+    type voting_option = Parameter.Types.voting_option
     type agreement = Parameter.Types.agreement
     type proposal = Types.proposal
     type proposal_state = Types.proposal_state
@@ -128,6 +129,14 @@ module Op = struct
             proposal with
             votes = update_votes;
         }
+
+    let is_voting_history (proposal_id, addr, storage : proposal_id * address * types) : bool =
+      Option.is_some (Big_map.find_opt (proposal_id, addr) storage.voting_history) 
+
+    let get_voting_history (proposal_id, addr, storage : proposal_id * address * types) : votes =
+      match Big_map.find_opt (proposal_id, addr) storage.voting_history with
+      | Some v -> v
+      | None -> failwith "no history"
 
     //let ready_execution (proposal, approvals, threshold : proposal * nat * nat) : proposal =
     //    let is_executed = approvals >= threshold && proposal.state = (Proposing : proposal_state) in
