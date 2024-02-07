@@ -30,6 +30,7 @@ module Types = struct
     type execution_duration = int
     type supermajority = nat
     type quorum = nat
+    type voting_histiry = ((proposal_id * address), votes) big_map
 
     type actor =
     [@layout:comb]
@@ -56,7 +57,7 @@ module Types = struct
         proposal_counter   : nat;
         proposals          : (proposal_id, proposal) big_map;
         archives           : (proposal_id, proposal_state) big_map;
-        voting_history     : ((proposal_id * address), votes) big_map;
+        voting_history     : voting_histiry;
         nft                : (address * nat);
         supermajority      : supermajority;
         quorum             : quorum;
@@ -70,7 +71,6 @@ module Op = struct
     type proposal_content = Proposal_content.Types.t
     type proposal_id = Parameter.Types.proposal_id
     type votes = Parameter.Types.votes
-    type voting_options = Parameter.Types.voting_options
     type voting_option = Parameter.Types.voting_option
     type agreement = Parameter.Types.agreement
     type proposal = Types.proposal
@@ -78,11 +78,12 @@ module Op = struct
     type voting_duration = Types.voting_duration
     type execution_duration = Types.execution_duration
     type proposal_state = Types.proposal_state
+    type voting_history = Types.voting_histiry
     type types = Types.t
 
-    let create_proposal (contents, voting_options: proposal_content list * voting_options) : proposal =
-        let aux (acc, v) = Map.add v 0n acc in
-        let new_votes = Set.fold aux voting_options Map.empty in
+    [@inline]
+    let create_proposal (contents: proposal_content list) : proposal =
+        let new_votes = Map.literal [(Yes, 0n); (No, 0n); (Abstention, 0n)] in
         {
             state            = Proposing;
             votes            = new_votes;
@@ -95,6 +96,7 @@ module Op = struct
             contents         = contents;
         }
 
+    [@inline]
     let register_proposal (proposal, storage: proposal * types) : types =
         let proposal_counter = storage.proposal_counter + 1n in
         let proposals = Big_map.add proposal_counter proposal storage.proposals in
@@ -115,28 +117,36 @@ module Op = struct
           end
 
     [@inline]
-    let adjust_votes (proposal, {vote; quantity}, is_increased: proposal * votes * bool) : proposal =
-        let update_votes =
-          match Map.find_opt vote proposal.votes with
-          | Some a ->
-             if is_increased then
-                Map.update vote (Some (a + quantity)) proposal.votes
-             else
-                Map.update vote (Some (abs(a - quantity))) proposal.votes
-          | None -> failwith "Not an option"
-        in
-        {
-            proposal with
-            votes = update_votes;
-        }
+    let adjust_votes (proposal, {vote; quantity}, history: proposal * votes * votes option) : proposal =
+      let votes =
+        match Map.find_opt vote proposal.votes with
+        | Some a -> Map.update vote (Some (a + quantity)) proposal.votes
+        | None -> failwith "Vote option not found"
+      in
+      let votes = 
+        match history with
+        | Some {vote = hv; quantity = hq} ->
+            begin
+              match Map.find_opt hv votes with
+              | Some a -> Map.update vote (Some (abs (a - hq))) proposal.votes
+              | None -> failwith "Vote option not found"
+            end
+        | None -> votes
+      in
+      { proposal with votes = votes }
 
-    let is_voting_history (proposal_id, addr, storage : proposal_id * address * types) : bool =
-      Option.is_some (Big_map.find_opt (proposal_id, addr) storage.voting_history) 
+    let in_voting_history (proposal_id, addr, voting_history: proposal_id * address * voting_history) : bool =
+      Option.is_some (Big_map.find_opt (proposal_id, addr) voting_history) 
 
-    let get_voting_history (proposal_id, addr, storage : proposal_id * address * types) : votes =
-      match Big_map.find_opt (proposal_id, addr) storage.voting_history with
+    let get_voting_history (proposal_id, addr, voting_history: proposal_id * address * voting_history) : votes =
+      match Big_map.find_opt (proposal_id, addr) voting_history with
       | Some v -> v
       | None -> failwith "no history"
+    
+    let update_voting_history ((proposal_id, voter_address, new_votes, s) : proposal_id * address * votes * types) : types =
+      let key = (proposal_id, voter_address) in
+      let updated_voting_history = Big_map.update key (Some new_votes) s.voting_history in
+      { s with voting_history = updated_voting_history}
 
     //let ready_execution (proposal, approvals, threshold : proposal * nat * nat) : proposal =
     //    let is_executed = approvals >= threshold && proposal.state = (Proposing : proposal_state) in

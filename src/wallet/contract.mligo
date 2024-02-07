@@ -25,6 +25,7 @@
 #import "conditions.mligo" "Conditions"
 #import "execution.mligo" "Execution"
 #import "event.mligo" "Event"
+#import "fa2_interactor.mligo" "FA2"
 
 type parameter_types = Parameter.Types.t
 type proposal_id = Parameter.Types.proposal_id
@@ -34,7 +35,6 @@ type storage_types_proposal = Storage.Types.proposal
 type storage_types_proposal_state = Storage.Types.proposal_state
 type proposal_content = Proposal_content.Types.t
 type votes = Parameter.Types.votes
-type voting_options = Parameter.Types.voting_options
 
 type request = parameter_types -> storage_types
 type result = operation list * storage_types
@@ -50,20 +50,17 @@ let default (_, s : unit * storage_types) : result =
 (**
  * Proposal creation
  *)
-
-let create_proposal (proposal_contents, voting_options, storage : proposal_content list * voting_options * storage_types) : result =
+[@inline]
+let create_proposal (proposal_contents, storage : proposal_content list * storage_types) : result =
     let (addr, token_id) = storage.nft in
-    let () = assert_some (Tezos.call_view "get_balance" (Tezos.get_sender(), token_id) addr : nat option) in
+    let _tokens = Conditions.check_ownership token_id addr in
     let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
     let () = Conditions.not_empty_content proposal_contents in
-    let proposal = Storage.Op.create_proposal (proposal_contents, voting_options) in
+    let proposal = Storage.Op.create_proposal (proposal_contents) in
     let storage = Storage.Op.register_proposal(proposal, storage) in
     let proposal_id = storage.proposal_counter in
     let event = Tezos.emit "%create_proposal" ({ proposal_id } : Event.Types.create_proposal) in
-    // Not implement yet
-    let contr_opt = Tezos.get_entrypoint_opt "%active_lock" addr in
-    let contr = Option.unopt contr_opt in
-    let op = Tezos.transaction proposal_id 0tez contr in
+    let op = FA2.call_register_lock_key addr proposal_id in
     ([event; op], storage)
 
 (**
@@ -79,31 +76,27 @@ let sign_proposal
   : result =
     let (addr, token_id) = storage.nft in
     let owner = Tezos.get_sender () in
-    let () = assert_some (Tezos.call_view "get_balance" (owner, token_id) addr : nat option) in
+    let _tokens = Conditions.check_ownership token_id addr in
     let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
     let proposal = Storage.Op.retrieve_proposal (proposal_id, storage) in
     let () = Conditions.within_voting_time proposal.proposer.timestamp storage.voting_duration in
     let () = Conditions.check_proposals_content proposal_contents proposal.contents in
-
-    let lock = Option.unopt (Tezos.call_view "get_lock" (proposal_id, token_id, owner) addr : nat option) in
-    let {vote; quantity} = votes in
+    let {vote = _; quantity} = votes in
     let ops, proposal =
-        if Storage.Op.is_voting_history (proposal_id, addr, storage) then
-            let {vote = _; quantity = history} = Storage.Op.get_voting_history (proposal_id, addr, storage) in
-            let contr_opt = Tezos.get_entrypoint_opt "%unlock" addr in
-            let contr = Option.unopt contr_opt in
-            let op1 = Tezos.transaction ((proposal_id, token_id, owner), history) 0tez contr in
-            let contr_opt = Tezos.get_entrypoint_opt "%lock" addr in
-            let contr = Option.unopt contr_opt in
-            let op2 = Tezos.transaction ((proposal_id, token_id, owner), quantity ) 0tez contr in
-            [op1; op2], Storage.Op.adjust_votes (proposal, votes, true)
+        if Storage.Op.in_voting_history (proposal_id, addr, storage.voting_history) then
+            let history = Storage.Op.get_voting_history (proposal_id, addr, storage.voting_history) in
+            let {vote = _; quantity = h_quantity} = history in
+            let proposal =  Storage.Op.adjust_votes (proposal, votes, (Some history)) in
+
+            let op1 = FA2.call_unlock addr proposal_id token_id owner h_quantity in
+            let op2 = FA2.call_lock addr proposal_id token_id owner quantity in
+            [op1; op2], proposal 
         else 
-            let contr_opt = Tezos.get_entrypoint_opt "%lock" addr in
-            let contr = Option.unopt contr_opt in
-            let op = Tezos.transaction (proposal_id, token_id, owner) 0tez contr in
-            let storage =  Storage.Op.adjust_votes (proposal,votes,true) in
-            [op], storage
+            let op = FA2.call_lock addr proposal_id token_id owner quantity in
+            let proposal = Storage.Op.adjust_votes (proposal, votes, None) in
+            [op], proposal
     in
+    let storage = Storage.Op.update_voting_history(proposal_id, owner, votes, storage) in
     let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
     let event = Tezos.emit "%sign_proposal" ({proposal_id; signer = owner} : Event.Types.sign_proposal) in
     (event::ops, storage)
@@ -132,16 +125,17 @@ let resolve_proposal
     //(event::archive::ops, storage)
     ([],storage)
 
+// PoE is one special type of proposal
+[@inline]
 let proof_of_event_challenge (payload, storage : payload * storage_types) : result =
-  //create_proposal ([Proof_of_event {payload}], storage)
-  ([],storage)
+  create_proposal ([Proof_of_event {payload}], storage)
 
 let contract (action : parameter_types) (storage : storage_types) : result =
     let ops, storage =
       match action with
       | Default u -> default (u, storage)
-      | Create_proposal { proposal_contents; voting_options } ->
-          create_proposal (proposal_contents, voting_options, storage)
+      | Create_proposal { proposal_contents; } ->
+          create_proposal (proposal_contents, storage)
       | Sign_proposal { proposal_id; proposal_contents; votes } ->
           sign_proposal (proposal_id, proposal_contents, votes, storage)
       | Resolve_proposal { proposal_id; proposal_contents } ->

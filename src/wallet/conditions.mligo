@@ -40,6 +40,7 @@ let amount_must_be_zero_tez (amount : tez) : unit =
 //let ready_to_execute (state : storage_types_proposal_state) : unit =
 //    assert_with_error (not (state = (Proposing : storage_types_proposal_state))) Errors.no_enough_signature_to_resolve
 //
+[@inline]
 let check_proposal (content: proposal_content) : unit =
     match content with
     | Transfer t ->
@@ -58,6 +59,7 @@ let check_proposal (content: proposal_content) : unit =
     | Remove_metadata _ -> ()
     | Proof_of_event _ -> ()
 
+[@inline]
 let not_empty_content (proposals_content: proposal_content list) : unit =
     let () = assert_with_error ((List.length proposals_content) > 0n) Errors.no_proposal in
     List.iter check_proposal proposals_content
@@ -76,3 +78,15 @@ let check_proposals_content (from_input: proposal_content list) (from_storage: p
 
 let within_voting_time (created_timestamp: timestamp) (voting_duration: int) : unit =
   assert_with_error (created_timestamp + voting_duration > Tezos.get_now ()) Errors.pass_voting_time
+
+
+[@inline]
+let check_ownership (token_id : nat) (addr : address) : nat =
+  let sender = Tezos.get_sender() in
+  match (Tezos.call_view "get_balance" (sender, token_id) addr : nat option) with
+  | Some(balance) -> 
+      if balance <= 0n then
+        failwith "Balance is non-positive"
+      else
+        balance
+  | None -> failwith "No balance found"

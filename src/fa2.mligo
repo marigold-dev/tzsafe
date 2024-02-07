@@ -1,7 +1,8 @@
 #import "@ligo/fa/lib/main.mligo" "FA2"
 #import "./fa2/storage.mligo" "Storage"
 #import "./fa2/total_supply.mligo" "Total_supply"
-#import "./fa2/lock.mligo" "Lock"
+#import "./fa2/lock_table.mligo" "LockTable"
+#import "./fa2/registered_lock_key.mligo" "LockKey"
 
 module NFT = FA2.MultiAssetExtendable
 
@@ -52,15 +53,27 @@ let update_operators (u: NFT.TZIP12.update_operators) (s: storage) : ret =
   NFT.update_operators  u s
 
 [@entry]
-let lock ((key, owner, token_id), amount : Lock.lock_id * nat) (s: storage) : ret = 
-  let new_lock = Lock.lock s.extension.lock key token_id owner amount in
-  let s = Storage.set_lock s new_lock in
+let lock ((key, owner, token_id), amount : LockTable.lock_id * nat) (s: storage) : ret = 
+  let new_lock = LockTable.lock s.extension.lock_table key token_id owner amount in
+  let s = Storage.set_lock_table s new_lock in
   [], s
 
 [@entry]
-let unlock ((key, owner, token_id), amount : Lock.lock_id * nat) (s: storage) : ret = 
-  let new_lock = Lock.unlock s.extension.lock key token_id owner amount in
-  let s = Storage.set_lock s new_lock in
+let unlock ((key, owner, token_id), amount : LockTable.lock_id * nat) (s: storage) : ret = 
+  let new_lock = LockTable.unlock s.extension.lock_table key token_id owner amount in
+  let s = Storage.set_lock_table s new_lock in
+  [], s
+
+[@entry]
+let register_lock_key(key : LockTable.lock_key) (s: storage) : ret = 
+  let new_lock_keys = LockKey.register_lock_key s.extension.lock_keys key in
+  let s = Storage.set_lock_keys s new_lock_keys in
+  [], s
+
+[@entry]
+let unregister_lock_key(key : LockTable.lock_key) (s: storage) : ret = 
+  let new_lock_keys = LockKey.unregister_lock_key s.extension.lock_keys key in
+  let s = Storage.set_lock_keys s new_lock_keys in
   [], s
 
 [@view]
@@ -72,5 +85,5 @@ let total_supply (token_id : nat) (s : storage) : nat =
   Total_supply.get_supply s.extension.total_supply token_id
 
 [@view]
-let get_lock (key, owner, token_id: Lock.lock_id) (s : storage) : nat =
-  Lock.get_amount s.extension.lock key token_id owner
+let get_lock_table (key, owner, token_id: LockTable.lock_id) (s : storage) : nat =
+  LockTable.get_amount s.extension.lock_table key token_id owner

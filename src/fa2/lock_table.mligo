@@ -1,9 +1,9 @@
 
-type key = nat
+type lock_key = nat 
 type token_id = nat
 type owner = address
 type amount = nat
-type lock_id = (key * owner * token_id)
+type lock_id = (lock_key * owner * token_id)
 
 type t = (lock_id, amount) big_map
 
