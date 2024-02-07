@@ -76,12 +76,13 @@ let sign_proposal
   : result =
     let (addr, token_id) = storage.nft in
     let owner = Tezos.get_sender () in
-    let _tokens = Conditions.check_ownership token_id addr in
+    let tokens = Conditions.check_ownership token_id addr in
     let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
+    let {vote = _; quantity} = votes in
+    let () = Conditions.sufficient_token tokens quantity in
     let proposal = Storage.Op.retrieve_proposal (proposal_id, storage) in
     let () = Conditions.within_voting_time proposal.proposer.timestamp storage.voting_duration in
     let () = Conditions.check_proposals_content proposal_contents proposal.contents in
-    let {vote = _; quantity} = votes in
     let ops, proposal =
         if Storage.Op.in_voting_history (proposal_id, addr, storage.voting_history) then
             let history = Storage.Op.get_voting_history (proposal_id, addr, storage.voting_history) in
@@ -111,17 +112,22 @@ let resolve_proposal
       * proposal_content list
       * storage_types)
   : result =
-    //let () = Conditions.only_owner storage in
-    //let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
-    //let proposal = Storage.Op.retrieve_proposal(proposal_id, storage) in
-    //let () = Conditions.check_proposals_content proposal_contents proposal.contents in
-    //let expiration_time = proposal.proposer.timestamp + storage.effective_period in
-    //let proposal = Storage.Op.update_proposal_state (proposal, storage.owners, storage.threshold, expiration_time) in
-    //let () = Conditions.ready_to_execute proposal.state in
-    //let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
+    let (addr, token_id) = storage.nft in
+    let owner = Tezos.get_sender () in
+    let tokens = Conditions.check_ownership token_id addr in
+    let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
+    let proposal = Storage.Op.retrieve_proposal(proposal_id, storage) in
+    let () = Conditions.check_proposals_content proposal_contents proposal.contents in
+    let () = Conditions.pass_voting_time proposal.proposer.timestamp storage.voting_duration in
+    let expiration_time = proposal.proposer.timestamp + storage.voting_duration + storage.execution_duration in
+    let supply = FA2.get_total_supply token_id addr in
+    let proposal = Storage.Op.update_proposal_state (proposal, storage.quorum, storage.supermajority, supply, expiration_time) in
+    let () = Conditions.ready_to_execute proposal.state in
+    let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
     //let ops, storage = Execution.perform_operations proposal_id proposal storage in
-    //let event = Tezos.emit "%resolve_proposal" ({ proposal_id ; proposal_state = proposal.state } : Event.Types.resolve_proposal) in
-    //let archive = Tezos.emit "%archive_proposal" ({ proposal_id ; proposal = Bytes.pack proposal }: Event.Types.archive_proposal ) in
+    // need unlock lock key
+    let event = Tezos.emit "%resolve_proposal" ({ proposal_id ; proposal_state = proposal.state } : Event.Types.resolve_proposal) in
+    let archive = Tezos.emit "%archive_proposal" ({ proposal_id ; proposal = Bytes.pack proposal }: Event.Types.archive_proposal ) in
     //(event::archive::ops, storage)
     ([],storage)
 

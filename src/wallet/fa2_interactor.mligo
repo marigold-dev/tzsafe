@@ -25,3 +25,12 @@ let call_unlock (addr : address) (proposal_id : proposal_id) (token_id : nat) (o
     Tezos.transaction ((proposal_id, token_id, owner), quantity) 0tez contr
   | None -> 
     failwith "The entrypoint `%unlock` does not exist."
+
+let get_total_supply (token_id : nat) (addr : address) : nat =
+  match (Tezos.call_view "total_supply" token_id addr : nat option) with
+  | Some(supply) -> 
+      if supply <= 0n then
+        failwith "Total supply is non-positive"
+      else
+        supply 
+  | None -> failwith "No Total supply found"

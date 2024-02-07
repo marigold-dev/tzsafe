@@ -106,6 +106,7 @@ module Op = struct
             proposal_counter = proposal_counter
         }
 
+    [@inline]
     let retrieve_proposal (proposal_number, storage : proposal_id * types) : proposal =
         match Big_map.find_opt proposal_number storage.proposals with
         | Some proposal -> proposal
@@ -148,67 +149,62 @@ module Op = struct
       let updated_voting_history = Big_map.update key (Some new_votes) s.voting_history in
       { s with voting_history = updated_voting_history}
 
-    //let ready_execution (proposal, approvals, threshold : proposal * nat * nat) : proposal =
-    //    let is_executed = approvals >= threshold && proposal.state = (Proposing : proposal_state) in
-    //    if is_executed
-    //    then
-    //      {
-    //          proposal with
-    //          state    = Executed;
-    //          resolver =
-    //            Some {
-    //              actor = Tezos.get_sender ();
-    //              timestamp = Tezos.get_now ()
-    //            };
-    //      }
-    //    else proposal
+    let resolve (proposal, is_executed: proposal * bool) : proposal =
+      let state =
+        if is_executed then
+          Executed
+        else
+          Rejected
+      in
+      {
+          proposal with
+          state    = state;
+          resolver =
+            Some {
+              actor = Tezos.get_sender ();
+              timestamp = Tezos.get_now ()
+            };
+      }
 
-    //let reject_proposal (proposal, disapprovals, threshold : proposal * nat * nat) : proposal =
-    //    let is_closed = disapprovals > threshold && proposal.state = (Proposing : proposal_state) in
-    //    if is_closed
-    //    then
-    //      {
-    //          proposal with
-    //          state    = Rejected;
-    //          resolver =
-    //            Some {
-    //              actor = Tezos.get_sender ();
-    //              timestamp = Tezos.get_now ()
-    //            };
-    //      }
-    //    else proposal
+    let expire_proposal (proposal, expiration_time : proposal * timestamp) : proposal =
+      if expiration_time < Tezos.get_now () then
+          {
+              proposal with
+              state    = Expired;
+              resolver =
+                Some {
+                  actor = Tezos.get_sender ();
+                  timestamp = Tezos.get_now ()
+                };
+          }
+      else proposal
 
-    //let expire_proposal (proposal, expiration_time : proposal * timestamp) : proposal =
-    //  if expiration_time < Tezos.get_now () then
-    //      {
-    //          proposal with
-    //          state    = Expired;
-    //          resolver =
-    //            Some {
-    //              actor = Tezos.get_sender ();
-    //              timestamp = Tezos.get_now ()
-    //            };
-    //      }
-    //  else proposal
+    let is_quorum_met (total_votes : nat) (votes : (voting_option, nat) map) (quorum_requirement : nat) : bool =
+      let folded = fun ((votes_count : nat), (_, (v : nat))) -> v + votes_count in
+      let total_votes_cast = Map.fold folded votes 0n in
+      let required_votes_for_quorum = (total_votes * quorum_requirement) in
+      total_votes_cast * 100n >= required_votes_for_quorum
+    
+    let is_supermajority_met (votes: (voting_option, nat) map) (supermajority_requirement : nat) : bool =
+      let yes_votes = match Map.find_opt Yes votes with
+        | Some(v) -> v
+        | None -> failwith "No positive option, it should not happen"
+      in
+      let no_votes = match Map.find_opt No votes with
+        | Some(v) -> v
+        | None -> failwith "No negative option, it should not happen"
+      in
+      let total_votes_for_supermajority = yes_votes + no_votes in
+      let required_yes_votes = (total_votes_for_supermajority * supermajority_requirement) in
+      yes_votes * 100n >= required_yes_votes
 
-    //let remove_invalid_signature (owners : address set) (proposal : proposal) : proposal =
-    //  let aux ((acc, k): ((address, bool) map * address)) =
-    //    match Map.find_opt k proposal.signatures with
-    //    | None -> acc
-    //    | Some v -> Map.add k v acc in
-    //  { proposal with signatures = Set.fold aux owners Map.empty }
 
-    //let update_proposal_state (proposal, owners , threshold, expiration_time : proposal * address set * nat * timestamp) : proposal =
-    //    let proposal = expire_proposal (proposal, expiration_time) in
-    //    if proposal.state = (Expired : proposal_state) then proposal
-    //    else
-    //      let proposal = remove_invalid_signature owners proposal in
-    //      let statistic ((t_acc,f_acc), (_, v) : (nat * nat) * (address * bool)) : (nat * nat) =
-    //        if v then (t_acc + 1n, f_acc) else (t_acc, f_acc + 1n) in
-    //      let (approvals, disapprovals) = Map.fold statistic proposal.signatures (0n, 0n) in
-    //      let proposal = ready_execution (proposal, approvals, threshold) in
-    //      let number_of_owners = Set.cardinal owners in
-    //      reject_proposal (proposal, disapprovals, abs(number_of_owners - threshold))
+    let update_proposal_state (proposal, quorum, supermajority, total_supply, expiration_time : proposal * nat * nat * nat * timestamp) : proposal =
+        let proposal = expire_proposal (proposal, expiration_time) in
+        if proposal.state = (Expired : proposal_state) then proposal
+        else
+          let is_executed = is_quorum_met total_supply proposal.votes quorum && is_supermajority_met proposal.votes supermajority in
+          resolve (proposal, is_executed)
 
     let update_proposal (proposal_id , proposal, storage: proposal_id * proposal * types) : types =
         let proposals = Big_map.update proposal_id (Some proposal) storage.proposals in
