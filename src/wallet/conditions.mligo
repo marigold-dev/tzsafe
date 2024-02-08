@@ -26,11 +26,7 @@
 type storage_types = Storage.Types.t
 type storage_types_proposal = Storage.Types.proposal
 type storage_types_proposal_state = Storage.Types.proposal_state
-//type effective_period = Storage.Types.effective_period
 type proposal_content = Proposal_content.Types.t
-
-//let only_owner (storage : storage_types) : unit =
-//    assert_with_error (Set.mem (Tezos.get_sender ()) storage.owners) Errors.only_owner
 
 // removing inline compiler will cause compiler error
 [@inline]
@@ -64,12 +60,12 @@ let not_empty_content (proposals_content: proposal_content list) : unit =
     let () = assert_with_error ((List.length proposals_content) > 0n) Errors.no_proposal in
     List.iter check_proposal proposals_content
 
-//let check_setting (storage : storage_types) : unit =
-//    let () = assert_with_error (Set.cardinal storage.owners > 0n) Errors.no_owner  in
-//    let () = assert_with_error (Set.cardinal storage.owners >= storage.threshold) Errors.no_enough_owner in
-//    let () = assert_with_error (storage.threshold > 0n) Errors.invalidated_threshold in
-//    let () = assert_with_error (storage.effective_period > 0) Errors.invalid_effective_period in
-//    ()
+let check_setting (storage : storage_types) : unit =
+    let () = assert_with_error (storage.supermajority > 0n) "Invalid settings: supermajority" in
+    let () = assert_with_error (storage.quorum > 0n) "Invalid settings: quorum" in
+    let () = assert_with_error (storage.voting_duration > 0) "Invalid settings: voting_duration" in
+    let () = assert_with_error (storage.execution_duration > 0) "Invalid settings: execution_duration" in
+    ()
 
 [@inline]
 let check_proposals_content (from_input: proposal_content list) (from_storage: proposal_content list) : unit =

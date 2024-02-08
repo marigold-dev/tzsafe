@@ -26,6 +26,7 @@ module Types = struct
     type voting_option = Parameter.Types.voting_option
     type votes = Parameter.Types.votes
     type proposal_content = Proposal_content.Types.t
+    type nft = Proposal_content.Types.nft
     type voting_duration = int
     type execution_duration = int
     type supermajority = nat
@@ -58,7 +59,7 @@ module Types = struct
         proposals          : (proposal_id, proposal) big_map;
         archives           : (proposal_id, proposal_state) big_map;
         voting_history     : voting_histiry;
-        nft                : (address * nat);
+        nft                : nft;
         supermajority      : supermajority;
         quorum             : quorum;
         voting_duration    : voting_duration;
@@ -69,6 +70,7 @@ end
 
 module Op = struct
     type proposal_content = Proposal_content.Types.t
+    type nft = Proposal_content.Types.nft
     type proposal_id = Parameter.Types.proposal_id
     type votes = Parameter.Types.votes
     type voting_option = Parameter.Types.voting_option
@@ -206,6 +208,7 @@ module Op = struct
           let is_executed = is_quorum_met total_supply proposal.votes quorum && is_supermajority_met proposal.votes supermajority in
           resolve (proposal, is_executed)
 
+    [@inline]
     let update_proposal (proposal_id , proposal, storage: proposal_id * proposal * types) : types =
         let proposals = Big_map.update proposal_id (Some proposal) storage.proposals in
         {
@@ -213,6 +216,7 @@ module Op = struct
             proposals = proposals
         }
 
+    [@inline]
     let archive_proposal (proposal_id, proposal_state, storage: proposal_id * proposal_state * types) : types =
         let proposals = Big_map.remove proposal_id storage.proposals in
         let archives = Big_map.add proposal_id proposal_state storage.archives in
@@ -222,6 +226,7 @@ module Op = struct
             archives = archives
         }
 
+    [@inline]
     let update_metadata (key, value, storage: string * bytes option * types) : types =
         let metadata = Big_map.update key value storage.metadata in
         {
@@ -240,4 +245,7 @@ module Op = struct
 
     let adjust_execution_duration (execution_duration: int) (storage : types) : types =
       { storage with execution_duration = execution_duration }
+
+    let adjust_nft (nft : nft) (storage : types) : types =
+      { storage with nft = nft}
 end

@@ -3,6 +3,14 @@
 type proposal_id = Parameter.Types.proposal_id
 
 [@inline]
+let call_unregister_lock_key (addr : address) (proposal_id : proposal_id) : operation =
+  match Tezos.get_entrypoint_opt "%unregister_lock_key" addr with
+  | Some(contr) ->
+    Tezos.transaction proposal_id 0tez contr
+  | None -> 
+    failwith "The entrypoint %unregister_lock_key does not exist."
+
+[@inline]
 let call_register_lock_key (addr : address) (proposal_id : proposal_id) : operation =
   match Tezos.get_entrypoint_opt "%register_lock_key" addr with
   | Some(contr) ->
