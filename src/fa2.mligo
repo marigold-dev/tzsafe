@@ -19,7 +19,7 @@ type mint =
 [@entry]
 let mint (mint : mint) (s : storage) : ret =
   let sender = Tezos.get_sender () in
-  let () = assert (sender = s.extension.admin) in
+  let () = assert_with_error (sender = s.extension.admin) "not an admin" in
   let {owner; amount; token_id} = mint in
   let () = NFT.Assertions.assert_token_exist s.token_metadata token_id in
   let new_ledger = Big_map.update (owner, token_id) (Some amount) s.ledger in
@@ -29,6 +29,11 @@ let mint (mint : mint) (s : storage) : ret =
   let s = Storage.set_total_supply s new_total_supply in
   [], s
 
+[@entry]
+let set_admin (admin : address) (s : storage) : ret = 
+  let () = assert_with_error (Tezos.get_sender () = s.extension.admin) "No an admin" in
+  [], Storage.set_admin s admin
+  
 let decrease_token_amount_for_user
   (ledger : NFT.ledger)
   (lock_key : LockKey.t)
@@ -81,24 +86,28 @@ let update_operators (u: NFT.TZIP12.update_operators) (s: storage) : ret =
 
 [@entry]
 let lock ((key, owner, token_id), amount : LockTable.lock_id * nat) (s: storage) : ret = 
+  let () = assert_with_error (Tezos.get_sender () = s.extension.admin) "No an admin" in
   let new_lock = LockTable.lock s.extension.lock_table key token_id owner amount in
   let s = Storage.set_lock_table s new_lock in
   [], s
 
 [@entry]
 let unlock ((key, owner, token_id), amount : LockTable.lock_id * nat) (s: storage) : ret = 
+  let () = assert_with_error (Tezos.get_sender () = s.extension.admin) "No an admin" in
   let new_lock = LockTable.unlock s.extension.lock_table key token_id owner amount in
   let s = Storage.set_lock_table s new_lock in
   [], s
 
 [@entry]
 let register_lock_key(key : LockTable.lock_key) (s: storage) : ret = 
+  let () = assert_with_error (Tezos.get_sender () = s.extension.admin) "No an admin" in
   let new_lock_keys = LockKey.register_lock_key s.extension.lock_keys key in
   let s = Storage.set_lock_keys s new_lock_keys in
   [], s
 
 [@entry]
 let unregister_lock_key(key : LockTable.lock_key) (s: storage) : ret = 
+  let () = assert_with_error (Tezos.get_sender () = s.extension.admin) "No an admin" in
   let new_lock_keys = LockKey.unregister_lock_key s.extension.lock_keys key in
   let s = Storage.set_lock_keys s new_lock_keys in
   [], s

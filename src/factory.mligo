@@ -1,12 +1,14 @@
 #import "./wallet.mligo" "Wallet"
+#import "./fa2.mligo" "FA2"
 
 [@entry]
-let factory (t: Wallet.Storage.Types.t) (() : unit) : operation list * unit = 
+let factory (w, n: Wallet.Storage.Types.t * FA2.storage) (() : unit) : operation list * unit = 
   // create NFT
+  let (op1, _) = Tezos.create_contract (fun x y -> contract_of FA2 (x, y)) None 0tez n in 
   // create Wallet
   let (op2, _) = Tezos.create_contract Wallet.contract None 0tez t in
   // set NFT admin
-  [op2], unit
+  [op1, op2], unit
 
 //// ligo compile parameter ./src/factory.mligo input -e factor
 //let input : (unit -> operation list)  =
