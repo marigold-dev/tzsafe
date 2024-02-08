@@ -16,33 +16,61 @@ type mint =
   ; token_id : nat
   }
 
-// can only create new token
 [@entry]
 let mint (mint : mint) (s : storage) : ret =
   let sender = Tezos.get_sender () in
   let () = assert (sender = s.extension.admin) in
   let {owner; amount; token_id} = mint in
-
-  (* ???? *)
   let () = NFT.Assertions.assert_token_exist s.token_metadata token_id in
-
-  (* TODO: Check that nobody owns the token already *)
   let new_ledger = Big_map.update (owner, token_id) (Some amount) s.ledger in
-
   let () = assert (Option.is_none (Big_map.find_opt (owner, token_id) s.ledger)) in
   let s = NFT.set_ledger s new_ledger in
-
   let new_total_supply = Total_supply.update_supply s.extension.total_supply token_id amount in
   let s = Storage.set_total_supply s new_total_supply in
   [], s
 
-(* Standard FA2 interface, copied from the source *)
+let decrease_token_amount_for_user
+  (ledger : NFT.ledger)
+  (lock_key : LockKey.t)
+  (locktable : LockTable.t)
+  (from_ : address)
+  (token_id : nat)
+  (amount_ : nat)
+: NFT.ledger =
+  let balance_ = NFT.get_for_user ledger from_ token_id in
+  let lock = LockKey.get_lock_amount lock_key from_ token_id locktable in
+  let () = assert_with_error (balance_ - lock >= 0) NFT.Errors.ins_balance in
+  let () = assert_with_error (abs (balance_ - lock) >= amount_) NFT.Errors.ins_balance in
+  let balance_ = abs (balance_ - amount_) in
+  let ledger = NFT.set_for_user ledger from_ token_id balance_ in
+  ledger
 
 
 //TODO: add lock
 [@entry]
 let transfer (t: NFT.TZIP12.transfer) (s: storage) : ret =
-  NFT.transfer t s
+  let process_atomic_transfer
+    (from_ : address)
+    (ledger, t : NFT.ledger * NFT.TZIP12.atomic_trans) =
+    let {
+     to_;
+     token_id;
+     amount = amount_
+    } = t in
+    let () = NFT.assert_token_exist s token_id in
+    let () = NFT.assert_authorisation s.operators from_ token_id in
+    let ledger = decrease_token_amount_for_user ledger s.extension.lock_keys s.extension.lock_table from_ token_id amount_ in
+    let ledger = NFT.increase_token_amount_for_user ledger to_ token_id amount_ in
+    ledger in
+  let process_single_transfer (ledger, t : NFT.ledger * NFT.TZIP12.transfer_from) =
+    let {
+     from_;
+     txs
+    } = t in
+    let ledger = List.fold_left (process_atomic_transfer from_) ledger txs in
+    ledger in
+  let ledger = List.fold_left process_single_transfer s.ledger t in
+  ([] : operation list), NFT.set_ledger s ledger
 
 [@entry]
 let balance_of (b: NFT.TZIP12.balance_of) (s: storage) : ret =
