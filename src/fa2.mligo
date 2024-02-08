@@ -46,7 +46,6 @@ let decrease_token_amount_for_user
   ledger
 
 
-//TODO: add lock
 [@entry]
 let transfer (t: NFT.TZIP12.transfer) (s: storage) : ret =
   let process_atomic_transfer
