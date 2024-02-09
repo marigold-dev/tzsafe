@@ -21,10 +21,9 @@
 #import "./wallet/contract.mligo" "WContract"
 
 #import "@ligo/fa/lib/main.mligo" "FA2"
-#import "./fa2/storage.mligo" "FStorage"
-#import "./fa2/total_supply.mligo" "Total_supply"
-#import "./fa2/lock_table.mligo" "LockTable"
 #import "./fa2/registered_lock_key.mligo" "LockKey"
+#import "./fa2/lock_table.mligo" "LockTable"
+#import "./fa2/storage.mligo" "FStorage"
 
 #import "./storage.mligo" "Storage"
 
@@ -38,28 +37,6 @@ type ret = operation list * storage
 let contract (parameter: WParameter.Types.t) (storage : storage)  : ret =
   let ops, s = WContract.contract parameter storage in
   ops, s
-
-
-type mint =
-  { owner : address
-  ; amount : nat
-  ; token_id : nat
-  }
-
-[@entry]
-let mint (mint : mint) (s : storage) : ret =
-  let fa2 = s.fa2 in
-  let sender = Tezos.get_sender () in
-  let () = assert_with_error (sender = fa2.extension.admin) "not an admin" in
-  let {owner; amount; token_id} = mint in
-  let () = FA2.Assertions.assert_token_exist fa2.token_metadata token_id in
-  let new_ledger = Big_map.update (owner, token_id) (Some amount) fa2.ledger in
-  let () = assert (Option.is_none (Big_map.find_opt (owner, token_id) fa2.ledger)) in
-  let fa2 = FA2.set_ledger fa2 new_ledger in
-  let new_total_supply = Total_supply.update_supply fa2.extension.total_supply token_id amount in
-  let fa2 = FStorage.set_total_supply fa2 new_total_supply in
-  [], { s with fa2 = fa2}
-
 
 let decrease_token_amount_for_user
   (ledger : FA2.ledger)
@@ -116,11 +93,3 @@ let update_operators (u: FA2.TZIP12.update_operators) (s: storage) : ret =
   let fa2 = s.fa2 in
   let ops, fa2 = FA2.update_operators  u fa2 in
   ops, { s with fa2 = fa2}
-
-[@entry]
-let unregister_lock_key(key : LockTable.lock_key) (s: storage) : ret = 
-  let fa2 = s.fa2 in
-  let () = assert_with_error (Tezos.get_sender () = fa2.extension.admin) "No an admin" in
-  let new_lock_keys = LockKey.unregister_lock_key fa2.extension.lock_keys key in
-  let fa2 = FStorage.set_lock_keys fa2 new_lock_keys in
-  [], { s with fa2 = fa2 }

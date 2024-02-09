@@ -6,7 +6,6 @@
 module NFT = FA2.MultiAssetExtendable
 
 type extension = {
-  admin: address;
   total_supply: TS.t;
   lock_table: LockTable.t;
   lock_keys : LockKey.t;
@@ -26,6 +25,3 @@ let set_lock_table (s:t) (lock_table : LockTable.t) : t =
 
 let set_lock_keys (s:t) (lock_keys : LockKey.t) : t =
    set_extension s { s.extension with lock_keys = lock_keys }
-
-let set_admin (s:t) (admin : address) : t =
-   set_extension s { s.extension with admin = admin}

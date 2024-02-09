@@ -26,6 +26,12 @@ module Types = struct
 
     type token = { token_id : nat}
 
+    type mint =
+    { owner : address
+    ; amount : nat
+    ; token_id : nat
+    }
+
     type t =
     | Transfer of transaction
     | Execute_lambda of { metadata: bytes option; lambda: (unit -> operation list)}
@@ -37,4 +43,5 @@ module Types = struct
     | Add_or_update_metadata of { key: string; value: bytes; }
     | Remove_metadata of { key: string }
     | Proof_of_event of { payload: bytes}
+    | Mint of mint
 end

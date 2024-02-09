@@ -23,6 +23,11 @@
 #import "./storage.mligo" "Storage"
 #import "conditions.mligo" "Conditions"
 #import "event.mligo" "Event"
+#import "fa2_interactor.mligo" "FA2"
+
+#import "../storage.mligo" "GStorage"
+
+type g_storage = GStorage.t
 
 type storage_types = Storage.Types.t
 type storage_types_proposal_id = Storage.Types.proposal_id
@@ -35,43 +40,46 @@ let send_by (target : address) (amount : tez) : operation =
     let contract = Option.unopt_with_error contract_opt Errors.unknown_contract in
     Tezos.transaction () amount contract
 
-let send (content : proposal_content) (storage : storage_types)
-  : (operation list  * storage_types) =
+let send (content : proposal_content) (storage : g_storage)
+  : (operation list  * g_storage) =
+    let {wallet; fa2} = storage in
     match content with
     | Transfer tx -> ([send_by tx.target tx.amount], storage)
     | Execute_lambda e -> (e.lambda (), storage)
-    | Adjust_quorum t -> ([], Storage.Op.adjust_quorum t storage)
-    | Adjust_supermajority t -> ([], Storage.Op.adjust_supermajority t storage)
-    | Adjust_voting_duration t -> ([], Storage.Op.adjust_voting_duration t storage)
-    | Adjust_execution_duration t -> ([], Storage.Op.adjust_execution_duration t storage)
-    | Adjust_token token -> ([], Storage.Op.adjust_token token storage )
-    | Add_or_update_metadata { key; value } -> ([], Storage.Op.update_metadata (key, (Some value), storage))
-    | Remove_metadata { key } -> ([], Storage.Op.update_metadata (key, None, storage))
+    | Adjust_quorum t -> ([], { storage with wallet = Storage.Op.adjust_quorum t wallet})
+    | Adjust_supermajority t -> ([], { storage with wallet = Storage.Op.adjust_supermajority t wallet})
+    | Adjust_voting_duration t -> ([], { storage with wallet = Storage.Op.adjust_voting_duration t wallet})
+    | Adjust_execution_duration t -> ([], { storage with wallet = Storage.Op.adjust_execution_duration t wallet})
+    | Adjust_token token -> ([], { storage with wallet = Storage.Op.adjust_token token wallet})
+    | Add_or_update_metadata { key; value } -> ([], { storage with wallet = Storage.Op.update_metadata (key, (Some value), wallet )})
+    | Remove_metadata { key } -> ([], { storage with wallet = Storage.Op.update_metadata (key, None, wallet) })
     | Proof_of_event { payload } ->
         let event = Tezos.emit "%proof_of_event" ({ payload } : Event.Types.proof_of_event) in
         ([event], storage)
+    | Mint m -> ([], { storage with fa2 = FA2.mint fa2 m})
 
 let perform_operations
   (proposal_id: storage_types_proposal_id)
   (proposal: storage_types_proposal)
-  (storage : storage_types)
-  : operation list * storage_types =
-    let batch ((ops, s), c : (operation list * storage_types) * proposal_content) : (operation list * storage_types) =
+  (storage: g_storage)
+  : operation list * g_storage=
+    let batch ((ops, s), c : (operation list * g_storage) * proposal_content) : (operation list * g_storage) =
       let (new_ops, new_s) = send c s in
       let acc (x,ys : (operation * operation list)) : operation list = x :: ys in
       List.fold_right acc ops new_ops, new_s
     in
+    let {wallet; fa2} = storage in
     match proposal.state with
     | Executed ->
-      let (ops, s) = List.fold_left batch (Constants.no_operation, storage) proposal.contents in
-      let new_s = Storage.Op.archive_proposal (proposal_id, Executed, s) in
+      let (ops, {wallet; fa2}) = List.fold_left batch (Constants.no_operation, storage) proposal.contents in
+      let new_s = { wallet = Storage.Op.archive_proposal (proposal_id, Executed, wallet); fa2} in
       (ops, new_s)
     | Proposing ->
       (Constants.no_operation, storage)
     | Rejected ->
-      let new_s = Storage.Op.archive_proposal (proposal_id, Rejected, storage) in
+      let new_s = { wallet = Storage.Op.archive_proposal (proposal_id, Rejected, wallet); fa2} in
       (Constants.no_operation, new_s)
     | Expired ->
-      let new_s = Storage.Op.archive_proposal (proposal_id, Expired, storage) in
+      let new_s = { wallet = Storage.Op.archive_proposal (proposal_id, Expired, wallet); fa2} in
       (Constants.no_operation, new_s)
 

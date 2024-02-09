@@ -73,7 +73,7 @@ deploy:
 	$(eval SIGNER := $(shell TEZOS_CLIENT_UNSAFE_DISABLE_DISCLAIMER=yes ./_build/octez-client --endpoint https://ghostnet.tezos.marigold.dev show address wallet_address | grep Hash | awk '{print $$2}'))
 
 	echo deploy 
-	$(BUILD_DIRECTORY)/octez-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME) transferring 0 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME).tez --init '(Pair (Pair 0 {} {} {} (Pair "$(SIGNER)" 0) 80 90 36800 36800 {}) (Pair {} {} {} {} (Pair "$(SIGNER)" {} {} {})))' -f --burn-cap 4
+	$(BUILD_DIRECTORY)/octez-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME) transferring 0 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME).tez --init '(Pair (Pair 0 {} {} {} 0 80 90 36800 36800 {}) (Pair {} {} {} {} (Pair {} {} {})))' -f --burn-cap 4
 
 get-tezos-binary:
 	wget -O $(BUILD_DIRECTORY)/octez-client $(TEZOS_BINARIES_URL)/octez-client

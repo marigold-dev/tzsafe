@@ -117,23 +117,23 @@ let resolve_proposal
       * proposal_content list
       * g_storage)
   : result =
-    //let { token_id} = storage.nft in
-    //let _tokens = Conditions.check_ownership token_id addr in
-    //let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
-    //let proposal = Storage.Op.retrieve_proposal(proposal_id, storage) in
-    //let () = Conditions.check_proposals_content proposal_contents proposal.contents in
-    //let () = Conditions.pass_voting_time proposal.proposer.timestamp storage.voting_duration in
-    //let expiration_time = proposal.proposer.timestamp + storage.voting_duration + storage.execution_duration in
-    //let supply = FA2.get_total_supply token_id addr in
-    //let proposal = Storage.Op.update_proposal_state (proposal, storage.quorum, storage.supermajority, supply, expiration_time) in
-    //let () = Conditions.ready_to_execute proposal.state in
-    //let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
-    //let ops, storage = Execution.perform_operations proposal_id proposal storage in
-    //let op = FA2.call_register_lock_key addr proposal_id in
-    //let event = Tezos.emit "%resolve_proposal" ({ proposal_id ; proposal_state = proposal.state } : Event.Types.resolve_proposal) in
-    //let archive = Tezos.emit "%archive_proposal" ({ proposal_id ; proposal = Bytes.pack proposal }: Event.Types.archive_proposal ) in
-    //(event::archive::op::ops, storage)
-    ([], storage)
+    let { wallet; fa2; } = storage in
+    let { token_id } = wallet.token in
+    let _tokens = Conditions.check_ownership token_id (Tezos.get_sender()) fa2 in
+    let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
+    let proposal = Storage.Op.retrieve_proposal(proposal_id, wallet) in
+    let () = Conditions.check_proposals_content proposal_contents proposal.contents in
+    let () = Conditions.pass_voting_time proposal.proposer.timestamp wallet.voting_duration in
+    let expiration_time = proposal.proposer.timestamp + wallet.voting_duration + wallet.execution_duration in
+    let supply = FA2.get_total_supply fa2 token_id in
+    let proposal = Storage.Op.update_proposal_state (proposal, wallet.quorum, wallet.supermajority, supply, expiration_time) in
+    let () = Conditions.ready_to_execute proposal.state in
+    let wallet = Storage.Op.update_proposal(proposal_id, proposal, wallet) in
+    let fa2 = FA2.call_unregister_lock_key fa2 proposal_id in
+    let ops, s= Execution.perform_operations proposal_id proposal {wallet; fa2} in
+    let event = Tezos.emit "%resolve_proposal" ({ proposal_id ; proposal_state = proposal.state } : Event.Types.resolve_proposal) in
+    let archive = Tezos.emit "%archive_proposal" ({ proposal_id ; proposal = Bytes.pack proposal }: Event.Types.archive_proposal ) in
+    (event::archive::ops, s)
 
 // PoE is one special type of proposal
 let proof_of_event_challenge (payload, storage : payload * g_storage) : result =

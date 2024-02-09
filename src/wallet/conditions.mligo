@@ -57,6 +57,7 @@ let check_proposal (content: proposal_content) : unit =
     | Add_or_update_metadata _ -> ()
     | Remove_metadata _ -> ()
     | Proof_of_event _ -> ()
+    | Mint _ -> ()
 
 let not_empty_content (proposals_content: proposal_content list) : unit =
     let () = assert_with_error ((List.length proposals_content) > 0n) Errors.no_proposal in
@@ -87,7 +88,6 @@ let within_execution_time (created_timestamp: timestamp) (voting_duration: int) 
    ) Errors.pass_voting_time
 
 let check_ownership (token_id : nat) (addr : address) (fa2_s : FStorage.t): nat =
-  let sender = Tezos.get_sender() in
   let balance = FA2.get_balance (addr, token_id) fa2_s in
   if balance  <= 0n then
     failwith "Balance is non-positive"
