@@ -42,9 +42,7 @@ build-metadata:
 
 build-contract: check-ligo-version
 	mkdir -p $(BUILT_APP_DIRECTORY)
-	$(LIGO_BUILD) $(APP_DIRECTORY)/factory.mligo > $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_FACTORY.tez
-	$(LIGO_BUILD) $(APP_DIRECTORY)/wallet.mligo > $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_WALLET.tez
-	$(LIGO_BUILD) $(APP_DIRECTORY)/fa2.mligo > $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_NFT.tez
+	$(LIGO_BUILD) $(APP_DIRECTORY)/tzsafe.mligo > $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME).tez
 
 test:
 	$(LIGO_TEST) $(TEST_DIRECTORY)/test.mligo
@@ -75,13 +73,7 @@ deploy:
 	$(eval SIGNER := $(shell TEZOS_CLIENT_UNSAFE_DISABLE_DISCLAIMER=yes ./_build/octez-client --endpoint https://ghostnet.tezos.marigold.dev show address wallet_address | grep Hash | awk '{print $$2}'))
 
 	echo deploy 
-	$(BUILD_DIRECTORY)/octez-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME)_FACTORY transferring 0 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_FACTORY.tez --init 'Unit' -f --burn-cap 1.106
-
-	#echo deploy wallet
-	#$(BUILD_DIRECTORY)/octez-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME)_WALLET transferring 0.000001 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_WALLET.tez --init '(Pair 0 {} {} {"$(SIGNER)"; "tz1inzFwAjE4oWXMabJFZdPHoDQN5S4XB3wH"} 1 604800 {})' --burn-cap 3 -f
-
-	#echo deploy NFT
-	#$(BUILD_DIRECTORY)/octez-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME)_NFT transferring 0 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME)_NFT.tez --init '(Pair {} {} {} {} "$(SIGNER)" {} {} {})' --burn-cap 3 -f
+	$(BUILD_DIRECTORY)/octez-client --endpoint https://ghostnet.tezos.marigold.dev originate contract $(PROJECT_NAME) transferring 0 from wallet_address running $(BUILT_APP_DIRECTORY)/$(PROJECT_NAME).tez --init '(Pair (Pair 0 {} {} {} (Pair "$(SIGNER)" 0) 80 90 36800 36800 {}) (Pair {} {} {} {} (Pair "$(SIGNER)" {} {} {})))' -f --burn-cap 4
 
 get-tezos-binary:
 	wget -O $(BUILD_DIRECTORY)/octez-client $(TEZOS_BINARIES_URL)/octez-client
