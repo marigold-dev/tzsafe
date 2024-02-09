@@ -24,7 +24,7 @@ module Types = struct
         amount: tez;
     }
 
-    type nft = { token_contract : address ; token_id : nat}
+    type token = { token_id : nat}
 
     type t =
     | Transfer of transaction
@@ -33,7 +33,7 @@ module Types = struct
     | Adjust_supermajority of nat
     | Adjust_voting_duration of int
     | Adjust_execution_duration of int
-    | Adjust_nft of nft
+    | Adjust_token of token
     | Add_or_update_metadata of { key: string; value: bytes; }
     | Remove_metadata of { key: string }
     | Proof_of_event of { payload: bytes}

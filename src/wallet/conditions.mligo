@@ -17,26 +17,29 @@
    SOFTWARE. *)
 
 
+#import "@ligo/fa/lib/main.mligo" "FA2"
+
 #import "../common/errors.mligo" "Errors"
 #import "../common/util.mligo" "Util"
 #import "proposal_content.mligo" "Proposal_content"
 #import "parameter.mligo" "Parameter"
 #import "storage.mligo" "Storage"
 
+#import "../fa2/storage.mligo" "FStorage"
+
+module FA2 = FA2.MultiAssetExtendable
+
 type storage_types = Storage.Types.t
 type storage_types_proposal = Storage.Types.proposal
 type storage_types_proposal_state = Storage.Types.proposal_state
 type proposal_content = Proposal_content.Types.t
 
-// removing inline compiler will cause compiler error
-[@inline]
 let amount_must_be_zero_tez (amount : tez) : unit =
     assert_with_error (amount = 0tez) Errors.amount_must_be_zero_tez
 
 let ready_to_execute (state : storage_types_proposal_state) : unit =
     assert_with_error (not (state = (Proposing : storage_types_proposal_state))) "Can not resolve proposal"
 
-[@inline]
 let check_proposal (content: proposal_content) : unit =
     match content with
     | Transfer t ->
@@ -50,12 +53,11 @@ let check_proposal (content: proposal_content) : unit =
         assert_with_error (v > 0) Errors.invalid_voting_period
     | Adjust_execution_duration e ->
         assert_with_error (e > 0) Errors.invalid_execution_period
-    | Adjust_nft _ -> ()
+    | Adjust_token _ -> ()
     | Add_or_update_metadata _ -> ()
     | Remove_metadata _ -> ()
     | Proof_of_event _ -> ()
 
-[@inline]
 let not_empty_content (proposals_content: proposal_content list) : unit =
     let () = assert_with_error ((List.length proposals_content) > 0n) Errors.no_proposal in
     List.iter check_proposal proposals_content
@@ -67,7 +69,6 @@ let check_setting (storage : storage_types) : unit =
     let () = assert_with_error (storage.execution_duration > 0) "Invalid settings: execution_duration" in
     ()
 
-[@inline]
 let check_proposals_content (from_input: proposal_content list) (from_storage: proposal_content list) : unit =
   let pack_from_input = Bytes.pack from_input in
   let pack_from_storage = Bytes.pack from_storage in
@@ -85,16 +86,13 @@ let within_execution_time (created_timestamp: timestamp) (voting_duration: int) 
    created_timestamp + voting_duration + execution_duration > now
    ) Errors.pass_voting_time
 
-[@inline]
-let check_ownership (token_id : nat) (addr : address) : nat =
+let check_ownership (token_id : nat) (addr : address) (fa2_s : FStorage.t): nat =
   let sender = Tezos.get_sender() in
-  match (Tezos.call_view "get_balance" (sender, token_id) addr : nat option) with
-  | Some(balance) -> 
-      if balance <= 0n then
-        failwith "Balance is non-positive"
-      else
-        balance
-  | None -> failwith "No balance found"
+  let balance = FA2.get_balance (addr, token_id) fa2_s in
+  if balance  <= 0n then
+    failwith "Balance is non-positive"
+  else
+    balance
 
 let sufficient_token (tokens : nat) (quantity : nat) : unit =
   if tokens < quantity then

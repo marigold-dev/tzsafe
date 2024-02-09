@@ -26,7 +26,7 @@ module Types = struct
     type voting_option = Parameter.Types.voting_option
     type votes = Parameter.Types.votes
     type proposal_content = Proposal_content.Types.t
-    type nft = Proposal_content.Types.nft
+    type token = Proposal_content.Types.token
     type voting_duration = int
     type execution_duration = int
     type supermajority = nat
@@ -59,7 +59,7 @@ module Types = struct
         proposals          : (proposal_id, proposal) big_map;
         archives           : (proposal_id, proposal_state) big_map;
         voting_history     : voting_histiry;
-        nft                : nft;
+        token              : token;
         supermajority      : supermajority;
         quorum             : quorum;
         voting_duration    : voting_duration;
@@ -70,7 +70,7 @@ end
 
 module Op = struct
     type proposal_content = Proposal_content.Types.t
-    type nft = Proposal_content.Types.nft
+    type token = Proposal_content.Types.token
     type proposal_id = Parameter.Types.proposal_id
     type votes = Parameter.Types.votes
     type voting_option = Parameter.Types.voting_option
@@ -246,6 +246,6 @@ module Op = struct
     let adjust_execution_duration (execution_duration: int) (storage : types) : types =
       { storage with execution_duration = execution_duration }
 
-    let adjust_nft (nft : nft) (storage : types) : types =
-      { storage with nft = nft}
+    let adjust_token (token : token) (storage : types) : types =
+      { storage with token = token}
 end

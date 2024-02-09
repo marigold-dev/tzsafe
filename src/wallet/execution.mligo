@@ -44,7 +44,7 @@ let send (content : proposal_content) (storage : storage_types)
     | Adjust_supermajority t -> ([], Storage.Op.adjust_supermajority t storage)
     | Adjust_voting_duration t -> ([], Storage.Op.adjust_voting_duration t storage)
     | Adjust_execution_duration t -> ([], Storage.Op.adjust_execution_duration t storage)
-    | Adjust_nft nft -> ([], Storage.Op.adjust_nft nft storage )
+    | Adjust_token token -> ([], Storage.Op.adjust_token token storage )
     | Add_or_update_metadata { key; value } -> ([], Storage.Op.update_metadata (key, (Some value), storage))
     | Remove_metadata { key } -> ([], Storage.Op.update_metadata (key, None, storage))
     | Proof_of_event { payload } ->

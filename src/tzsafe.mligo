@@ -16,9 +16,9 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-#import "./wallet/parameter.mligo" "Parameter"
+#import "./wallet/parameter.mligo" "WParameter"
 #import "./wallet/storage.mligo" "WStorage"
-#import "./wallet/contract.mligo" "Contract"
+#import "./wallet/contract.mligo" "WContract"
 
 #import "@ligo/fa/lib/main.mligo" "FA2"
 #import "./fa2/storage.mligo" "FStorage"
@@ -26,26 +26,18 @@
 #import "./fa2/lock_table.mligo" "LockTable"
 #import "./fa2/registered_lock_key.mligo" "LockKey"
 
-(* type 'a parameter_types  *)
-type parameter_types = Parameter.Types.t
+#import "./storage.mligo" "Storage"
 
-(* type 'a storage_types *)
-type storage = 
-  { wallet : WStorage.Types.t;
-    nft :  FStorage.t;
-  }
+type storage = Storage.t
 
-module NFT = FA2.MultiAssetExtendable
+module FA2 = FA2.MultiAssetExtendable
 
 type ret = operation list * storage
 
-(* type ['a request] is an alias of ['a parameter_types * 'a storage_types]  *)
-type request = Contract.request
-
 [@entry]
-let contract (parameter: parameter_types) (storage : storage)  : ret =
-  let ops, s = Contract.contract parameter storage.wallet in
-  ops, { storage with wallet = s}
+let contract (parameter: WParameter.Types.t) (storage : storage)  : ret =
+  let ops, s = WContract.contract parameter storage in
+  ops, s
 
 
 type mint =
@@ -56,103 +48,95 @@ type mint =
 
 [@entry]
 let mint (mint : mint) (s : storage) : ret =
-  let nft = s.nft in
+  let fa2 = s.fa2 in
   let sender = Tezos.get_sender () in
-  let () = assert_with_error (sender = nft.extension.admin) "not an admin" in
+  let () = assert_with_error (sender = fa2.extension.admin) "not an admin" in
   let {owner; amount; token_id} = mint in
-  let () = NFT.Assertions.assert_token_exist nft.token_metadata token_id in
-  let new_ledger = Big_map.update (owner, token_id) (Some amount) nft.ledger in
-  let () = assert (Option.is_none (Big_map.find_opt (owner, token_id) nft.ledger)) in
-  let nft = NFT.set_ledger nft new_ledger in
-  let new_total_supply = Total_supply.update_supply nft.extension.total_supply token_id amount in
-  let nft = FStorage.set_total_supply nft new_total_supply in
-  [], { s with nft = nft}
+  let () = FA2.Assertions.assert_token_exist fa2.token_metadata token_id in
+  let new_ledger = Big_map.update (owner, token_id) (Some amount) fa2.ledger in
+  let () = assert (Option.is_none (Big_map.find_opt (owner, token_id) fa2.ledger)) in
+  let fa2 = FA2.set_ledger fa2 new_ledger in
+  let new_total_supply = Total_supply.update_supply fa2.extension.total_supply token_id amount in
+  let fa2 = FStorage.set_total_supply fa2 new_total_supply in
+  [], { s with fa2 = fa2}
 
 
 let decrease_token_amount_for_user
-  (ledger : NFT.ledger)
+  (ledger : FA2.ledger)
   (lock_key : LockKey.t)
   (locktable : LockTable.t)
   (from_ : address)
   (token_id : nat)
   (amount_ : nat)
-: NFT.ledger =
-  let balance_ = NFT.get_for_user ledger from_ token_id in
+: FA2.ledger =
+  let balance_ = FA2.get_for_user ledger from_ token_id in
   let lock = LockKey.get_lock_amount lock_key from_ token_id locktable in
-  let () = assert_with_error (balance_ - lock >= 0) NFT.Errors.ins_balance in
-  let () = assert_with_error (abs (balance_ - lock) >= amount_) NFT.Errors.ins_balance in
+  let () = assert_with_error (balance_ - lock >= 0) FA2.Errors.ins_balance in
+  let () = assert_with_error (abs (balance_ - lock) >= amount_) FA2.Errors.ins_balance in
   let balance_ = abs (balance_ - amount_) in
-  let ledger = NFT.set_for_user ledger from_ token_id balance_ in
+  let ledger = FA2.set_for_user ledger from_ token_id balance_ in
   ledger
 
 
 [@entry]
-let transfer (t: NFT.TZIP12.transfer) (s: storage) : ret =
-  let nft = s.nft in
+let transfer (t: FA2.TZIP12.transfer) (s: storage) : ret =
+  let fa2 = s.fa2 in
   let process_atomic_transfer
     (from_ : address)
-    (ledger, t : NFT.ledger * NFT.TZIP12.atomic_trans) =
+    (ledger, t : FA2.ledger * FA2.TZIP12.atomic_trans) =
     let {
      to_;
      token_id;
      amount = amount_
     } = t in
-    let () = NFT.assert_token_exist nft token_id in
-    let () = NFT.assert_authorisation nft.operators from_ token_id in
-    let ledger = decrease_token_amount_for_user ledger nft.extension.lock_keys nft.extension.lock_table from_ token_id amount_ in
-    let ledger = NFT.increase_token_amount_for_user ledger to_ token_id amount_ in
+    let () = FA2.assert_token_exist fa2 token_id in
+    let () = FA2.assert_authorisation fa2.operators from_ token_id in
+    let ledger = decrease_token_amount_for_user ledger fa2.extension.lock_keys fa2.extension.lock_table from_ token_id amount_ in
+    let ledger = FA2.increase_token_amount_for_user ledger to_ token_id amount_ in
     ledger in
-  let process_single_transfer (ledger, t : NFT.ledger * NFT.TZIP12.transfer_from) =
+  let process_single_transfer (ledger, t : FA2.ledger * FA2.TZIP12.transfer_from) =
     let {
      from_;
      txs
     } = t in
     let ledger = List.fold_left (process_atomic_transfer from_) ledger txs in
     ledger in
-  let ledger = List.fold_left process_single_transfer nft.ledger t in
-  let s = { s with nft = NFT.set_ledger nft ledger} in
+  let ledger = List.fold_left process_single_transfer fa2.ledger t in
+  let s = { s with fa2 = FA2.set_ledger fa2 ledger} in
   ([] : operation list), s
 
 [@entry]
-let balance_of (b: NFT.TZIP12.balance_of) (s: storage) : ret =
-  let nft = s.nft in
-  let ops, nft = NFT.balance_of b nft in
-  ops, { s with nft = nft }
+let balance_of (b: FA2.TZIP12.balance_of) (s: storage) : ret =
+  let fa2 = s.fa2 in
+  let ops, fa2 = FA2.balance_of b fa2 in
+  ops, { s with fa2 = fa2 }
 
 [@entry]
-let update_operators (u: NFT.TZIP12.update_operators) (s: storage) : ret =
-  let nft = s.nft in
-  let ops, nft = NFT.update_operators  u nft in
-  ops, { s with nft = nft}
+let update_operators (u: FA2.TZIP12.update_operators) (s: storage) : ret =
+  let fa2 = s.fa2 in
+  let ops, fa2 = FA2.update_operators  u fa2 in
+  ops, { s with fa2 = fa2}
 
 [@entry]
 let lock ((key, owner, token_id), amount : LockTable.lock_id * nat) (s: storage) : ret = 
-  let nft = s.nft in
-  let () = assert_with_error (Tezos.get_sender () = nft.extension.admin) "No an admin" in
-  let new_lock = LockTable.lock nft.extension.lock_table key token_id owner amount in
-  let nft = FStorage.set_lock_table nft new_lock in
-  [], { s with nft = nft}
+  let fa2 = s.fa2 in
+  let () = assert_with_error (Tezos.get_sender () = fa2.extension.admin) "No an admin" in
+  let new_lock = LockTable.lock fa2.extension.lock_table key token_id owner amount in
+  let fa2 = FStorage.set_lock_table fa2 new_lock in
+  [], { s with fa2 = fa2}
 
 [@entry]
 let unlock ((key, owner, token_id), amount : LockTable.lock_id * nat) (s: storage) : ret = 
-  let nft = s.nft in
-  let () = assert_with_error (Tezos.get_sender () = nft.extension.admin) "No an admin" in
-  let new_lock = LockTable.unlock nft.extension.lock_table key token_id owner amount in
-  let nft = FStorage.set_lock_table nft new_lock in
-  [], { s with nft = nft}
-
-[@entry]
-let register_lock_key(key : LockTable.lock_key) (s: storage) : ret = 
-  let nft = s.nft in
-  let () = assert_with_error (Tezos.get_sender () = nft.extension.admin) "No an admin" in
-  let new_lock_keys = LockKey.register_lock_key nft.extension.lock_keys key in
-  let nft = FStorage.set_lock_keys nft new_lock_keys in
-  [], { s with nft = nft }
+  let fa2 = s.fa2 in
+  let () = assert_with_error (Tezos.get_sender () = fa2.extension.admin) "No an admin" in
+  let new_lock = LockTable.unlock fa2.extension.lock_table key token_id owner amount in
+  let fa2 = FStorage.set_lock_table fa2 new_lock in
+  [], { s with fa2 = fa2}
 
 [@entry]
 let unregister_lock_key(key : LockTable.lock_key) (s: storage) : ret = 
-  let nft = s.nft in
-  let () = assert_with_error (Tezos.get_sender () = nft.extension.admin) "No an admin" in
-  let new_lock_keys = LockKey.unregister_lock_key nft.extension.lock_keys key in
-  let nft = FStorage.set_lock_keys nft new_lock_keys in
-  [], { s with nft = nft }
+  let fa2 = s.fa2 in
+  let () = assert_with_error (Tezos.get_sender () = fa2.extension.admin) "No an admin" in
+  let new_lock_keys = LockKey.unregister_lock_key fa2.extension.lock_keys key in
+  let fa2 = FStorage.set_lock_keys fa2 new_lock_keys in
+  [], { s with fa2 = fa2 }
