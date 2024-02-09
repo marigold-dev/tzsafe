@@ -118,22 +118,6 @@ let update_operators (u: FA2.TZIP12.update_operators) (s: storage) : ret =
   ops, { s with fa2 = fa2}
 
 [@entry]
-let lock ((key, owner, token_id), amount : LockTable.lock_id * nat) (s: storage) : ret = 
-  let fa2 = s.fa2 in
-  let () = assert_with_error (Tezos.get_sender () = fa2.extension.admin) "No an admin" in
-  let new_lock = LockTable.lock fa2.extension.lock_table key token_id owner amount in
-  let fa2 = FStorage.set_lock_table fa2 new_lock in
-  [], { s with fa2 = fa2}
-
-[@entry]
-let unlock ((key, owner, token_id), amount : LockTable.lock_id * nat) (s: storage) : ret = 
-  let fa2 = s.fa2 in
-  let () = assert_with_error (Tezos.get_sender () = fa2.extension.admin) "No an admin" in
-  let new_lock = LockTable.unlock fa2.extension.lock_table key token_id owner amount in
-  let fa2 = FStorage.set_lock_table fa2 new_lock in
-  [], { s with fa2 = fa2}
-
-[@entry]
 let unregister_lock_key(key : LockTable.lock_key) (s: storage) : ret = 
   let fa2 = s.fa2 in
   let () = assert_with_error (Tezos.get_sender () = fa2.extension.admin) "No an admin" in

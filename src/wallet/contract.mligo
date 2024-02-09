@@ -78,34 +78,34 @@ let sign_proposal
       * votes
       * g_storage)
   : result =
-    //let { token_id} = storage.nft in
-    //let owner = Tezos.get_sender () in
-    //let tokens = Conditions.check_ownership token_id addr in
-    //let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
-    //let {vote = _; quantity} = votes in
-    //let () = Conditions.sufficient_token tokens quantity in
-    //let proposal = Storage.Op.retrieve_proposal (proposal_id, storage) in
-    //let () = Conditions.within_voting_time proposal.proposer.timestamp storage.voting_duration in
-    //let () = Conditions.check_proposals_content proposal_contents proposal.contents in
-    //let ops, proposal =
-    //    if Storage.Op.in_voting_history (proposal_id, addr, storage.voting_history) then
-    //        let history = Storage.Op.get_voting_history (proposal_id, addr, storage.voting_history) in
-    //        let {vote = _; quantity = h_quantity} = history in
-    //        let proposal =  Storage.Op.adjust_votes (proposal, votes, (Some history)) in
+    let { wallet; fa2;} = storage in
+    let { token_id} = wallet.token in
+    let owner = Tezos.get_sender () in
+    let tokens = Conditions.check_ownership token_id owner fa2 in
+    let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
+    let {vote = _; quantity} = votes in
+    let () = Conditions.sufficient_token tokens quantity in
+    let proposal = Storage.Op.retrieve_proposal (proposal_id, wallet) in
+    let () = Conditions.within_voting_time proposal.proposer.timestamp wallet.voting_duration in
+    let () = Conditions.check_proposals_content proposal_contents proposal.contents in
+    let fa2, proposal =
+        if Storage.Op.in_voting_history (proposal_id, owner, wallet.voting_history) then
+            let history = Storage.Op.get_voting_history (proposal_id, owner, wallet.voting_history) in
+            let {vote = _; quantity = h_quantity} = history in
+            let proposal =  Storage.Op.adjust_votes (proposal, votes, (Some history)) in
 
-    //        let op1 = FA2.call_unlock addr proposal_id token_id owner h_quantity in
-    //        let op2 = FA2.call_lock addr proposal_id token_id owner quantity in
-    //        [op1; op2], proposal 
-    //    else 
-    //        let op = FA2.call_lock addr proposal_id token_id owner quantity in
-    //        let proposal = Storage.Op.adjust_votes (proposal, votes, None) in
-    //        [op], proposal
-    //in
-    //let storage = Storage.Op.update_voting_history(proposal_id, owner, votes, storage) in
-    //let storage = Storage.Op.update_proposal(proposal_id, proposal, storage) in
-    //let event = Tezos.emit "%sign_proposal" ({proposal_id; signer = owner} : Event.Types.sign_proposal) in
-    //(event::ops, storage)
-    ([], storage)
+            let fa2 = FA2.call_unlock fa2 proposal_id token_id owner h_quantity in
+            let fa2 = FA2.call_lock fa2 proposal_id token_id owner quantity in
+            fa2, proposal 
+        else 
+            let fa2 = FA2.call_lock fa2 proposal_id token_id owner quantity in
+            let proposal = Storage.Op.adjust_votes (proposal, votes, None) in
+            fa2, proposal
+    in
+    let wallet = Storage.Op.update_voting_history(proposal_id, owner, votes, wallet) in
+    let wallet = Storage.Op.update_proposal(proposal_id, proposal, wallet) in
+    let event = Tezos.emit "%sign_proposal" ({proposal_id; signer = owner} : Event.Types.sign_proposal) in
+    ([event], {wallet; fa2})
 
 (**
  * Proposal Execution
