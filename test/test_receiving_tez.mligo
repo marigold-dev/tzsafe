@@ -9,7 +9,7 @@ let case_receive_tez =
   "successuful receiving tez"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
-      let owners : address set = Set.literal [alice.address; bob.address;] in
+      let owners = [((alice.address, 0n), 10n); ((bob.address, 0n), 20n);] in
       let init_storage = Helper.init_storage (owners, 1n) in
       let multisig = Helper.originate level init_storage 0tez in
       let contract = Mock.originate_transfer_only_contract level multisig.originated_address in
@@ -29,7 +29,7 @@ let case_invalidated_setting =
   "fail to receive tez"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, _bob, _carol)) = Breath.Context.init_default () in
-      let owners : address set = Set.literal [alice.address] in
+      let owners = [((alice.address, 0n), 10n); ((bob.address, 0n), 20n);] in
       let init_storage = Helper.init_storage (owners, 0n) in
       let multisig = Helper.originate level init_storage 0tez in
       let contract = Mock.originate_transfer_only_contract level multisig.originated_address in

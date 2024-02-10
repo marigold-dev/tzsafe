@@ -18,8 +18,8 @@
 
 #import "ligo-breathalyzer/lib/lib.mligo" "Breath"
 
-#import "./test_receiving_tez.mligo" "Tez"
-//#import "./test_basic_proposal.mligo" "Basic_proposal"
+//#import "./test_receiving_tez.mligo" "Tez"
+#import "./test_basic_proposal.mligo" "Basic_proposal"
 //#import "./test_setting.mligo" "Setting"
 //#import "./test_adjust_threshold_proposal.mligo" "Adjust_threshold_proposal"
 //#import "./test_change_owner_proposal.mligo" "Change_owner_proposal"
@@ -34,8 +34,9 @@
 
 let () =
   Breath.Model.run_suites Void 
-  [ Tez.test_suite
-  //; Basic_proposal.test_suite
+  [ //Tez.test_suite
+  //;
+   Basic_proposal.test_suite
   //; Setting.test_suite
   //; Adjust_threshold_proposal.test_suite
   //; Change_owner_proposal.test_suite

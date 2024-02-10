@@ -30,7 +30,10 @@ type sign_proposal = Param.Types.sign_proposal
 type resolve_proposal = Param.Types.resolve_proposal
 type votes = Param.Types.votes
 
-let init_storage (owners, quorum: address set * nat) : GStorage.t =
+let init_storage (owners, quorum: ((address * nat) * nat) list * nat) : GStorage.t =
+  let add_fold = fun ((acc, ((_addr, _n1), n2)) : (nat * ((address * nat) * nat))) -> acc + n2 in
+  let supply : nat =  List.fold add_fold owners 0n in
+  let _ = Test.log(owners) in
   let wallet : storage_types = 
     {
         proposal_counter   = 0n;
@@ -47,12 +50,12 @@ let init_storage (owners, quorum: address set * nat) : GStorage.t =
   in
   let fa2 : FStorage.t = 
     {
-        ledger = Big_map.empty;
+        ledger = Big_map.literal owners;
         operators = Big_map.empty;
-        token_metadata = Big_map.empty;
+        token_metadata = Big_map.literal [(0n, {token_id = 0n; token_info = (Map.empty : (string, bytes) map) })];
         metadata = Big_map.empty;
         extension = {
-          total_supply = Big_map.empty;
+          total_supply = Big_map.literal [(0n, supply)];
           lock_table = Big_map.empty;
           lock_keys = Set.empty;
         }
