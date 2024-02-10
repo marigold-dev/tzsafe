@@ -50,9 +50,9 @@ let check_proposal (content: proposal_content) : unit =
     | Adjust_supermajority s ->
         assert_with_error (s > 0n) Errors.invalid_supermajority
     | Adjust_voting_duration v ->
-        assert_with_error (v > 0) Errors.invalid_voting_period
+        assert_with_error (v > 0) Errors.invalid_voting_duration
     | Adjust_execution_duration e ->
-        assert_with_error (e > 0) Errors.invalid_execution_period
+        assert_with_error (e > 0) Errors.invalid_execution_duration
     | Adjust_token _ -> ()
     | Add_or_update_metadata _ -> ()
     | Remove_metadata _ -> ()
@@ -65,10 +65,10 @@ let not_empty_content (proposals_content: proposal_content list) : unit =
     List.iter check_proposal proposals_content
 
 let check_setting (storage : storage_types) : unit =
-    let () = assert_with_error (storage.supermajority > 0n) "Invalid settings: supermajority" in
-    let () = assert_with_error (storage.quorum > 0n) "Invalid settings: quorum" in
-    let () = assert_with_error (storage.voting_duration > 0) "Invalid settings: voting_duration" in
-    let () = assert_with_error (storage.execution_duration > 0) "Invalid settings: execution_duration" in
+    let () = assert_with_error (storage.supermajority > 0n) Errors.invalid_supermajority in
+    let () = assert_with_error (storage.quorum > 0n) Errors.invalid_quorum in
+    let () = assert_with_error (storage.voting_duration > 0) Errors.invalid_voting_duration in
+    let () = assert_with_error (storage.execution_duration > 0) Errors.invalid_execution_duration in
     ()
 
 let check_proposals_content (from_input: proposal_content list) (from_storage: proposal_content list) : unit =

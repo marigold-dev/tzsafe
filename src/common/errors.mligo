@@ -33,5 +33,5 @@
 [@inline] let pass_voting_time = "The proposal has passed its voting time"
 [@inline] let invalid_quorum = "The quorum must be >= 1"
 [@inline] let invalid_supermajority = "The supermajority must be >= 1"
-[@inline] let invalid_voting_period = "The voting period must be >= 1"
-[@inline] let invalid_execution_period = "The execution period must be >= 1"
+[@inline] let invalid_voting_duration = "The voting period must be >= 1"
+[@inline] let invalid_execution_duration = "The execution period must be >= 1"

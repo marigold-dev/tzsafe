@@ -56,8 +56,8 @@ let send (content : proposal_content) (storage : g_storage)
     | Proof_of_event { payload } ->
         let event = Tezos.emit "%proof_of_event" ({ payload } : Event.Types.proof_of_event) in
         ([event], storage)
-    | Mint m -> ([], { storage with fa2 = FA2.mint fa2 m})
-    | Create_token md -> ([], {storage with fa2 = FA2.create_token fa2 md})
+    | Mint m -> ([], { storage with fa2 = FA2.mint (fa2, m)})
+    | Create_token md -> ([], {storage with fa2 = FA2.create_token (fa2, md)})
 
 let perform_operations
   (proposal_id: storage_types_proposal_id)
