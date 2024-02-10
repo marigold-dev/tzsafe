@@ -16,21 +16,30 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-#import "./internal/parameter.mligo" "Parameter"
-#import "./internal/storage.mligo" "Storage"
-#import "./internal/contract.mligo" "Contract"
+#import "proposal_content.mligo" "Proposal_content"
 
-(* type 'a parameter_types  *)
-type parameter_types = Parameter.Types.t
+module Types = struct
+    type proposal_content = Proposal_content.Types.t
+    type proposal_id = nat
+    type agreement = bool
+    type expiration_time = timestamp
+    type payload = bytes
 
-(* type 'a storage_types *)
-type storage_types = Storage.Types.t
+    type voting_option =
+    | Yes
+    | No
+    | Abstention
 
-(* type ['a request] is an alias of ['a parameter_types * 'a storage_types]  *)
-type request = Contract.request
+    type votes =
+    {
+        vote: voting_option;
+        quantity : nat;
+    }
 
-(* type ['a request] is an alias of [operation list * 'a storage_types]  *)
-type result = Contract.result
-
-let contract (parameter: parameter_types) (storage : storage_types)  : result =
-  Contract.contract parameter storage
+    type t =
+    | Default of unit
+    | Create_proposal of { proposal_contents: proposal_content list }
+    | Sign_proposal of { proposal_id: proposal_id; proposal_contents: proposal_content list; votes: votes }
+    | Resolve_proposal of { proposal_id: proposal_id; proposal_contents: proposal_content list }
+    | Proof_of_event_challenge of { payload: payload }
+end

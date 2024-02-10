@@ -16,24 +16,37 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-#import "proposal_content.mligo" "Proposal_content"
+#import "@ligo/fa/lib/main.mligo" "FA2"
+
+module FA2 = FA2.MultiAssetExtendable
 
 module Types = struct
-    type proposal_content = Proposal_content.Types.t
-    type proposal_id = nat
-    type agreement = bool
-    type expiration_time = timestamp
-    type payload = bytes
+    type transaction =
+    [@layout:comb]
+    {
+        target: address;
+        amount: tez;
+    }
 
-    type create_proposal = { proposal_contents: proposal_content list }
-    type sign_proposal = { proposal_id: proposal_id; proposal_contents: proposal_content list; agreement: agreement } 
-    type resolve_proposal = { proposal_id: proposal_id; proposal_contents: proposal_content list } 
+    type token = { token_id : nat}
+
+    type mint =
+    { owner : address
+    ; amount : nat
+    ; token_id : nat
+    }
 
     type t =
-    [@layout:comb]
-    | Default of unit
-    | Create_proposal of { proposal_contents: proposal_content list }
-    | Sign_proposal of sign_proposal
-    | Resolve_proposal of { proposal_id: proposal_id; proposal_contents: proposal_content list }
-    | Proof_of_event_challenge of { payload: payload }
+    | Transfer of transaction
+    | Execute_lambda of { metadata: bytes option; lambda: (unit -> operation list)}
+    | Adjust_quorum of nat
+    | Adjust_supermajority of nat
+    | Adjust_voting_duration of int
+    | Adjust_execution_duration of int
+    | Adjust_token of token
+    | Add_or_update_metadata of { key: string; value: bytes; }
+    | Remove_metadata of { key: string }
+    | Proof_of_event of { payload: bytes}
+    | Mint of mint
+    | Create_token of FA2.TZIP12.tokenMetadataData
 end
