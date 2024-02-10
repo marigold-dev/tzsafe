@@ -17,11 +17,11 @@
    SOFTWARE. *)
 
 #import "ligo-breathalyzer/lib/lib.mligo" "Breath"
-#include "../../src/internal/contract.mligo"
-#import "../../src/internal/proposal_content.mligo" "Proposal_content"
-#import "../../src/internal/parameter.mligo" "Param"
+#include "../../src/wallet/contract.mligo"
+#import "../../src/wallet/proposal_content.mligo" "Proposal_content"
+#import "../../src/wallet/parameter.mligo" "Param"
 #import "./util.mligo" "Util"
-#import "../../app/main.mligo" "App"
+#import "../../src/tzsafe.mligo" "App"
 
 type proposal_content = Proposal_content.Types.t
 type sign_proposal = Param.Types.sign_proposal

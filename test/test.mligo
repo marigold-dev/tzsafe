@@ -32,12 +32,6 @@
 #import "./test_update_metadata.mligo" "Update_metadata"
 #import "./test_tzip27.mligo" "Tzip27"
 
-#include "../src/internal/contract.mligo"
-#import "../app/main.mligo" "App"
-
-#import "../src/internal/proposal_content.mligo" "Proposal_content"
-#import "../src/internal/parameter.mligo" "Param"
-
 type proposal_content = Proposal_content.Types.t
 type sign_proposal = Param.Types.sign_proposal
 

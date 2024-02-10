@@ -19,8 +19,8 @@
 #import "ligo-breathalyzer/lib/lib.mligo" "Breath"
 #import "./common/helper.mligo" "Helper"
 #import "./common/mock_contract.mligo" "Mock_contract"
-#import "../src/internal/proposal_content.mligo" "Proposal_content"
-#import "../app/main.mligo" "App"
+#import "../src/wallet/proposal_content.mligo" "Proposal_content"
+#import "../src/tzsafe.mligo" "App"
 
 type proposal_content = Proposal_content.Types.t
 

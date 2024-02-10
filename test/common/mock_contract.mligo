@@ -17,7 +17,7 @@
    SOFTWARE. *)
 
 #import "ligo-breathalyzer/lib/lib.mligo" "Breath"
-#import "../../src/internal/contract.mligo" "Contract"
+#import "../../src/wallet/contract.mligo" "Contract"
 
 (* ------------------------ *)
 (* contract 1 *)

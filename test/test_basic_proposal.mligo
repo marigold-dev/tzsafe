@@ -20,9 +20,9 @@
 #import "./common/helper.mligo" "Helper"
 #import "./common/assert.mligo" "Assert"
 #import "./common/mock_contract.mligo" "Mock_contract"
-#import "../src/internal/proposal_content.mligo" "Proposal_content"
-#import "../app/main.mligo" "App"
-#include "../src/internal/contract.mligo"
+#import "../src/wallet/proposal_content.mligo" "Proposal_content"
+#import "../src/tzsafe.mligo" "App"
+#include "../src/wallet/contract.mligo"
 #include "./common/util.mligo"
 
 type proposal_content = Proposal_content.Types.t

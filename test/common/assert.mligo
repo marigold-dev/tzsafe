@@ -17,7 +17,7 @@
    SOFTWARE. *)
 
 #import "ligo-breathalyzer/lib/lib.mligo" "Breath"
-#import "../../src/internal/storage.mligo" "Storage"
+#import "../../src/wallet/storage.mligo" "Storage"
 
 type storage_types_proposal = Storage.Types.proposal
 type storage_types_actor = Storage.Types.actor

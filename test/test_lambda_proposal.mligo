@@ -20,9 +20,9 @@
 #import "./common/helper.mligo" "Helper"
 #import "./common/assert.mligo" "Assert"
 #import "./common/util.mligo" "Util"
-#import "../src/internal/proposal_content.mligo" "Proposal_content"
-#import "../src/internal/storage.mligo" "Storage"
-#import "../app/main.mligo" "App"
+#import "../src/wallet/proposal_content.mligo" "Proposal_content"
+#import "../src/wallet/storage.mligo" "Storage"
+#import "../src/tzsafe.mligo" "App"
 
 type proposal_content = Proposal_content.Types.t
 

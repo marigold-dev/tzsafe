@@ -1,8 +1,7 @@
 #import "ligo-breathalyzer/lib/lib.mligo" "Breath"
 #import "./common/helper.mligo" "Helper"
 #import "./common/mock_contract.mligo" "Mock"
-#import "../app/main.mligo" "App"
-
+#import "../src/tzsafe.mligo" "App"
 
 let case_receive_tez =
   Breath.Model.case
