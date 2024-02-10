@@ -22,24 +22,46 @@
 #import "../../src/wallet/parameter.mligo" "Param"
 #import "./util.mligo" "Util"
 #import "../../src/tzsafe.mligo" "App"
+#import "../../src/storage.mligo" "GStorage"
+#import "../../src/fa2/storage.mligo" "FStorage"
 
 type proposal_content = Proposal_content.Types.t
 type sign_proposal = Param.Types.sign_proposal
 type resolve_proposal = Param.Types.resolve_proposal
+type votes = Param.Types.votes
 
-let init_storage (owners, threshold: address set * nat) : storage_types =
-{ proposal_counter = 0n;
-  proposals     = (Big_map.empty : (nat, storage_types_proposal) big_map);
-  archives      = (Big_map.empty : (nat, storage_types_proposal_state) big_map);
-  owners           = owners;
-  threshold        = threshold;
-  effective_period = 172800;
-  metadata         = Big_map.literal [("", 0x01)];
-}
+let init_storage (owners, quorum: address set * nat) : GStorage.t =
+  let wallet : storage_types = 
+    {
+        proposal_counter   = 0n;
+        proposals          = Big_map.empty;
+        archives           = Big_map.empty;
+        voting_history     = Big_map.empty;
+        token              = { token_id = 0n};
+        supermajority      = 80n;
+        quorum             = quorum;
+        voting_duration    = 172800;
+        execution_duration = 172800;
+        metadata           = Big_map.literal [("", 0x01)];
+    }
+  in
+  let fa2 : FStorage.t = 
+    {
+        ledger = Big_map.empty;
+        operators = Big_map.empty;
+        token_metadata = Big_map.empty;
+        metadata = Big_map.empty;
+        extension = {
+          total_supply = Big_map.empty;
+          lock_table = Big_map.empty;
+          lock_keys = Set.empty;
+        }
+    }
+  in { wallet; fa2; }
 
 type originated = Breath.Contract.originated
 
-let originate (level: Breath.Logger.level) (init_storage : storage_types) (amount : tez) : (App parameter_of, storage_types) originated=
+let originate (level: Breath.Logger.level) (init_storage : g_storage) (amount : tez) : (App parameter_of, g_storage) originated=
   Breath.Contract.originate
     level
     "multisig"
@@ -47,17 +69,17 @@ let originate (level: Breath.Logger.level) (init_storage : storage_types) (amoun
     init_storage
     amount
 
-let proof_of_event_challenge (amount: tez) (contract : (App parameter_of, storage_types) originated) (payload : payload) () =
+let proof_of_event_challenge (amount: tez) (contract : (App parameter_of, g_storage) originated) (payload : payload) () =
   Breath.Contract.transfer_with_entrypoint_to contract "proof_of_event_challenge" payload amount
 
-let create_proposal_with_amount (amount : tez) (contract : (App parameter_of, storage_types) originated) (proposal : (proposal_content) list) () =
+let create_proposal_with_amount (amount : tez) (contract : (App parameter_of, g_storage) originated) (proposal : (proposal_content) list) () =
   Breath.Contract.transfer_with_entrypoint_to contract "create_proposal" proposal amount
 
-let sign_proposal_with_amount (amount : tez) (contract : (App parameter_of, storage_types) originated) (proposal_id : nat) (agreement : bool) (proposal_contents : (proposal_content) list) () =
-  let p : sign_proposal = { proposal_id; proposal_contents; agreement } in
+let sign_proposal_with_amount (amount : tez) (contract : (App parameter_of, g_storage) originated) (proposal_id : nat) (votes: votes) (proposal_contents : (proposal_content) list) () =
+  let p : sign_proposal = { proposal_id; proposal_contents; votes} in
   Breath.Contract.transfer_with_entrypoint_to contract "sign_proposal" p amount
 
-let resolve_proposal_with_amount (amount : tez) (contract : (App parameter_of, storage_types) originated) (proposal_id : nat) (proposal_contents: (proposal_content) list) () =
+let resolve_proposal_with_amount (amount : tez) (contract : (App parameter_of, g_storage) originated) (proposal_id : nat) (proposal_contents: (proposal_content) list) () =
   let p : resolve_proposal = { proposal_id; proposal_contents;} in
   Breath.Contract.transfer_with_entrypoint_to contract "resolve_proposal" p amount
 

@@ -37,7 +37,7 @@ let case_invalidated_setting =
       let action = Breath.Context.act_as alice (fun (_u:unit) -> (Breath.Contract.transfer_with_entrypoint_to contract "default" ()  0tez)) in
 
       Breath.Result.reduce [
-        Breath.Expect.fail_with_message "Threshold must be greater than 1" action
+        Breath.Expect.fail_with_message "The quorum must be >= 1" action
       ])
 
 let test_suite =
