@@ -58,6 +58,7 @@ let check_proposal (content: proposal_content) : unit =
     | Remove_metadata _ -> ()
     | Proof_of_event _ -> ()
     | Mint _ -> ()
+    | Create_token _ -> ()
 
 let not_empty_content (proposals_content: proposal_content list) : unit =
     let () = assert_with_error ((List.length proposals_content) > 0n) Errors.no_proposal in

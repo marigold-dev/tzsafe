@@ -16,6 +16,10 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
+#import "@ligo/fa/lib/main.mligo" "FA2"
+
+module FA2 = FA2.MultiAssetExtendable
+
 module Types = struct
     type transaction =
     [@layout:comb]
@@ -44,4 +48,5 @@ module Types = struct
     | Remove_metadata of { key: string }
     | Proof_of_event of { payload: bytes}
     | Mint of mint
+    | Create_token of FA2.TZIP12.tokenMetadataData
 end

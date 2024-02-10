@@ -38,4 +38,7 @@ let mint (fa2 : f_storage) (mint : PC.Types.mint) : f_storage =
   let new_total_supply = Total_supply.update_supply fa2.extension.total_supply token_id amount in
   FStorage.set_total_supply fa2 new_total_supply
 
-// TODO: set metadata
+let create_token (fa2 : f_storage) (md: FA2.TZIP12.tokenMetadataData) : f_storage =
+  let () = assert_with_error (not (Big_map.mem md.token_id fa2.token_metadata)) "Token is already exist" in
+  let md = Big_map.add md.token_id md fa2.token_metadata in
+  { fa2 with token_metadata = md}
