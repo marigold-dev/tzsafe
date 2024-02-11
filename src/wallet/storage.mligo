@@ -64,7 +64,6 @@ module Types = struct
         quorum             : quorum;
         voting_duration    : voting_duration;
         execution_duration : execution_duration;
-        metadata           : (string, bytes) big_map;
     }
 end
 
@@ -83,7 +82,6 @@ module Op = struct
     type voting_history = Types.voting_histiry
     type types = Types.t
 
-    [@inline]
     let create_proposal (contents: proposal_content list) : proposal =
         let new_votes = Map.literal [(Yes, 0n); (No, 0n); (Abstention, 0n)] in
         {
@@ -98,7 +96,6 @@ module Op = struct
             contents         = contents;
         }
 
-    [@inline]
     let register_proposal (proposal, storage: proposal * types) : types =
         let proposal_counter = storage.proposal_counter + 1n in
         let proposals = Big_map.add proposal_counter proposal storage.proposals in
@@ -108,7 +105,6 @@ module Op = struct
             proposal_counter = proposal_counter
         }
 
-    [@inline]
     let retrieve_proposal (proposal_number, storage : proposal_id * types) : proposal =
         match Big_map.find_opt proposal_number storage.proposals with
         | Some proposal -> proposal
@@ -119,7 +115,6 @@ module Op = struct
             | None -> failwith Errors.no_proposal_exist
           end
 
-    [@inline]
     let adjust_votes (proposal, {vote; quantity}, history: proposal * votes * votes option) : proposal =
       let votes =
         match Map.find_opt vote proposal.votes with
@@ -208,7 +203,6 @@ module Op = struct
           let is_executed = is_quorum_met total_supply proposal.votes quorum && is_supermajority_met proposal.votes supermajority in
           resolve (proposal, is_executed)
 
-    [@inline]
     let update_proposal (proposal_id , proposal, storage: proposal_id * proposal * types) : types =
         let proposals = Big_map.update proposal_id (Some proposal) storage.proposals in
         {
@@ -216,7 +210,6 @@ module Op = struct
             proposals = proposals
         }
 
-    [@inline]
     let archive_proposal (proposal_id, proposal_state, storage: proposal_id * proposal_state * types) : types =
         let proposals = Big_map.remove proposal_id storage.proposals in
         let archives = Big_map.add proposal_id proposal_state storage.archives in
@@ -224,14 +217,6 @@ module Op = struct
             storage with
             proposals = proposals;
             archives = archives
-        }
-
-    [@inline]
-    let update_metadata (key, value, storage: string * bytes option * types) : types =
-        let metadata = Big_map.update key value storage.metadata in
-        {
-            storage with
-            metadata = metadata
         }
 
     let adjust_quorum (quorum : nat) (storage : types) : types =

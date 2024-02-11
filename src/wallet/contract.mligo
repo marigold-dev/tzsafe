@@ -55,7 +55,7 @@ let default (_, s : unit * g_storage) : result =
  *)
 [@inline]
 let create_proposal (proposal_contents, storage : proposal_content list * g_storage) : result =
-    let {wallet; fa2;} = storage in
+    let {wallet; fa2; metadata;} = storage in
     let {token_id} = wallet.token in
     let _tokens = Conditions.check_ownership token_id (Tezos.get_sender ()) fa2 in
     let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
@@ -65,7 +65,7 @@ let create_proposal (proposal_contents, storage : proposal_content list * g_stor
     let proposal_id = wallet.proposal_counter in
     let event = Tezos.emit "%create_proposal" ({ proposal_id } : Event.Types.create_proposal) in
     let fa2 = FA2.call_register_lock_key (fa2, proposal_id) in
-    ([event], {wallet; fa2})
+    ([event], {wallet; fa2; metadata;})
 
 (**
  * Proposal Signing
@@ -78,7 +78,7 @@ let sign_proposal
       * votes
       * g_storage)
   : result =
-    let { wallet; fa2;} = storage in
+    let { wallet; fa2; metadata} = storage in
     let { token_id} = wallet.token in
     let owner = Tezos.get_sender () in
     let tokens = Conditions.check_ownership token_id owner fa2 in
@@ -105,7 +105,7 @@ let sign_proposal
     let wallet = Storage.Op.update_voting_history(proposal_id, owner, votes, wallet) in
     let wallet = Storage.Op.update_proposal(proposal_id, proposal, wallet) in
     let event = Tezos.emit "%sign_proposal" ({proposal_id; signer = owner} : Event.Types.sign_proposal) in
-    ([event], {wallet; fa2})
+    ([event], {wallet; fa2; metadata})
 
 (**
  * Proposal Execution
@@ -117,7 +117,7 @@ let resolve_proposal
       * proposal_content list
       * g_storage)
   : result =
-    let { wallet; fa2; } = storage in
+    let { wallet; fa2; metadata } = storage in
     let { token_id } = wallet.token in
     let _tokens = Conditions.check_ownership token_id (Tezos.get_sender()) fa2 in
     let () = Conditions.amount_must_be_zero_tez (Tezos.get_amount ()) in
@@ -130,7 +130,7 @@ let resolve_proposal
     let () = Conditions.ready_to_execute proposal.state in
     let wallet = Storage.Op.update_proposal(proposal_id, proposal, wallet) in
     let fa2 = FA2.call_unregister_lock_key (fa2, proposal_id) in
-    let ops, s= Execution.perform_operations proposal_id proposal {wallet; fa2} in
+    let ops, s= Execution.perform_operations proposal_id proposal {wallet; fa2; metadata} in
     let event = Tezos.emit "%resolve_proposal" ({ proposal_id ; proposal_state = proposal.state } : Event.Types.resolve_proposal) in
     let archive = Tezos.emit "%archive_proposal" ({ proposal_id ; proposal = Bytes.pack proposal }: Event.Types.archive_proposal ) in
     (event::archive::ops, s)

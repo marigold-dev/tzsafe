@@ -42,7 +42,7 @@ let send_by (target : address) (amount : tez) : operation =
 
 let send (content : proposal_content) (storage : g_storage)
   : (operation list  * g_storage) =
-    let {wallet; fa2} = storage in
+    let {wallet; fa2; metadata} = storage in
     match content with
     | Transfer tx -> ([send_by tx.target tx.amount], storage)
     | Execute_lambda e -> (e.lambda (), storage)
@@ -51,8 +51,8 @@ let send (content : proposal_content) (storage : g_storage)
     | Adjust_voting_duration t -> ([], { storage with wallet = Storage.Op.adjust_voting_duration t wallet})
     | Adjust_execution_duration t -> ([], { storage with wallet = Storage.Op.adjust_execution_duration t wallet})
     | Adjust_token token -> ([], { storage with wallet = Storage.Op.adjust_token token wallet})
-    | Add_or_update_metadata { key; value } -> ([], { storage with wallet = Storage.Op.update_metadata (key, (Some value), wallet )})
-    | Remove_metadata { key } -> ([], { storage with wallet = Storage.Op.update_metadata (key, None, wallet) })
+    | Add_or_update_metadata { key; value } -> ([], { storage with metadata = Big_map.update key (Some value) metadata })
+    | Remove_metadata { key } -> ([], { storage with metadata = Big_map.remove key metadata })
     | Proof_of_event { payload } ->
         let event = Tezos.emit "%proof_of_event" ({ payload } : Event.Types.proof_of_event) in
         ([event], storage)
@@ -69,18 +69,18 @@ let perform_operations
       let acc (x,ys : (operation * operation list)) : operation list = x :: ys in
       List.fold_right acc ops new_ops, new_s
     in
-    let {wallet; fa2} = storage in
+    let {wallet; fa2 = _; metadata = _} = storage in
     match proposal.state with
     | Executed ->
-      let (ops, {wallet; fa2}) = List.fold_left batch (Constants.no_operation, storage) proposal.contents in
-      let new_s = { wallet = Storage.Op.archive_proposal (proposal_id, Executed, wallet); fa2} in
+      let (ops, {wallet; fa2; metadata}) = List.fold_left batch (Constants.no_operation, storage) proposal.contents in
+      let new_s = { wallet = Storage.Op.archive_proposal (proposal_id, Executed, wallet); fa2; metadata} in
       (ops, new_s)
     | Proposing ->
       (Constants.no_operation, storage)
     | Rejected ->
-      let new_s = { wallet = Storage.Op.archive_proposal (proposal_id, Rejected, wallet); fa2} in
+      let new_s = { storage with wallet = Storage.Op.archive_proposal (proposal_id, Rejected, wallet); } in
       (Constants.no_operation, new_s)
     | Expired ->
-      let new_s = { wallet = Storage.Op.archive_proposal (proposal_id, Expired, wallet); fa2} in
+      let new_s = { storage with wallet = Storage.Op.archive_proposal (proposal_id, Expired, wallet); } in
       (Constants.no_operation, new_s)
 
