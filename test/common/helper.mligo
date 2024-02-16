@@ -45,7 +45,6 @@ let init_storage (owners, quorum: ((address * nat) * nat) list * nat) : GStorage
         quorum             = quorum;
         voting_duration    = 172800;
         execution_duration = 172800;
-        metadata           = Big_map.literal [("", 0x01)];
     }
   in
   let fa2 : FStorage.t = 
@@ -60,7 +59,9 @@ let init_storage (owners, quorum: ((address * nat) * nat) list * nat) : GStorage
           lock_keys = Set.empty;
         }
     }
-  in { wallet; fa2; }
+  in
+  let metadata = Big_map.literal [("", 0x01)]
+  in { wallet; fa2; metadata }
 
 type originated = Breath.Contract.originated
 
